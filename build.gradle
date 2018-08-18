@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+group 'club.tempvs'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    dependencies {
+        //tempvs rest api
+        compile "club.tempvs:rest:1.6"
+        //testing
+        testCompile "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-bundle:$jerseyVersion"
+        testCompile 'org.mockito:mockito-core:2.18.3'
+    }
+}
+
+task copyToLib(type: Copy) {
+    into "$buildDir/libs"
+    from configurations.compile
+}
+
+task stage() {
+    dependsOn clean, copyToLib, jar
+}
+
+tasks.stage.doLast() {
+    delete "build/tmp"
+    delete "build/classes"
+}
