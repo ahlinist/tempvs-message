@@ -9,8 +9,8 @@ import java.util.Objects;
 public class Participant {
 
     @Id
-    @GeneratedValue
     private Long id;
+    //private Long profileId;
     @ManyToMany(cascade = CascadeType.MERGE)
     private List<Conversation> conversations = new ArrayList<>();
     @OneToMany
@@ -25,6 +25,14 @@ public class Participant {
     public void setId(Long id) {
         this.id = id;
     }
+
+/*    public Long getProfileId() {
+        return profileId;
+    }
+
+    public void setProfileId(Long profileId) {
+        this.profileId = profileId;
+    }*/
 
     public List<Conversation> getConversations() {
         return conversations;
