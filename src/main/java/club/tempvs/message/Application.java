@@ -17,18 +17,14 @@ public class Application {
     @Bean
     public CommandLineRunner commandLineRunner(
             MessageRepository messageRepository,
+            ParticipantService participantService,
             ParticipantRepository participantRepository
     ) {
 
         return args -> {
 
-            Participant participant1 = new Participant();
-            participant1.setId(3L);
-            Participant participant2 = new Participant();
-            participant2.setId(4L);
-
-            participantRepository.save(participant1);
-            participantRepository.save(participant2);
+            Participant participant1 = participantService.createParticipant(10L);
+            Participant participant2 = participantService.createParticipant(12L);
 
             Conversation conversation = new Conversation();
             conversation.addParticipant(participant1);
@@ -37,7 +33,7 @@ public class Application {
             Message message = new Message();
             message.setConversation(conversation);
             message.setSender(participant1);
-            message.setText("asd");
+            message.setText("qwe");
 
             conversation.addMessage(message);
 
@@ -48,6 +44,12 @@ public class Application {
             messageRepository.save(message);
 
             System.out.println("Participants:");
+
+            for (Participant participantsFromList : participantRepository.findAll()) {
+                System.out.println("Participant #" + participantsFromList.getId());
+            }
+
+            System.out.println("Messages:");
 
             for (Message messageFromList : messageRepository.findAll()) {
                 System.out.println("Message #" + messageFromList.getId());
