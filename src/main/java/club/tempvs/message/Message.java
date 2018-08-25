@@ -1,6 +1,7 @@
 package club.tempvs.message;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Entity
@@ -9,11 +10,13 @@ public class Message {
     @Id
     @GeneratedValue
     private Long id;
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @NotNull
+    @ManyToOne(cascade = CascadeType.ALL)
     private Conversation conversation;
+    @NotNull
     @OneToOne
     private Participant sender;
-
+    @NotNull
     private String text;
 
     public Long getId() {

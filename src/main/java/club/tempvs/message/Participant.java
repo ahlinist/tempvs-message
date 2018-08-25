@@ -10,13 +10,8 @@ public class Participant {
 
     @Id
     private Long id;
-    //private Long profileId;
     @ManyToMany(cascade = CascadeType.MERGE)
     private List<Conversation> conversations = new ArrayList<>();
-    @OneToMany
-    private List<Message> receivedMessages = new ArrayList<>();
-    @OneToMany
-    private List<Message> sentMessages = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -26,14 +21,6 @@ public class Participant {
         this.id = id;
     }
 
-/*    public Long getProfileId() {
-        return profileId;
-    }
-
-    public void setProfileId(Long profileId) {
-        this.profileId = profileId;
-    }*/
-
     public List<Conversation> getConversations() {
         return conversations;
     }
@@ -42,35 +29,17 @@ public class Participant {
         this.conversations = conversations;
     }
 
-    public List<Message> getReceivedMessages() {
-        return receivedMessages;
-    }
-
-    public void setReceivedMessages(List<Message> receivedMessages) {
-        this.receivedMessages = receivedMessages;
-    }
-
-    public List<Message> getSentMessages() {
-        return sentMessages;
-    }
-
-    public void setSentMessages(List<Message> sentMessages) {
-        this.sentMessages = sentMessages;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Participant that = (Participant) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(conversations, that.conversations) &&
-                Objects.equals(receivedMessages, that.receivedMessages) &&
-                Objects.equals(sentMessages, that.sentMessages);
+                Objects.equals(conversations, that.conversations);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, conversations, receivedMessages, sentMessages);
+        return Objects.hash(id, conversations);
     }
 }

@@ -4,6 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Entity
@@ -12,10 +13,13 @@ public class Message2Recipient {
     @Id
     @GeneratedValue
     private Long id;
+    @NotNull
     @OneToOne
     private Participant recipient;
+    @NotNull
     @OneToOne
     private Message message;
+    @NotNull
     private Boolean seen = Boolean.FALSE;
 
     public Long getId() {
