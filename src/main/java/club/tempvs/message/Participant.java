@@ -10,7 +10,7 @@ public class Participant {
 
     @Id
     private Long id;
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "participants")
     private List<Conversation> conversations = new ArrayList<>();
 
     public Long getId() {
@@ -27,6 +27,10 @@ public class Participant {
 
     public void setConversations(List<Conversation> conversations) {
         this.conversations = conversations;
+    }
+
+    public void addConversation(Conversation conversation) {
+        this.conversations.add(conversation);
     }
 
     @Override

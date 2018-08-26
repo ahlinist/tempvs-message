@@ -2,7 +2,7 @@ package club.tempvs.message;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 public class Message {
@@ -16,6 +16,8 @@ public class Message {
     @NotNull
     @OneToOne
     private Participant sender;
+    @ManyToMany
+    private List<Participant> newFor = new ArrayList<>();
     @NotNull
     private String text;
 
@@ -41,6 +43,14 @@ public class Message {
 
     public void setSender(Participant sender) {
         this.sender = sender;
+    }
+
+    public List<Participant> getNewFor() {
+        return newFor;
+    }
+
+    public void setNewFor(List<Participant> newFor) {
+        this.newFor = newFor;
     }
 
     public String getText() {

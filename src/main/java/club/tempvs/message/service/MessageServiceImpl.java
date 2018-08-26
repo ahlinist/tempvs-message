@@ -6,7 +6,7 @@ import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.List;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -20,16 +20,17 @@ public class MessageServiceImpl implements MessageService {
         this.messageRepository = messageRepository;
     }
 
-    public Message createMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text) {
+    public Message createMessage(Conversation conversation, Participant sender, List<Participant> receivers, String text) {
         Message message = objectFactory.getInstance(Message.class);
         message.setConversation(conversation);
         message.setSender(sender);
+        message.setNewFor(receivers);
         message.setText(text);
 
         return message;
     }
 
-    public Message persistMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text) {
+    public Message persistMessage(Conversation conversation, Participant sender, List<Participant> receivers, String text) {
         Message message = createMessage(conversation, sender, receivers, text);
         return messageRepository.save(message);
     }

@@ -6,7 +6,7 @@ import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.List;
 
 @Service
 public class ConversationServiceImpl implements ConversationService {
@@ -24,7 +24,7 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation createConversation(
-            Participant sender, Set<Participant> receivers, String messageText, String conversationName) {
+            Participant sender, List<Participant> receivers, String messageText, String conversationName) {
         Conversation conversation = objectFactory.getInstance(Conversation.class);
         conversation.setParticipants(receivers);
         conversation.addParticipant(sender);

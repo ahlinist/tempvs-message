@@ -12,8 +12,7 @@ import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MessageServiceTest {
@@ -43,7 +42,7 @@ public class MessageServiceTest {
     @Test
     public void testCreateMessage() {
         String text = "text";
-        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver1, receiver2));
+        List<Participant> receivers = Arrays.asList(receiver1, receiver2);
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
 
@@ -52,6 +51,7 @@ public class MessageServiceTest {
         verify(objectFactory).getInstance(Message.class);
         verify(message).setConversation(conversation);
         verify(message).setSender(sender);
+        verify(message).setNewFor(receivers);
         verify(message).setText(text);
         verifyNoMoreInteractions(objectFactory);
         verifyNoMoreInteractions(message);
@@ -63,7 +63,7 @@ public class MessageServiceTest {
     @Test
     public void testPersistMessage() {
         String text = "text";
-        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver1, receiver2));
+        List<Participant> receivers = Arrays.asList(receiver1, receiver2);
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
         when(messageRepository.save(message)).thenReturn(message);
@@ -73,6 +73,7 @@ public class MessageServiceTest {
         verify(objectFactory).getInstance(Message.class);
         verify(message).setConversation(conversation);
         verify(message).setSender(sender);
+        verify(message).setNewFor(receivers);
         verify(message).setText(text);
         verify(messageRepository).save(message);
         verifyNoMoreInteractions(objectFactory);

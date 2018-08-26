@@ -7,9 +7,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootApplication
 public class Application {
@@ -28,10 +27,11 @@ public class Application {
 
         return args -> {
 
-            Participant sender = participantService.createParticipant(15L);
-            Participant receiver = participantService.createParticipant(16L);
+            Participant sender = participantService.createParticipant(20L);
+            Participant receiver = participantService.createParticipant(21L);
 
-            Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
+            List<Participant> receivers = new ArrayList<>();
+            receivers.add(receiver);
 
             conversationService.createConversation(sender, receivers, "message text", "conversation name");
 

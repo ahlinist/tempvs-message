@@ -15,9 +15,9 @@ public class Conversation {
     @NotEmpty
     @OneToMany(cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
-    @Size(min=2)
+    @Size(min = 2)
     @ManyToMany
-    private Set<Participant> participants = new LinkedHashSet<>();
+    private List<Participant> participants = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -47,11 +47,11 @@ public class Conversation {
         this.messages.add(message);
     }
 
-    public Set<Participant> getParticipants() {
+    public List<Participant> getParticipants() {
         return participants;
     }
 
-    public void setParticipants(Set<Participant> participants) {
+    public void setParticipants(List<Participant> participants) {
         this.participants = participants;
     }
 

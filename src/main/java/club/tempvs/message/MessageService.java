@@ -1,8 +1,8 @@
 package club.tempvs.message;
 
-import java.util.Set;
+import java.util.List;
 
 public interface MessageService {
-    Message createMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text);
-    Message persistMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text);
+    Message createMessage(Conversation conversation, Participant sender, List<Participant> receivers, String text);
+    Message persistMessage(Conversation conversation, Participant sender, List<Participant> receivers, String text);
 }
