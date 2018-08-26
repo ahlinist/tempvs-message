@@ -7,6 +7,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 @SpringBootApplication
 public class Application {
 
@@ -16,6 +20,7 @@ public class Application {
 
     @Bean
     public CommandLineRunner commandLineRunner(
+            ConversationService conversationService,
             MessageRepository messageRepository,
             ParticipantService participantService,
             ParticipantRepository participantRepository
@@ -23,25 +28,12 @@ public class Application {
 
         return args -> {
 
-            Participant participant1 = participantService.createParticipant(10L);
-            Participant participant2 = participantService.createParticipant(12L);
+            Participant sender = participantService.createParticipant(15L);
+            Participant receiver = participantService.createParticipant(16L);
 
-            Conversation conversation = new Conversation();
-            conversation.addParticipant(participant1);
-            conversation.addParticipant(participant2);
+            Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
-            Message message = new Message();
-            message.setConversation(conversation);
-            message.setSender(participant1);
-            message.setText("qwe");
-
-            conversation.addMessage(message);
-
-            Message2Recipient message2Recipient = new Message2Recipient();
-            message2Recipient.setMessage(message);
-            message2Recipient.setRecipient(participant2);
-
-            messageRepository.save(message);
+            conversationService.createConversation(sender, receivers, "message text", "conversation name");
 
             System.out.println("Participants:");
 

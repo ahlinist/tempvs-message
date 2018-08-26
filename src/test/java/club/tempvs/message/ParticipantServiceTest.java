@@ -1,6 +1,7 @@
 package club.tempvs.message;
 
 import club.tempvs.message.dao.ParticipantRepository;
+import club.tempvs.message.service.ParticipantServiceImpl;
 import club.tempvs.message.util.ObjectFactory;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -26,7 +27,7 @@ public class ParticipantServiceTest {
 
     @Before
     public void setup() {
-        participantService = new ParticipantServiceImpl(objectFactory, participantRepository);
+        this.participantService = new ParticipantServiceImpl(objectFactory, participantRepository);
     }
 
     @Test

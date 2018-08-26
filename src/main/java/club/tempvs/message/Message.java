@@ -72,4 +72,9 @@ public class Message {
     public int hashCode() {
         return Objects.hash(id, conversation, sender, text);
     }
+
+    @Override
+    public String toString() {
+        return text;
+    }
 }

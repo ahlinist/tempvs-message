@@ -3,9 +3,7 @@ package club.tempvs.message;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 public class Conversation {
@@ -13,12 +11,13 @@ public class Conversation {
     @Id
     @GeneratedValue
     private Long id;
+    private String name;
     @NotEmpty
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
     @Size(min=2)
-    @ManyToMany(cascade = CascadeType.MERGE)
-    private List<Participant> participants = new ArrayList<>();
+    @ManyToMany
+    private Set<Participant> participants = new LinkedHashSet<>();
 
     public Long getId() {
         return id;
@@ -26,6 +25,14 @@ public class Conversation {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<Message> getMessages() {
@@ -40,11 +47,11 @@ public class Conversation {
         this.messages.add(message);
     }
 
-    public List<Participant> getParticipants() {
+    public Set<Participant> getParticipants() {
         return participants;
     }
 
-    public void setParticipants(List<Participant> participants) {
+    public void setParticipants(Set<Participant> participants) {
         this.participants = participants;
     }
 
@@ -63,11 +70,12 @@ public class Conversation {
         }
 
         Conversation that = (Conversation) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(id, that.id) &&
+                Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, name);
     }
 }

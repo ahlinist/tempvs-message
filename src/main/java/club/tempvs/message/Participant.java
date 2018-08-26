@@ -10,7 +10,7 @@ public class Participant {
 
     @Id
     private Long id;
-    @ManyToMany(cascade = CascadeType.MERGE)
+    @ManyToMany(cascade = CascadeType.ALL)
     private List<Conversation> conversations = new ArrayList<>();
 
     public Long getId() {
