@@ -1,5 +1,7 @@
 package club.tempvs.message;
 
+import org.hibernate.annotations.BatchSize;
+
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,7 @@ public class Participant {
     @Id
     private Long id;
     @ManyToMany(mappedBy = "participants")
+    @BatchSize(size = 20)
     private List<Conversation> conversations = new ArrayList<>();
 
     public Long getId() {
