@@ -41,12 +41,11 @@ public class Participant {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Participant that = (Participant) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(conversations, that.conversations);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, conversations);
+        return Objects.hash(id);
     }
 }

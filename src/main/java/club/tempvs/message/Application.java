@@ -5,9 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @SpringBootApplication
 public class Application {
@@ -76,6 +74,18 @@ public class Application {
                     System.out.println("----------------------");
                 }
             }
+
+            long conversationId = 3L;
+            Participant newParticipant = participantService.createParticipant(666L);
+
+            Conversation conversation = conversationService.getConversation(conversationId);
+
+            System.out.println("Conversation #69 has " + conversation.getParticipants().size() + " participants");
+            System.out.println("Adding one more...");
+            Set<Participant> newParticipants = new LinkedHashSet<>();
+            newParticipants.add(newParticipant);
+            conversationService.addParticipants(conversation, newParticipants);
+            System.out.println("Now conversation #69 has " + conversation.getParticipants().size() + " participants");
         };
     }
 }

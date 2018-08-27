@@ -5,4 +5,5 @@ import java.util.Set;
 public interface ConversationService {
     Conversation createConversation(Participant sender, Set<Participant> receivers, String text, String name);
     Conversation getConversation(Long id);
+    Conversation addParticipants(Conversation conversation, Set<Participant> participantsToAdd);
 }

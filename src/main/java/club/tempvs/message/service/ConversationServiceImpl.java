@@ -38,4 +38,15 @@ public class ConversationServiceImpl implements ConversationService {
     public Conversation getConversation(Long id) {
         return conversationRepository.findById(id).orElse(null);
     }
+
+    public Conversation addParticipants(Conversation conversation, Set<Participant> participantsToAdd) {
+        Set<Participant> participants = conversation.getParticipants();
+        participants.addAll(participantsToAdd);
+
+        for (Participant addedParticipant : participantsToAdd) {
+            addedParticipant.addConversation(conversation);
+        }
+
+        return conversationRepository.save(conversation);
+    }
 }

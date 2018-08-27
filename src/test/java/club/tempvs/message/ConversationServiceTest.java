@@ -27,6 +27,10 @@ public class ConversationServiceTest {
     @Mock
     private Participant receiver;
     @Mock
+    private Participant participant;
+    @Mock
+    private Participant participantToAdd;
+    @Mock
     private ObjectFactory objectFactory;
     @Mock
     private ConversationRepository conversationRepository;
@@ -42,7 +46,8 @@ public class ConversationServiceTest {
     public void testCreateConversation() {
         String messageText = "text";
         String conversationName = "name";
-        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver));
+        Set<Participant> receivers = new LinkedHashSet<>();
+        receivers.add(receiver);
 
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(messageService.createMessage(conversation, sender, receivers, messageText)).thenReturn(message);
@@ -89,5 +94,29 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(conversationRepository);
 
         assertEquals("A conversation with given id is retrieved", result, null);
+    }
+
+    @Test
+    public void testAddParticipants() {
+        Set<Participant> participants = new LinkedHashSet<>();
+        participants.add(participant);
+        Set<Participant> participantsToAdd = new LinkedHashSet<>();
+        participantsToAdd.add(participantToAdd);
+        int participantsInitSize = participants.size();
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.addParticipants(conversation, participantsToAdd);
+
+        verify(conversation).getParticipants();
+        verify(participantToAdd).addConversation(conversation);
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(conversation);
+        verifyNoMoreInteractions(participantToAdd);
+        verifyNoMoreInteractions(conversationRepository);
+
+        assertTrue("Participants collection size increased by 1", participants.size() == (participantsInitSize + 1));
+        assertTrue("'True' is returned as a successful result", result.equals(conversation));
+
     }
 }
