@@ -5,8 +5,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @SpringBootApplication
 public class Application {
@@ -23,23 +24,26 @@ public class Application {
 
         return args -> {
 
-            Participant sender = participantService.getParticipant(20L);
-            Participant receiver = participantService.getParticipant(21L);
+            long senderId = 27L;
+            long receiverId = 29L;
+
+            Participant sender = participantService.getParticipant(senderId);
+            Participant receiver = participantService.getParticipant(receiverId);
 
             if (sender == null) {
-                sender = participantService.createParticipant(20L);
+                sender = participantService.createParticipant(senderId);
             }
 
             if (receiver == null) {
-                receiver = participantService.createParticipant(21L);
+                receiver = participantService.createParticipant(receiverId);
             }
 
-            List<Participant> receivers = new ArrayList<>();
+            Set<Participant> receivers = new LinkedHashSet<>();
             receivers.add(receiver);
 
             conversationService.createConversation(sender, receivers, "message text", "conversation name");
 
-            Participant participant = participantService.getParticipant(20L);
+            Participant participant = participantService.getParticipant(senderId);
             List<Conversation> conversations = participant.getConversations();
 
             System.out.println("Participant #20 has " + conversations.size() + " converstations.");
@@ -56,7 +60,7 @@ public class Application {
                 }
             }
 
-            participant = participantService.getParticipant(21L);
+            participant = participantService.getParticipant(receiverId);
             conversations = participant.getConversations();
 
             System.out.println("Participant #21 has " + conversations.size() + " converstations.");

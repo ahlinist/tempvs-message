@@ -12,7 +12,9 @@ import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MessageServiceTest {
@@ -42,7 +44,7 @@ public class MessageServiceTest {
     @Test
     public void testCreateMessage() {
         String text = "text";
-        List<Participant> receivers = Arrays.asList(receiver1, receiver2);
+        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver1, receiver2));
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
 
@@ -63,7 +65,7 @@ public class MessageServiceTest {
     @Test
     public void testPersistMessage() {
         String text = "text";
-        List<Participant> receivers = Arrays.asList(receiver1, receiver2);
+        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver1, receiver2));
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
         when(messageRepository.save(message)).thenReturn(message);

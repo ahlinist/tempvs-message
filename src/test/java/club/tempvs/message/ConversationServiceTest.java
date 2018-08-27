@@ -11,9 +11,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationServiceTest {
@@ -44,7 +42,7 @@ public class ConversationServiceTest {
     public void testCreateConversation() {
         String messageText = "text";
         String conversationName = "name";
-        List<Participant> receivers = Arrays.asList(receiver);
+        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver));
 
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(messageService.createMessage(conversation, sender, receivers, messageText)).thenReturn(message);

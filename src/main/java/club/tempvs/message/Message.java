@@ -17,7 +17,7 @@ public class Message {
     @OneToOne
     private Participant sender;
     @ManyToMany
-    private List<Participant> newFor = new ArrayList<>();
+    private Set<Participant> newFor = new LinkedHashSet<>();
     @NotNull
     private String text;
 
@@ -45,11 +45,11 @@ public class Message {
         this.sender = sender;
     }
 
-    public List<Participant> getNewFor() {
+    public Set<Participant> getNewFor() {
         return newFor;
     }
 
-    public void setNewFor(List<Participant> newFor) {
+    public void setNewFor(Set<Participant> newFor) {
         this.newFor = newFor;
     }
 

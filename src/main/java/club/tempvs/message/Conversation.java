@@ -17,7 +17,7 @@ public class Conversation {
     private List<Message> messages = new ArrayList<>();
     @Size(min = 2)
     @ManyToMany
-    private List<Participant> participants = new ArrayList<>();
+    private Set<Participant> participants = new LinkedHashSet<>();
 
     public Long getId() {
         return id;
@@ -47,11 +47,11 @@ public class Conversation {
         this.messages.add(message);
     }
 
-    public List<Participant> getParticipants() {
+    public Set<Participant> getParticipants() {
         return participants;
     }
 
-    public void setParticipants(List<Participant> participants) {
+    public void setParticipants(Set<Participant> participants) {
         this.participants = participants;
     }
 
