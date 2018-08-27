@@ -13,6 +13,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationServiceTest {
@@ -64,5 +65,31 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(receiver);
 
         assertEquals("Service returns a conversation instance", result, conversation);
+    }
+
+    @Test
+    public void testGetConversation() {
+        long conversationId = 1L;
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+
+        Conversation result = conversationService.getConversation(conversationId);
+
+        verify(conversationRepository).findById(conversationId);
+        verifyNoMoreInteractions(conversationRepository);
+
+        assertEquals("A conversation with given id is retrieved", result, conversation);
+    }
+
+    @Test
+    public void testGetConversationNotFound() {
+        long conversationId = 1L;
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.empty());
+
+        Conversation result = conversationService.getConversation(conversationId);
+
+        verify(conversationRepository).findById(conversationId);
+        verifyNoMoreInteractions(conversationRepository);
+
+        assertEquals("A conversation with given id is retrieved", result, null);
     }
 }

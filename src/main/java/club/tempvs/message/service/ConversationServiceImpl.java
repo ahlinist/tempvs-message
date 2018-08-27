@@ -24,18 +24,18 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation createConversation(
-            Participant sender, List<Participant> receivers, String messageText, String conversationName) {
+            Participant sender, List<Participant> receivers, String text, String name) {
         Conversation conversation = objectFactory.getInstance(Conversation.class);
         conversation.setParticipants(receivers);
         conversation.addParticipant(sender);
-        conversation.setName(conversationName);
+        conversation.setName(name);
 
-        Message message = messageService.createMessage(conversation, sender, receivers, messageText);
+        Message message = messageService.createMessage(conversation, sender, receivers, text);
         conversation.addMessage(message);
         return conversationRepository.save(conversation);
     }
 
     public Conversation getConversation(Long id) {
-        throw new RuntimeException("not implemented yet");
+        return conversationRepository.findById(id).orElse(null);
     }
 }
