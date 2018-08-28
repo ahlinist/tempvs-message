@@ -1,7 +1,6 @@
 package club.tempvs.message.service;
 
 import club.tempvs.message.*;
-import club.tempvs.message.dao.MessageRepository;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,12 +11,10 @@ import java.util.Set;
 public class MessageServiceImpl implements MessageService {
 
     private final ObjectFactory objectFactory;
-    private final MessageRepository messageRepository;
 
     @Autowired
-    public MessageServiceImpl(ObjectFactory objectFactory, MessageRepository messageRepository) {
+    public MessageServiceImpl(ObjectFactory objectFactory) {
         this.objectFactory = objectFactory;
-        this.messageRepository = messageRepository;
     }
 
     public Message createMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text) {

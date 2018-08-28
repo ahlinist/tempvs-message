@@ -1,6 +1,5 @@
 package club.tempvs.message;
 
-import club.tempvs.message.dao.MessageRepository;
 import club.tempvs.message.service.MessageServiceImpl;
 import club.tempvs.message.util.ObjectFactory;
 import static org.junit.Assert.*;
@@ -30,12 +29,10 @@ public class MessageServiceTest {
     private Conversation conversation;
     @Mock
     private ObjectFactory objectFactory;
-    @Mock
-    private MessageRepository messageRepository;
 
     @Before
     public void setup() {
-        this.messageService = new MessageServiceImpl(objectFactory, messageRepository);
+        this.messageService = new MessageServiceImpl(objectFactory);
     }
 
     @Test
@@ -56,7 +53,6 @@ public class MessageServiceTest {
         verify(message).setText(text);
         verifyNoMoreInteractions(objectFactory);
         verifyNoMoreInteractions(message);
-        verifyNoMoreInteractions(messageRepository);
 
         assertEquals("An instance of Message is returned as a result", result, message);
     }
