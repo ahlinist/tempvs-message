@@ -60,14 +60,21 @@ public class ParticipantServiceTest {
     }
 
     @Test
-    public void testGetParticipantForAbsent() {
+    public void testGetParticipantForNoneFound() {
         when(participantRepository.findById(1L)).thenReturn(Optional.empty());
+        when(objectFactory.getInstance(Participant.class)).thenReturn(participant);
+        when(participantRepository.save(participant)).thenReturn(participant);
 
         Participant result = participantService.getParticipant(1L);
 
         verify(participantRepository).findById(1L);
+        verify(objectFactory).getInstance(Participant.class);
+        verify(participant).setId(1L);
+        verify(participantRepository).save(participant);
+        verifyNoMoreInteractions(participant);
+        verifyNoMoreInteractions(objectFactory);
         verifyNoMoreInteractions(participantRepository);
 
-        assertEquals("A participant instance is returned", result, null);
+        assertEquals("A participant instance is returned", result, participant);
     }
 }

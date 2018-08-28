@@ -26,6 +26,6 @@ public class ParticipantServiceImpl implements ParticipantService {
     }
 
     public Participant getParticipant(Long id) {
-        return participantRepository.findById(id).orElse(null);
+        return participantRepository.findById(id).orElseGet(() -> createParticipant(id));
     }
 }

@@ -27,15 +27,7 @@ public class Application {
 
             Participant sender = participantService.getParticipant(senderId);
             Participant receiver = participantService.getParticipant(receiverId);
-
-            if (sender == null) {
-                sender = participantService.createParticipant(senderId);
-            }
-
-            if (receiver == null) {
-                receiver = participantService.createParticipant(receiverId);
-            }
-
+            
             Set<Participant> receivers = new LinkedHashSet<>();
             receivers.add(receiver);
 
