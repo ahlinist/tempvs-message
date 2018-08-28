@@ -29,9 +29,4 @@ public class MessageServiceImpl implements MessageService {
 
         return message;
     }
-
-    public Message persistMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text) {
-        Message message = createMessage(conversation, sender, receivers, text);
-        return messageRepository.save(message);
-    }
 }

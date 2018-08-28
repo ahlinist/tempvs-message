@@ -60,29 +60,4 @@ public class MessageServiceTest {
 
         assertEquals("An instance of Message is returned as a result", result, message);
     }
-
-    @Test
-    public void testPersistMessage() {
-        String text = "text";
-        Set<Participant> receivers = new LinkedHashSet<>();
-        receivers.add(receiver1);
-        receivers.add(receiver2);
-
-        when(objectFactory.getInstance(Message.class)).thenReturn(message);
-        when(messageRepository.save(message)).thenReturn(message);
-
-        Message result = messageService.persistMessage(conversation, sender, receivers, text);
-
-        verify(objectFactory).getInstance(Message.class);
-        verify(message).setConversation(conversation);
-        verify(message).setSender(sender);
-        verify(message).setNewFor(receivers);
-        verify(message).setText(text);
-        verify(messageRepository).save(message);
-        verifyNoMoreInteractions(objectFactory);
-        verifyNoMoreInteractions(message);
-        verifyNoMoreInteractions(messageRepository);
-
-        assertEquals("An instance of Message is returned as a result", result, message);
-    }
 }
