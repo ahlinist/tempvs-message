@@ -49,4 +49,10 @@ public class ConversationServiceImpl implements ConversationService {
 
         return conversationRepository.save(conversation);
     }
+
+    public Conversation addMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text) {
+        Message message = messageService.createMessage(conversation, sender, receivers, text);
+        conversation.addMessage(message);
+        return conversationRepository.save(conversation);
+    }
 }

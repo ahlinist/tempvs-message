@@ -116,7 +116,28 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(conversationRepository);
 
         assertTrue("Participants collection size increased by 1", participants.size() == (participantsInitSize + 1));
-        assertTrue("'True' is returned as a successful result", result.equals(conversation));
+        assertEquals("Updated conversation is returned as a successful result", result, conversation);
+    }
 
+    @Test
+    public void testAddMessage() {
+        String text = "new message text";
+        Set<Participant> receivers = new LinkedHashSet<>();
+        receivers.add(receiver);
+        when(messageService.createMessage(conversation, sender, receivers, text)).thenReturn(message);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.addMessage(conversation, sender, receivers, text);
+
+        verify(messageService).createMessage(conversation, sender, receivers, text);
+        verify(conversation).addMessage(message);
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(conversation);
+        verifyNoMoreInteractions(messageService);
+        verifyNoMoreInteractions(conversationRepository);
+        verifyNoMoreInteractions(sender);
+        verifyNoMoreInteractions(receiver);
+
+        assertEquals("Updated conversation is returned as a successful result", result, conversation);
     }
 }

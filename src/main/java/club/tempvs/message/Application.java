@@ -31,7 +31,7 @@ public class Application {
             Set<Participant> receivers = new LinkedHashSet<>();
             receivers.add(receiver);
 
-            conversationService.createConversation(sender, receivers, "message text", "conversation name");
+            Conversation initialConversation = conversationService.createConversation(sender, receivers, "message text", "conversation name");
 
             Participant participant = participantService.getParticipant(senderId);
             List<Conversation> conversations = participant.getConversations();
@@ -67,17 +67,22 @@ public class Application {
                 }
             }
 
-            long conversationId = 3L;
-            Participant newParticipant = participantService.createParticipant(666L);
+            Participant newParticipant = participantService.getParticipant(666L);
 
-            Conversation conversation = conversationService.getConversation(conversationId);
+            Conversation conversation = conversationService.getConversation(initialConversation.getId());
 
             System.out.println("Conversation #69 has " + conversation.getParticipants().size() + " participants");
-            System.out.println("Adding one more...");
+            System.out.println("Adding one more participant...");
             Set<Participant> newParticipants = new LinkedHashSet<>();
             newParticipants.add(newParticipant);
-            conversationService.addParticipants(conversation, newParticipants);
-            System.out.println("Now conversation #69 has " + conversation.getParticipants().size() + " participants");
+            Conversation updatedConversation = conversationService.addParticipants(conversation, newParticipants);
+            System.out.println("Now conversation #69 has " + updatedConversation.getParticipants().size() + " participants");
+
+            System.out.println("Conversation #" + updatedConversation.getId() + " has " + updatedConversation.getMessages().size() + " messages.");
+            System.out.println("Adding one more message...");
+            updatedConversation = conversationService.addMessage(updatedConversation, sender, receivers, "a new message");
+
+            System.out.println("Now conversation #" + updatedConversation.getId() + " has " + updatedConversation.getMessages().size() + " messages.");
         };
     }
 }
