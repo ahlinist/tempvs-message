@@ -16,9 +16,7 @@ public class Application {
 
     @Bean
     public CommandLineRunner commandLineRunner(
-            ConversationService conversationService,
-            ParticipantService participantService
-    ) {
+            ConversationService conversationService, ParticipantService participantService) {
 
         return args -> {
 
