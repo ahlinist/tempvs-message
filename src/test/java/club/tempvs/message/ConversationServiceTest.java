@@ -140,4 +140,39 @@ public class ConversationServiceTest {
 
         assertEquals("Updated conversation is returned as a successful result", result, conversation);
     }
+
+    @Test
+    public void testLeaveConversation() {
+        conversation = new Conversation();
+        conversation.addParticipant(sender);
+        conversation.addParticipant(receiver);
+        conversation.addParticipant(participant);
+
+        int initialPartisipantsAmount = conversation.getParticipants().size();
+
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.removeParticipant(conversation, participant);
+
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(conversationRepository);
+
+        assertEquals("A conversation object is returned", result, conversation);
+        assertEquals("Participants size decrease by 1", initialPartisipantsAmount - 1, conversation.getParticipants().size());
+    }
+
+    @Test
+    public void testLeaveConversationOfTwoParticipants() {
+        conversation = new Conversation();
+        conversation.addParticipant(sender);
+        conversation.addParticipant(participant);
+
+        int initialPartisipantsAmount = conversation.getParticipants().size();
+
+        Conversation result = conversationService.removeParticipant(conversation, participant);
+
+        assertEquals("A conversation object is returned", result, conversation);
+        assertEquals("Participants size remains the same",
+                initialPartisipantsAmount, conversation.getParticipants().size());
+    }
 }

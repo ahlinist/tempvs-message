@@ -76,6 +76,10 @@ public class Application {
             Conversation updatedConversation = conversationService.addParticipants(conversation, newParticipants);
             System.out.println("Now conversation #69 has " + updatedConversation.getParticipants().size() + " participants");
 
+            System.out.println("Removing one participant...");
+            Conversation updatedConversation2 = conversationService.removeParticipant(updatedConversation, newParticipant);
+            System.out.println("Now conversation #69 has " + updatedConversation2.getParticipants().size() + " participants");
+
             System.out.println("Conversation #" + updatedConversation.getId() + " has " + updatedConversation.getMessages().size() + " messages.");
             System.out.println("Adding one more message...");
             updatedConversation = conversationService.addMessage(updatedConversation, sender, receivers, "a new message");

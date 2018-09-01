@@ -55,4 +55,15 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.addMessage(message);
         return conversationRepository.save(conversation);
     }
+
+    public Conversation removeParticipant(Conversation conversation, Participant participant) {
+        Set<Participant> participants = conversation.getParticipants();
+
+        if (participants.size() > 2) {
+            participants.remove(participant);
+            return conversationRepository.save(conversation);
+        }
+
+        return conversation;
+    }
 }
