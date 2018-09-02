@@ -1,10 +1,15 @@
 package club.tempvs.message;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class Message {
 
     @Id
@@ -20,6 +25,8 @@ public class Message {
     private Set<Participant> newFor = new LinkedHashSet<>();
     @NotNull
     private String text;
+    @CreatedDate
+    private LocalDateTime createdDate;
 
     public Long getId() {
         return id;
@@ -59,6 +66,14 @@ public class Message {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
     }
 
     @Override

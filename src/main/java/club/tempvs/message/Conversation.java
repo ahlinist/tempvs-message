@@ -1,11 +1,16 @@
 package club.tempvs.message;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class Conversation {
 
     @Id
@@ -18,6 +23,8 @@ public class Conversation {
     @Size(min = 2)
     @ManyToMany
     private Set<Participant> participants = new LinkedHashSet<>();
+    @CreatedDate
+    private LocalDateTime createdDate;
 
     public Long getId() {
         return id;
@@ -59,6 +66,14 @@ public class Conversation {
         this.participants.add(participant);
     }
 
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -70,12 +85,11 @@ public class Conversation {
         }
 
         Conversation that = (Conversation) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(name, that.name);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name);
+        return Objects.hash(id);
     }
 }
