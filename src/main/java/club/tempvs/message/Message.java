@@ -15,16 +15,21 @@ public class Message {
     @Id
     @GeneratedValue
     private Long id;
+
     @NotNull
     @ManyToOne(cascade = CascadeType.ALL)
     private Conversation conversation;
+
     @NotNull
     @OneToOne
     private Participant sender;
+
     @ManyToMany
     private Set<Participant> newFor = new LinkedHashSet<>();
+
     @NotNull
     private String text;
+
     @CreatedDate
     private LocalDateTime createdDate;
 

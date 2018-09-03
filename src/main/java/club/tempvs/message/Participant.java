@@ -16,9 +16,11 @@ public class Participant {
 
     @Id
     private Long id;
+
     @ManyToMany(mappedBy = "participants")
     @BatchSize(size = 20)
     private List<Conversation> conversations = new ArrayList<>();
+    
     @CreatedDate
     private LocalDateTime createdDate;
 

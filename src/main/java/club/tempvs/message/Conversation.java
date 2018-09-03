@@ -17,12 +17,15 @@ public class Conversation {
     @GeneratedValue
     private Long id;
     private String name;
+
     @NotEmpty
     @OneToMany(cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
+
     @Size(min = 2)
     @ManyToMany
     private Set<Participant> participants = new LinkedHashSet<>();
+
     @CreatedDate
     private LocalDateTime createdDate;
 
