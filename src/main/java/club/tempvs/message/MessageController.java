@@ -6,14 +6,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api")
 public class MessageController {
 
     @Autowired
     CommandLineRunner commandLineRunner;
 
-    @RequestMapping("/")
-    public String index() throws Exception {
-        commandLineRunner.run();
-        return "Hello world!";
+    @RequestMapping("/ping")
+    public String getPong() {
+        return "pong!";
     }
 }

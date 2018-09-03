@@ -23,9 +23,9 @@ public class MessageControllerTest {
     private MockMvc mvc;
 
     @Test
-    public void getHello() throws Exception {
-        mvc.perform(MockMvcRequestBuilders.get("/").accept(MediaType.APPLICATION_JSON))
+    public void testGetPong() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get("/api/ping").accept(MediaType.TEXT_PLAIN))
                 .andExpect(status().isOk())
-                .andExpect(content().string(equalTo("Hello world!")));
+                .andExpect(content().string(equalTo("pong!")));
     }
 }
