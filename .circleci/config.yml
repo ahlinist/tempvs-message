@@ -43,11 +43,22 @@ jobs:
       - run:
           name: Save test results
           command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+            mkdir -p ~/unit-test/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/unit-test/ \;
           when: always
       - store_test_results:
-          path: ~/junit
+          path: ~/unit-test
+
+      # run integration tests!
+      - run: gradle integrationTest
+      - run:
+          name: Save integration-test results
+          command: |
+            mkdir -p ~/integration-test/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/integration-test/ \;
+          when: always
+      - store_test_results:
+          path: ~/integration-test
 
       #store the build war
       - store_artifacts:
