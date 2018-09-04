@@ -4,6 +4,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,6 +29,7 @@ public class Message {
     private Set<Participant> newFor = new LinkedHashSet<>();
 
     @NotNull
+    @NotEmpty
     private String text;
 
     @CreatedDate
