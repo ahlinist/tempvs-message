@@ -1,0 +1,8 @@
+{
+  "sender": 4,
+  "receivers": [
+    1, 2, 3
+  ],
+  "text": "myText",
+  "name": "myName"
+}
