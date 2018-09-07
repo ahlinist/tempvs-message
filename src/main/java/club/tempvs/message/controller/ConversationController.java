@@ -6,6 +6,7 @@ import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.ParticipantService;
+import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +21,14 @@ import static java.util.stream.Collectors.*;
 @RequestMapping("/api")
 public class ConversationController {
 
+    private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
     private final ParticipantService participantService;
 
     @Autowired
-    public ConversationController(ConversationService conversationService, ParticipantService participantService) {
+    public ConversationController(ObjectFactory objectFactory, ConversationService conversationService,
+                                  ParticipantService participantService) {
+        this.objectFactory = objectFactory;
         this.conversationService = conversationService;
         this.participantService = participantService;
     }
@@ -38,7 +42,8 @@ public class ConversationController {
         String text = createConversationDto.getText();
         String name = createConversationDto.getName();
         Conversation conversation = conversationService.createConversation(sender, receivers, text, name);
-        return new GetConversationDto(conversation);
+        GetConversationDto getConversationDto = objectFactory.getInstance(GetConversationDto.class, conversation);
+        return getConversationDto;
     }
 
     @ExceptionHandler(Exception.class)

@@ -7,6 +7,7 @@ import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.ParticipantService;
+import club.tempvs.message.util.ObjectFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +32,9 @@ public class ConversationControllerTest {
     private ParticipantService participantService;
 
     @Mock
+    private ObjectFactory objectFactory;
+
+    @Mock
     private CreateConversationDto createConversationDto;
 
     @Mock
@@ -42,9 +46,12 @@ public class ConversationControllerTest {
     @Mock
     private Conversation conversation;
 
+    @Mock
+    private GetConversationDto getConversationDto;
+
     @Before
     public void setup() {
-        conversationController = new ConversationController(conversationService, participantService);
+        conversationController = new ConversationController(objectFactory, conversationService, participantService);
     }
 
     @Test
@@ -63,6 +70,7 @@ public class ConversationControllerTest {
         when(createConversationDto.getText()).thenReturn(text);
         when(createConversationDto.getName()).thenReturn(name);
         when(conversationService.createConversation(sender, receivers, text, name)).thenReturn(conversation);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.createConversation(createConversationDto);
 
@@ -73,10 +81,11 @@ public class ConversationControllerTest {
         verify(createConversationDto).getText();
         verify(createConversationDto).getName();
         verify(conversationService).createConversation(sender, receivers, text, name);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation);
         verifyNoMoreInteractions(createConversationDto);
         verifyNoMoreInteractions(participantService);
         verifyNoMoreInteractions(conversationService);
 
-        assertTrue("Result is not null", result != null);
+        assertEquals("Result is a conversation", result, getConversationDto);
     }
 }
