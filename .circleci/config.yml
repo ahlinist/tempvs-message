@@ -8,13 +8,16 @@ jobs:
     docker:
       # specify the version you desire here
       - image: circleci/openjdk:8-jdk
-
+        environment:
+          JDBC_DATABASE_URL: postgresql://root@localhost/circle_test
+          JDBC_DATABASE_USERNAME: root
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/postgres:9.4
+      - image: circleci/postgres:9.6.5-alpine-ram
 
-    working_directory: ~/repo
+      working_directory: ~/repo
 
     environment:
       # Customize the JVM maximum heap limit
@@ -23,7 +26,9 @@ jobs:
 
     steps:
       - checkout
-
+      - run: sudo apt-get update
+      - run: sudo apt-get install postgresql-client-9.6
+      - run: whoami
       # Download and cache dependencies
       - restore_cache:
           keys:
