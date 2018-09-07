@@ -1,7 +1,8 @@
-package club.tempvs.message;
+package club.tempvs.message.service;
 
 import club.tempvs.message.dao.ParticipantRepository;
-import club.tempvs.message.service.ParticipantServiceImpl;
+import club.tempvs.message.domain.Participant;
+import club.tempvs.message.service.impl.ParticipantServiceImpl;
 import club.tempvs.message.util.ObjectFactory;
 import static org.junit.Assert.*;
 import org.junit.Before;

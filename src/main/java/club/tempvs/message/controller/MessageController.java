@@ -1,4 +1,4 @@
-package club.tempvs.message;
+package club.tempvs.message.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

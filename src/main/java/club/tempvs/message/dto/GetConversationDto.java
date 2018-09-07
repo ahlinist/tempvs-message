@@ -1,7 +1,7 @@
 package club.tempvs.message.dto;
 
-import club.tempvs.message.Conversation;
-import club.tempvs.message.Participant;
+import club.tempvs.message.domain.Conversation;
+import club.tempvs.message.domain.Participant;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package club.tempvs.message;
+package club.tempvs.message.domain;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;

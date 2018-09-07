@@ -1,4 +1,4 @@
-package club.tempvs.message;
+package club.tempvs.message.controller;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;

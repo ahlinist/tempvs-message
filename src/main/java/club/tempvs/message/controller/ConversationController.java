@@ -1,7 +1,11 @@
-package club.tempvs.message;
+package club.tempvs.message.controller;
 
+import club.tempvs.message.domain.Conversation;
+import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.dto.GetConversationDto;
+import club.tempvs.message.service.ConversationService;
+import club.tempvs.message.service.ParticipantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

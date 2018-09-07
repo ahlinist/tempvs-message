@@ -1,5 +1,10 @@
 package club.tempvs.message;
 
+import club.tempvs.message.domain.Conversation;
+import club.tempvs.message.domain.Message;
+import club.tempvs.message.domain.Participant;
+import club.tempvs.message.service.ConversationService;
+import club.tempvs.message.service.ParticipantService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

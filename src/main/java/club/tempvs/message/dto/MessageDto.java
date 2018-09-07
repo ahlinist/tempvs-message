@@ -1,7 +1,7 @@
 package club.tempvs.message.dto;
 
-import club.tempvs.message.Message;
-import club.tempvs.message.Participant;
+import club.tempvs.message.domain.Message;
+import club.tempvs.message.domain.Participant;
 
 import java.time.LocalDateTime;
 import java.util.*;

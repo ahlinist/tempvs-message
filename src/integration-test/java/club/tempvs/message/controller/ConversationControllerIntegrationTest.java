@@ -1,4 +1,4 @@
-package club.tempvs.message;
+package club.tempvs.message.controller;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

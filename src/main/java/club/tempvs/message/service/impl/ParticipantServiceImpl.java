@@ -1,8 +1,8 @@
-package club.tempvs.message.service;
+package club.tempvs.message.service.impl;
 
-import club.tempvs.message.Participant;
-import club.tempvs.message.ParticipantService;
+import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dao.ParticipantRepository;
+import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

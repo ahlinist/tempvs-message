@@ -1,4 +1,4 @@
-package club.tempvs.message;
+package club.tempvs.message.domain;
 
 import org.hibernate.annotations.BatchSize;
 import org.springframework.data.annotation.CreatedDate;
