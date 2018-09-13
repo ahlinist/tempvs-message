@@ -42,8 +42,13 @@ public class ConversationController {
         String text = createConversationDto.getText();
         String name = createConversationDto.getName();
         Conversation conversation = conversationService.createConversation(sender, receivers, text, name);
-        GetConversationDto getConversationDto = objectFactory.getInstance(GetConversationDto.class, conversation);
-        return getConversationDto;
+        return objectFactory.getInstance(GetConversationDto.class, conversation);
+    }
+
+    @RequestMapping(value="/conversation/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
+    GetConversationDto getConversation(@PathVariable("id") Long id) {
+        Conversation conversation = conversationService.getConversation(id);
+        return objectFactory.getInstance(GetConversationDto.class, conversation);
     }
 
     @ExceptionHandler(Exception.class)

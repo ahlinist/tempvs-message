@@ -1,6 +1,5 @@
 package club.tempvs.message.controller;
 
-import club.tempvs.message.controller.ConversationController;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.CreateConversationDto;
@@ -85,6 +84,24 @@ public class ConversationControllerTest {
         verifyNoMoreInteractions(createConversationDto);
         verifyNoMoreInteractions(participantService);
         verifyNoMoreInteractions(conversationService);
+        verifyNoMoreInteractions(objectFactory);
+
+        assertEquals("Result is a conversation", result, getConversationDto);
+    }
+
+    @Test
+    public void testGetConversation() {
+        long id = 1L;
+
+        when(conversationService.getConversation(id)).thenReturn(conversation);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation)).thenReturn(getConversationDto);
+
+        GetConversationDto result = conversationController.getConversation(id);
+
+        verify(conversationService).getConversation(id);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation);
+        verifyNoMoreInteractions(conversationService);
+        verifyNoMoreInteractions(objectFactory);
 
         assertEquals("Result is a conversation", result, getConversationDto);
     }
