@@ -24,7 +24,7 @@ public class ObjectFactoryImpl implements ObjectFactory {
     public <T> T getInstance(Class<T> clazz, Object... args) {
         T instance = null;
 
-        Class[] parameterTypes = Arrays.stream(args).map(x -> x.getClass()).toArray(Class[]::new);
+        Class[] parameterTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
 
         try {
             instance = clazz.getConstructor(parameterTypes).newInstance(args);
