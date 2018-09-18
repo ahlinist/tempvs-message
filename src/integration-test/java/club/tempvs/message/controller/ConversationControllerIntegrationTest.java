@@ -88,6 +88,8 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testGetConversation() throws Exception {
+
+        //TODO: remove the section below
         String createConversationJson = new String(Files.readAllBytes(createConversationResource.getFile().toPath()));
 
         String jsonResponse = mvc.perform(post("/api/conversation")
@@ -99,6 +101,7 @@ public class ConversationControllerIntegrationTest {
 
         GetConversationDto getConversationDto = mapper.readValue(jsonResponse, GetConversationDto.class);
         Long conversationId = getConversationDto.getId();
+        //TODO: remove the section above
 
         mvc.perform(get("/api/conversation/" + conversationId))
                 .andExpect(status().isOk())
