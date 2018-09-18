@@ -40,7 +40,7 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation getConversation(Long id) {
-        return conversationRepository.findById(id).get();
+        return conversationRepository.getOne(id);
     }
 
     public Conversation addParticipants(Conversation conversation, Set<Participant> participantsToAdd) {
