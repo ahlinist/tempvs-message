@@ -14,13 +14,6 @@ public class CreateConversationDto {
 
     }
 
-    public CreateConversationDto(Long sender, Set<Long> receivers, String text, String name) {
-        this.sender = sender;
-        this.receivers = receivers;
-        this.text = text;
-        this.name = name;
-    }
-
     public Long getSender() {
         return sender;
     }
