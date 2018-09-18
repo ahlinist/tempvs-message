@@ -2,6 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.AddParticipantDto;
 import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.service.ConversationService;
@@ -35,6 +36,9 @@ public class ConversationControllerTest {
 
     @Mock
     private CreateConversationDto createConversationDto;
+
+    @Mock
+    private AddParticipantDto addParticipantDto;
 
     @Mock
     private Participant sender;
@@ -104,5 +108,58 @@ public class ConversationControllerTest {
         verifyNoMoreInteractions(objectFactory);
 
         assertEquals("Result is a conversation", result, getConversationDto);
+    }
+
+    @Test
+    public void testAddParticipant() {
+        Long conversationId = 1L;
+        Long participantId = 2L;
+
+        Set<Long> participantIds = new HashSet<>();
+        participantIds.add(participantId);
+
+        Set<Participant> participants = new HashSet<>();
+        participants.add(receiver);
+
+        when(addParticipantDto.getConversation()).thenReturn(conversationId);
+        when(addParticipantDto.getParticipants()).thenReturn(participantIds);
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(participantService.getParticipant(participantId)).thenReturn(receiver);
+        when(conversationService.addParticipants(conversation, participants)).thenReturn(conversation);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation)).thenReturn(getConversationDto);
+
+        GetConversationDto result = conversationController.addParticipant(addParticipantDto);
+
+        verify(addParticipantDto).getConversation();
+        verify(addParticipantDto).getParticipants();
+        verify(conversationService).getConversation(conversationId);
+        verify(participantService).getParticipant(participantId);
+        verify(conversationService).addParticipants(conversation, participants);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation);
+        verifyNoMoreInteractions(addParticipantDto);
+        verifyNoMoreInteractions(conversationService);
+        verifyNoMoreInteractions(participantService);
+        verifyNoMoreInteractions(objectFactory);
+
+        assertEquals("Result is a conversation", result, getConversationDto);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddParticipantForMissingConversation() {
+        Long conversationId = 1L;
+
+        when(addParticipantDto.getConversation()).thenReturn(conversationId);
+        when(conversationService.getConversation(conversationId)).thenReturn(null);
+
+        GetConversationDto result = conversationController.addParticipant(addParticipantDto);
+
+        verify(addParticipantDto).getConversation();
+        verify(conversationService).getConversation(conversationId);
+        verifyNoMoreInteractions(addParticipantDto);
+        verifyNoMoreInteractions(conversationService);
+        verifyNoMoreInteractions(participantService);
+        verifyNoMoreInteractions(objectFactory);
+
+        assertEquals("Result is a conversation", result, null);
     }
 }

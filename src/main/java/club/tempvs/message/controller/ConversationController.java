@@ -2,6 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.AddParticipantDto;
 import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.service.ConversationService;
@@ -48,6 +49,22 @@ public class ConversationController {
     @RequestMapping(value="/conversation/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
     GetConversationDto getConversation(@PathVariable("id") Long id) {
         Conversation conversation = conversationService.getConversation(id);
+        return objectFactory.getInstance(GetConversationDto.class, conversation);
+    }
+
+    @RequestMapping(value="/conversation/participant", method = PUT,
+            consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    GetConversationDto addParticipant(@RequestBody AddParticipantDto addParticipantDto) {
+        Long conversationId = addParticipantDto.getConversation();
+        Conversation conversation = conversationService.getConversation(conversationId);
+
+        if (conversation == null) {
+            throw new IllegalArgumentException("No conversation with id" + conversationId + "found in db.");
+        }
+
+        Set<Long> participantIds = addParticipantDto.getParticipants();
+        Set<Participant> participants = participantIds.stream().map(participantService::getParticipant).collect(toSet());
+        conversation = conversationService.addParticipants(conversation, participants);
         return objectFactory.getInstance(GetConversationDto.class, conversation);
     }
 
