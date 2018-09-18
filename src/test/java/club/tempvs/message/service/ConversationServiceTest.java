@@ -76,23 +76,23 @@ public class ConversationServiceTest {
     @Test
     public void testGetConversation() {
         long conversationId = 1L;
-        when(conversationRepository.getOne(conversationId)).thenReturn(conversation);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
 
         Conversation result = conversationService.getConversation(conversationId);
 
-        verify(conversationRepository).getOne(conversationId);
+        verify(conversationRepository).findById(conversationId);
         verifyNoMoreInteractions(conversationRepository);
 
         assertEquals("A conversation with given id is retrieved", result, conversation);
     }
 
-    @Test
+    @Test(expected = NoSuchElementException.class)
     public void testGetConversationNotFound() {
         long conversationId = 1L;
 
         Conversation result = conversationService.getConversation(conversationId);
 
-        verify(conversationRepository).getOne(conversationId);
+        verify(conversationRepository).findById(conversationId);
         verifyNoMoreInteractions(conversationRepository);
 
         assertEquals("A conversation with given id is retrieved", result, null);
