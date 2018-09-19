@@ -6,7 +6,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 @Entity
@@ -33,7 +33,7 @@ public class Message {
     private String text;
 
     @CreatedDate
-    private LocalDateTime createdDate;
+    private Instant createdDate;
 
     public Long getId() {
         return id;
@@ -75,11 +75,11 @@ public class Message {
         this.text = text;
     }
 
-    public LocalDateTime getCreatedDate() {
+    public Instant getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(LocalDateTime createdDate) {
+    public void setCreatedDate(Instant createdDate) {
         this.createdDate = createdDate;
     }
 

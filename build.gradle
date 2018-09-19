@@ -32,6 +32,7 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-web:${springbootVersion}"
     compile "org.springframework.boot:spring-boot-starter-data-jpa:${springbootVersion}"
     compile "org.postgresql:postgresql:${postgresVersion}"
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     //testing
     integrationTestCompile "org.springframework.boot:spring-boot-starter-test:${springbootVersion}"
     testCompile 'junit:junit:4.12'

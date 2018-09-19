@@ -6,7 +6,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 @Entity
@@ -27,7 +27,7 @@ public class Conversation {
     private Set<Participant> participants = new LinkedHashSet<>();
 
     @CreatedDate
-    private LocalDateTime createdDate;
+    private Instant createdDate;
 
     public Long getId() {
         return id;
@@ -69,11 +69,11 @@ public class Conversation {
         this.participants.add(participant);
     }
 
-    public LocalDateTime getCreatedDate() {
+    public Instant getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(LocalDateTime createdDate) {
+    public void setCreatedDate(Instant createdDate) {
         this.createdDate = createdDate;
     }
 

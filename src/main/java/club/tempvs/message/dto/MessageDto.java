@@ -3,7 +3,7 @@ package club.tempvs.message.dto;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 import static java.util.stream.Collectors.toSet;
 
@@ -11,7 +11,7 @@ public class MessageDto {
 
     private String text;
     private Long author;
-    private LocalDateTime createdDate;
+    private Instant createdDate;
     private Set<Long> newFor = new HashSet<>();
 
     public MessageDto() {
@@ -41,11 +41,11 @@ public class MessageDto {
         this.author = author;
     }
 
-    public LocalDateTime getCreatedDate() {
+    public Instant getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(LocalDateTime createdDate) {
+    public void setCreatedDate(Instant createdDate) {
         this.createdDate = createdDate;
     }
 
