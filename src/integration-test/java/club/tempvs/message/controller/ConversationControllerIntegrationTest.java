@@ -6,7 +6,6 @@ import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.ParticipantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -35,6 +35,7 @@ import static org.springframework.http.MediaType.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional(propagation=Propagation.REQUIRED)
 public class ConversationControllerIntegrationTest {
 
     @Autowired
@@ -62,11 +63,6 @@ public class ConversationControllerIntegrationTest {
         mapper.registerModule(new JavaTimeModule());
     }
 
-    @Before
-    public void setup() {
-
-    }
-
     @Test
     public void testCreateConversation() throws Exception {
         String createConversationJson = new String(Files.readAllBytes(createConversationResource.getFile().toPath()));
@@ -91,7 +87,7 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -102,11 +98,10 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
-    @Transactional
     public void testGetConversation() throws Exception {
         Long senderId = 1L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));

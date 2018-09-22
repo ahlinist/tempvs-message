@@ -1,17 +1,8 @@
 package club.tempvs.message;
 
-import club.tempvs.message.domain.Conversation;
-import club.tempvs.message.domain.Message;
-import club.tempvs.message.domain.Participant;
-import club.tempvs.message.service.ConversationService;
-import club.tempvs.message.service.ParticipantService;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-
-import java.util.*;
 
 @EnableJpaAuditing
 @SpringBootApplication
@@ -19,79 +10,5 @@ public class Application {
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
-    }
-
-    @Bean
-    public CommandLineRunner commandLineRunner(
-            ConversationService conversationService, ParticipantService participantService) {
-
-        return args -> {
-
-            long senderId = 27L;
-            long receiverId = 29L;
-
-            Participant sender = participantService.getParticipant(senderId);
-            Participant receiver = participantService.getParticipant(receiverId);
-            
-            Set<Participant> receivers = new LinkedHashSet<>();
-            receivers.add(receiver);
-
-            Conversation initialConversation = conversationService.createConversation(sender, receivers, "message text", "conversation name");
-
-            Participant participant = participantService.getParticipant(senderId);
-            List<Conversation> conversations = participant.getConversations();
-
-            System.out.println("Participant #20 has " + conversations.size() + " converstations.");
-
-            for (Conversation conversation : conversations) {
-                System.out.println("Conversation #" + conversation.getId());
-                List<Message> messages = conversation.getMessages();
-
-                for (Message message : messages) {
-                    System.out.println("Message #" + message.getId());
-                    System.out.println("Message text: " + message.getText());
-                    System.out.println("Message author #: " + message.getSender().getId());
-                    System.out.println("----------------------");
-                }
-            }
-
-            participant = participantService.getParticipant(receiverId);
-            conversations = participant.getConversations();
-
-            System.out.println("Participant #21 has " + conversations.size() + " converstations.");
-
-            for (Conversation conversation : conversations) {
-                System.out.println("Conversation #" + conversation.getId());
-                List<Message> messages = conversation.getMessages();
-
-                for (Message message : messages) {
-                    System.out.println("Message #" + message.getId());
-                    System.out.println("Message text: " + message.getText());
-                    System.out.println("Message author #: " + message.getSender().getId());
-                    System.out.println("----------------------");
-                }
-            }
-
-            Participant newParticipant = participantService.getParticipant(666L);
-
-            Conversation conversation = conversationService.getConversation(initialConversation.getId());
-
-            System.out.println("Conversation #69 has " + conversation.getParticipants().size() + " participants");
-            System.out.println("Adding one more participant...");
-            Set<Participant> newParticipants = new LinkedHashSet<>();
-            newParticipants.add(newParticipant);
-            Conversation updatedConversation = conversationService.addParticipants(conversation, newParticipants);
-            System.out.println("Now conversation #69 has " + updatedConversation.getParticipants().size() + " participants");
-
-            System.out.println("Removing one participant...");
-            Conversation updatedConversation2 = conversationService.removeParticipant(updatedConversation, newParticipant);
-            System.out.println("Now conversation #69 has " + updatedConversation2.getParticipants().size() + " participants");
-
-            System.out.println("Conversation #" + updatedConversation.getId() + " has " + updatedConversation.getMessages().size() + " messages.");
-            System.out.println("Adding one more message...");
-            updatedConversation = conversationService.addMessage(updatedConversation, sender, receivers, "a new message");
-
-            System.out.println("Now conversation #" + updatedConversation.getId() + " has " + updatedConversation.getMessages().size() + " messages.");
-        };
     }
 }

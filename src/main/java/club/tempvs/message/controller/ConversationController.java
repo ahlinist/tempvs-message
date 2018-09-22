@@ -36,7 +36,7 @@ public class ConversationController {
 
     @RequestMapping(value="/conversation", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
+    public GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
         Participant sender = participantService.getParticipant(createConversationDto.getSender());
         Set<Participant> receivers = createConversationDto.getReceivers().stream()
                 .map(participantService::getParticipant).collect(toSet());
@@ -47,14 +47,14 @@ public class ConversationController {
     }
 
     @RequestMapping(value="/conversation/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
-    GetConversationDto getConversation(@PathVariable("id") Long id) {
+    public GetConversationDto getConversation(@PathVariable("id") Long id) {
         Conversation conversation = conversationService.getConversation(id);
         return objectFactory.getInstance(GetConversationDto.class, conversation);
     }
 
     @RequestMapping(value="/conversation/participant", method = PUT,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    GetConversationDto addParticipant(@RequestBody AddParticipantDto addParticipantDto) {
+    public GetConversationDto addParticipant(@RequestBody AddParticipantDto addParticipantDto) {
         Long conversationId = addParticipantDto.getConversation();
         Conversation conversation = conversationService.getConversation(conversationId);
 

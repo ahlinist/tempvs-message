@@ -54,7 +54,7 @@ public class ConversationServiceTest {
 
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(messageService.createMessage(conversation, sender, receivers, messageText)).thenReturn(message);
-        when(conversationRepository.save(conversation)).thenReturn(conversation);
+        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.createConversation(sender, receivers, messageText, conversationName);
 
@@ -63,7 +63,7 @@ public class ConversationServiceTest {
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
         verify(messageService).createMessage(conversation, sender, receivers, messageText);
-        verify(conversationRepository).save(conversation);
+        verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation);
         verifyNoMoreInteractions(messageService);
         verifyNoMoreInteractions(conversationRepository);

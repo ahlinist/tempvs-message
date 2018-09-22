@@ -36,7 +36,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         Message message = messageService.createMessage(conversation, sender, receivers, text);
         conversation.addMessage(message);
-        return conversationRepository.save(conversation);
+        return conversationRepository.saveAndFlush(conversation);
     }
 
     public Conversation getConversation(Long id) {
