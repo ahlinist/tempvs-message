@@ -46,11 +46,7 @@ public class ConversationServiceImpl implements ConversationService {
     public Conversation addParticipants(Conversation conversation, Set<Participant> participantsToAdd) {
         Set<Participant> participants = conversation.getParticipants();
         participants.addAll(participantsToAdd);
-
-        for (Participant addedParticipant : participantsToAdd) {
-            addedParticipant.addConversation(conversation);
-        }
-
+        participantsToAdd.stream().forEach(participant -> participant.addConversation(conversation));
         return conversationRepository.save(conversation);
     }
 
