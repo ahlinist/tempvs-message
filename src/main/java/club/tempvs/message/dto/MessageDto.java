@@ -9,20 +9,32 @@ import static java.util.stream.Collectors.toSet;
 
 public class MessageDto {
 
+    private Long id;
     private String text;
     private Long author;
     private Instant createdDate;
     private Set<Long> newFor = new HashSet<>();
+    private Boolean isSystem;
 
     public MessageDto() {
 
     }
 
     public MessageDto(Message message) {
+        this.id = message.getId();
         this.text = message.getText();
         this.author = message.getSender().getId();
         this.createdDate = message.getCreatedDate();
         this.newFor = message.getNewFor().stream().map(Participant::getId).collect(toSet());
+        this.isSystem = message.getSystem();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getText() {
@@ -57,25 +69,11 @@ public class MessageDto {
         this.newFor = newFor;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        MessageDto that = (MessageDto) o;
-        return Objects.equals(text, that.text) &&
-                Objects.equals(author, that.author) &&
-                Objects.equals(createdDate, that.createdDate) &&
-                Objects.equals(newFor, that.newFor);
+    public Boolean getSystem() {
+        return isSystem;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(text, author, createdDate, newFor);
+    public void setSystem(Boolean system) {
+        isSystem = system;
     }
 }

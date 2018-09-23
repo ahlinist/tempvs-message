@@ -5,7 +5,6 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.ConversationService;
-import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,30 +16,26 @@ public class ConversationServiceImpl implements ConversationService {
 
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
-    private final MessageService messageService;
 
     @Autowired
-    public ConversationServiceImpl(
-            ObjectFactory objectFactory, ConversationRepository conversationRepository, MessageService messageService) {
+    public ConversationServiceImpl(ObjectFactory objectFactory, ConversationRepository conversationRepository) {
         this.objectFactory = objectFactory;
         this.conversationRepository = conversationRepository;
-        this.messageService = messageService;
     }
 
     public Conversation createConversation(
-            Participant sender, Set<Participant> receivers, String text, String name) {
+            Participant sender, Set<Participant> receivers, String name, Message message) {
         Conversation conversation = objectFactory.getInstance(Conversation.class);
         conversation.setParticipants(receivers);
         conversation.addParticipant(sender);
+        conversation.setName(name);
+        conversation.addMessage(message);
+        message.setConversation(conversation);
 
         if (conversation.getParticipants().size() > 2) {
             conversation.setAdmin(sender);
         }
 
-        conversation.setName(name);
-
-        Message message = messageService.createMessage(conversation, sender, receivers, text);
-        conversation.addMessage(message);
         return conversationRepository.saveAndFlush(conversation);
     }
 
@@ -48,16 +43,9 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.findById(id).get();
     }
 
-    public Conversation addParticipants(Conversation conversation, Set<Participant> participantsToAdd) {
-        Set<Participant> participants = conversation.getParticipants();
-        participants.addAll(participantsToAdd);
-        participantsToAdd.stream().forEach(participant -> participant.addConversation(conversation));
-        return conversationRepository.save(conversation);
-    }
-
-    public Conversation addMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text) {
-        Message message = messageService.createMessage(conversation, sender, receivers, text);
+    public Conversation addMessage(Conversation conversation, Message message) {
         conversation.addMessage(message);
+        message.setConversation(conversation);
         return conversationRepository.save(conversation);
     }
 

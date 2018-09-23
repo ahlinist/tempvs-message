@@ -20,13 +20,18 @@ public class MessageServiceImpl implements MessageService {
         this.objectFactory = objectFactory;
     }
 
-    public Message createMessage(Conversation conversation, Participant sender, Set<Participant> receivers, String text) {
+    public Message createMessage(
+            Conversation conversation, Participant sender, Set<Participant> receivers, String text, Boolean isSystem) {
         Message message = objectFactory.getInstance(Message.class);
         message.setConversation(conversation);
         message.setSender(sender);
         message.setNewFor(receivers);
         message.setText(text);
-
+        message.setSystem(isSystem);
         return message;
+    }
+
+    public Message createMessage(Participant sender, Set<Participant> receivers, String text, Boolean isSystem) {
+        return createMessage(null, sender, receivers, text, isSystem);
     }
 }

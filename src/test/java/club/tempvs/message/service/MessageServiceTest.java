@@ -47,13 +47,14 @@ public class MessageServiceTest {
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
 
-        Message result = messageService.createMessage(conversation, sender, receivers, text);
+        Message result = messageService.createMessage(conversation, sender, receivers, text, false);
 
         verify(objectFactory).getInstance(Message.class);
         verify(message).setConversation(conversation);
         verify(message).setSender(sender);
         verify(message).setNewFor(receivers);
         verify(message).setText(text);
+        verify(message).setSystem(false);
         verifyNoMoreInteractions(objectFactory);
         verifyNoMoreInteractions(message);
 

@@ -1,9 +1,11 @@
 package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
+import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.service.ConversationService;
+import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -11,10 +13,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Propagation;
@@ -40,10 +40,10 @@ public class ConversationControllerIntegrationTest {
 
     @Autowired
     private ParticipantService participantService;
-
     @Autowired
     private ConversationService conversationService;
-
+    @Autowired
+    private MessageService messageService;
     @Autowired
     private MockMvc mvc;
 
@@ -72,7 +72,8 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("messages", hasSize(1)))
                 .andExpect(jsonPath("messages[0].text", is(message)))
                 .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
-                .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1, 2, 3, 4))));
+                .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1, 2, 3, 4))))
+                .andExpect(jsonPath("messages[0].system", is(false)));
     }
 
     @Test
@@ -113,7 +114,10 @@ public class ConversationControllerIntegrationTest {
 
         Conversation conversation = createConversation(senderId, receiverIds, text, name);
         Long conversationId = conversation.getId();
-        int messagesSize = conversation.getMessages().size();
+        List<Message> messages = conversation.getMessages();
+        int messagesSize = messages.size();
+        Long messageId = messages.get(0).getId();
+        Boolean isSystem = messages.get(0).getSystem();
 
         mvc.perform(get("/api/conversation/" + conversationId))
                 .andExpect(status().isOk())
@@ -121,9 +125,11 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("admin", is(senderId.intValue())))
                 .andExpect(jsonPath("participants", is(participantIds)))
                 .andExpect(jsonPath("messages", hasSize(messagesSize)))
+                .andExpect(jsonPath("messages[0].id", is(messageId.intValue())))
                 .andExpect(jsonPath("messages[0].text", is(text)))
                 .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
-                .andExpect(jsonPath("messages[0].newFor", is(participantIds)));
+                .andExpect(jsonPath("messages[0].newFor", is(participantIds)))
+                .andExpect(jsonPath("messages[0].system", is(isSystem)));
     }
 
     private String getCreateConversationDtoJson(
@@ -140,6 +146,7 @@ public class ConversationControllerIntegrationTest {
     private Conversation createConversation(Long senderId, Set<Long> receiverIds, String text, String name) {
         Participant sender = participantService.createParticipant(senderId);
         Set<Participant> receivers = receiverIds.stream().map(participantService::createParticipant).collect(toSet());
-        return conversationService.createConversation(sender, receivers, text, name);
+        Message message = messageService.createMessage(sender, receivers, text, false);
+        return conversationService.createConversation(sender, receivers, name, message);
     }
 }

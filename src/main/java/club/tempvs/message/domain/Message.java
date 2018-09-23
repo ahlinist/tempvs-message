@@ -17,6 +17,8 @@ public class Message {
     @GeneratedValue
     private Long id;
 
+    Boolean isSystem = false;
+
     @NotNull
     @ManyToOne(cascade = CascadeType.ALL)
     private Conversation conversation;
@@ -34,12 +36,24 @@ public class Message {
     @CreatedDate
     private Instant createdDate;
 
+    public Message() {
+
+    }
+
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Boolean getSystem() {
+        return isSystem;
+    }
+
+    public void setSystem(Boolean system) {
+        isSystem = system;
     }
 
     public Conversation getConversation() {
@@ -94,14 +108,12 @@ public class Message {
 
         Message message = (Message) o;
         return Objects.equals(id, message.id) &&
-                Objects.equals(conversation, message.conversation) &&
-                Objects.equals(sender, message.sender) &&
-                Objects.equals(text, message.text);
+                Objects.equals(conversation, message.conversation);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, conversation, sender, text);
+        return Objects.hash(id, conversation);
     }
 
     @Override

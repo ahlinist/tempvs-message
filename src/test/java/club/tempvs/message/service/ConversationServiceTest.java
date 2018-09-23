@@ -34,22 +34,17 @@ public class ConversationServiceTest {
     @Mock
     private Participant participant;
     @Mock
-    private Participant participantToAdd;
-    @Mock
     private ObjectFactory objectFactory;
     @Mock
     private ConversationRepository conversationRepository;
-    @Mock
-    private MessageService messageService;
 
     @Before
     public void setup() {
-        this.conversationService = new ConversationServiceImpl(objectFactory, conversationRepository, messageService);
+        this.conversationService = new ConversationServiceImpl(objectFactory, conversationRepository);
     }
 
     @Test
     public void testCreateConversationOf2Participants() {
-        String messageText = "text";
         String conversationName = "name";
         Set<Participant> receivers = new LinkedHashSet<>();
         receivers.add(receiver);
@@ -60,30 +55,29 @@ public class ConversationServiceTest {
 
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
-        when(messageService.createMessage(conversation, sender, receivers, messageText)).thenReturn(message);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.createConversation(sender, receivers, messageText, conversationName);
+        Conversation result = conversationService.createConversation(sender, receivers, conversationName, message);
 
         verify(conversation).setParticipants(receivers);
         verify(conversation).addParticipant(sender);
         verify(conversation).getParticipants();
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
-        verify(messageService).createMessage(conversation, sender, receivers, messageText);
+        verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation);
-        verifyNoMoreInteractions(messageService);
-        verifyNoMoreInteractions(conversationRepository);
         verifyNoMoreInteractions(sender);
         verifyNoMoreInteractions(receiver);
+        verifyNoMoreInteractions(message);
+        verifyNoMoreInteractions(conversationRepository);
+
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
 
     @Test
     public void testCreateConversationOf3Participants() {
-        String messageText = "text";
         String conversationName = "name";
         Set<Participant> receivers = new LinkedHashSet<>();
         receivers.add(receiver);
@@ -96,10 +90,9 @@ public class ConversationServiceTest {
 
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
-        when(messageService.createMessage(conversation, sender, receivers, messageText)).thenReturn(message);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.createConversation(sender, receivers, messageText, conversationName);
+        Conversation result = conversationService.createConversation(sender, receivers, conversationName, message);
 
         verify(conversation).setParticipants(receivers);
         verify(conversation).addParticipant(sender);
@@ -107,13 +100,13 @@ public class ConversationServiceTest {
         verify(conversation).setAdmin(sender);
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
-        verify(messageService).createMessage(conversation, sender, receivers, messageText);
+        verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation);
-        verifyNoMoreInteractions(messageService);
-        verifyNoMoreInteractions(conversationRepository);
         verifyNoMoreInteractions(sender);
         verifyNoMoreInteractions(receiver);
+        verifyNoMoreInteractions(message);
+        verifyNoMoreInteractions(conversationRepository);
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
@@ -143,44 +136,18 @@ public class ConversationServiceTest {
         assertEquals("A conversation with given id is retrieved", result, null);
     }
 
-    @Test
-    public void testAddParticipants() {
-        Set<Participant> participants = new LinkedHashSet<>();
-        participants.add(participant);
-        Set<Participant> participantsToAdd = new LinkedHashSet<>();
-        participantsToAdd.add(participantToAdd);
-        int participantsInitSize = participants.size();
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(conversationRepository.save(conversation)).thenReturn(conversation);
-
-        Conversation result = conversationService.addParticipants(conversation, participantsToAdd);
-
-        verify(conversation).getParticipants();
-        verify(participantToAdd).addConversation(conversation);
-        verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation);
-        verifyNoMoreInteractions(participantToAdd);
-        verifyNoMoreInteractions(conversationRepository);
-
-        assertTrue("Participants collection size increased by 1", participants.size() == (participantsInitSize + 1));
-        assertEquals("Updated conversation is returned as a successful result", result, conversation);
-    }
 
     @Test
     public void testAddMessage() {
-        String text = "new message text";
         Set<Participant> receivers = new LinkedHashSet<>();
         receivers.add(receiver);
-        when(messageService.createMessage(conversation, sender, receivers, text)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.addMessage(conversation, sender, receivers, text);
+        Conversation result = conversationService.addMessage(conversation, message);
 
-        verify(messageService).createMessage(conversation, sender, receivers, text);
         verify(conversation).addMessage(message);
         verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(conversation);
-        verifyNoMoreInteractions(messageService);
         verifyNoMoreInteractions(conversationRepository);
         verifyNoMoreInteractions(sender);
         verifyNoMoreInteractions(receiver);
