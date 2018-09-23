@@ -32,8 +32,6 @@ public class ConversationServiceTest {
     @Mock
     private Participant oneMoreReceiver;
     @Mock
-    private Participant participant;
-    @Mock
     private ObjectFactory objectFactory;
     @Mock
     private ConversationRepository conversationRepository;
@@ -64,6 +62,7 @@ public class ConversationServiceTest {
         verify(conversation).getParticipants();
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
+        verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation);
@@ -100,6 +99,7 @@ public class ConversationServiceTest {
         verify(conversation).setAdmin(sender);
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
+        verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation);
@@ -146,6 +146,7 @@ public class ConversationServiceTest {
         Conversation result = conversationService.addMessage(conversation, message);
 
         verify(conversation).addMessage(message);
+        verify(conversation).setLastMessage(message);
         verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(conversation);
         verifyNoMoreInteractions(conversationRepository);
@@ -153,40 +154,5 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(receiver);
 
         assertEquals("Updated conversation is returned as a successful result", result, conversation);
-    }
-
-    @Test
-    public void testLeaveConversation() {
-        conversation = new Conversation();
-        conversation.addParticipant(sender);
-        conversation.addParticipant(receiver);
-        conversation.addParticipant(participant);
-
-        int initialPartisipantsAmount = conversation.getParticipants().size();
-
-        when(conversationRepository.save(conversation)).thenReturn(conversation);
-
-        Conversation result = conversationService.removeParticipant(conversation, participant);
-
-        verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversationRepository);
-
-        assertEquals("A conversation object is returned", result, conversation);
-        assertEquals("Participants size decrease by 1", initialPartisipantsAmount - 1, conversation.getParticipants().size());
-    }
-
-    @Test
-    public void testLeaveConversationOfTwoParticipants() {
-        conversation = new Conversation();
-        conversation.addParticipant(sender);
-        conversation.addParticipant(participant);
-
-        int initialPartisipantsAmount = conversation.getParticipants().size();
-
-        Conversation result = conversationService.removeParticipant(conversation, participant);
-
-        assertEquals("A conversation object is returned", result, conversation);
-        assertEquals("Participants size remains the same",
-                initialPartisipantsAmount, conversation.getParticipants().size());
     }
 }

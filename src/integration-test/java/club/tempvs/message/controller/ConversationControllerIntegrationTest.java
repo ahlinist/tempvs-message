@@ -73,7 +73,11 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("messages[0].text", is(message)))
                 .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
                 .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1, 2, 3, 4))))
-                .andExpect(jsonPath("messages[0].system", is(false)));
+                .andExpect(jsonPath("messages[0].system", is(false)))
+                .andExpect(jsonPath("lastMessage.text", is(message)))
+                .andExpect(jsonPath("lastMessage.author", is(senderId.intValue())))
+                .andExpect(jsonPath("lastMessage.newFor", is(Arrays.asList(1, 2, 3, 4))))
+                .andExpect(jsonPath("lastMessage.system", is(false)));
     }
 
     @Test
@@ -129,7 +133,12 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("messages[0].text", is(text)))
                 .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
                 .andExpect(jsonPath("messages[0].newFor", is(participantIds)))
-                .andExpect(jsonPath("messages[0].system", is(isSystem)));
+                .andExpect(jsonPath("messages[0].system", is(isSystem)))
+                .andExpect(jsonPath("lastMessage.id", is(messageId.intValue())))
+                .andExpect(jsonPath("lastMessage.text", is(text)))
+                .andExpect(jsonPath("lastMessage.author", is(senderId.intValue())))
+                .andExpect(jsonPath("lastMessage.newFor", is(participantIds)))
+                .andExpect(jsonPath("lastMessage.system", is(isSystem)));
     }
 
     private String getCreateConversationDtoJson(

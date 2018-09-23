@@ -25,6 +25,9 @@ public class Conversation {
     @OneToOne
     private Participant admin;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    private Message lastMessage;
+
     @Size(min = 2)
     @ManyToMany
     private Set<Participant> participants = new LinkedHashSet<>();
@@ -66,6 +69,14 @@ public class Conversation {
 
     public void setAdmin(Participant admin) {
         this.admin = admin;
+    }
+
+    public Message getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(Message lastMessage) {
+        this.lastMessage = lastMessage;
     }
 
     public Set<Participant> getParticipants() {

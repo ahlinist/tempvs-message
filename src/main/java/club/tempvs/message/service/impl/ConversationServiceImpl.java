@@ -30,6 +30,7 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.addParticipant(sender);
         conversation.setName(name);
         conversation.addMessage(message);
+        conversation.setLastMessage(message);
         message.setConversation(conversation);
 
         if (conversation.getParticipants().size() > 2) {
@@ -45,18 +46,8 @@ public class ConversationServiceImpl implements ConversationService {
 
     public Conversation addMessage(Conversation conversation, Message message) {
         conversation.addMessage(message);
+        conversation.setLastMessage(message);
         message.setConversation(conversation);
         return conversationRepository.save(conversation);
-    }
-
-    public Conversation removeParticipant(Conversation conversation, Participant participant) {
-        Set<Participant> participants = conversation.getParticipants();
-
-        if (participants.size() > 2) {
-            participants.remove(participant);
-            return conversationRepository.save(conversation);
-        }
-
-        return conversation;
     }
 }

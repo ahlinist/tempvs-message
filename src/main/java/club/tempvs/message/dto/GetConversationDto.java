@@ -12,6 +12,7 @@ public class GetConversationDto {
     private Long id;
     private Long admin;
     private Set<Long> participants = new HashSet<>();
+    private MessageDto lastMessage;
     private List<MessageDto> messages = new ArrayList<>();
 
     public GetConversationDto() {
@@ -22,6 +23,7 @@ public class GetConversationDto {
         this.id = conversation.getId();
         this.admin = conversation.getAdmin().getId();
         this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
+        this.lastMessage = new MessageDto(conversation.getLastMessage());
         this.messages = conversation.getMessages().stream().map(MessageDto::new).collect(toList());
     }
 
@@ -47,6 +49,14 @@ public class GetConversationDto {
 
     public void setParticipants(Set<Long> participants) {
         this.participants = participants;
+    }
+
+    public MessageDto getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(MessageDto lastMessage) {
+        this.lastMessage = lastMessage;
     }
 
     public List<MessageDto> getMessages() {

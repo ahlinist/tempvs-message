@@ -10,5 +10,4 @@ public interface ConversationService {
     Conversation createConversation(Participant sender, Set<Participant> receivers, String name, Message message);
     Conversation getConversation(Long id);
     Conversation addMessage(Conversation conversation, Message message);
-    Conversation removeParticipant(Conversation conversation, Participant participant);
 }
