@@ -22,6 +22,9 @@ public class Conversation {
     @OneToMany(cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
 
+    @OneToOne
+    private Participant admin;
+
     @Size(min = 2)
     @ManyToMany
     private Set<Participant> participants = new LinkedHashSet<>();
@@ -55,6 +58,14 @@ public class Conversation {
 
     public void addMessage(Message message) {
         this.messages.add(message);
+    }
+
+    public Participant getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Participant admin) {
+        this.admin = admin;
     }
 
     public Set<Participant> getParticipants() {

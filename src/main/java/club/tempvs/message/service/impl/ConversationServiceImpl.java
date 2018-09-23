@@ -32,6 +32,11 @@ public class ConversationServiceImpl implements ConversationService {
         Conversation conversation = objectFactory.getInstance(Conversation.class);
         conversation.setParticipants(receivers);
         conversation.addParticipant(sender);
+
+        if (conversation.getParticipants().size() > 2) {
+            conversation.setAdmin(sender);
+        }
+
         conversation.setName(name);
 
         Message message = messageService.createMessage(conversation, sender, receivers, text);

@@ -2,6 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.ParticipantService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
-import java.nio.file.Files;
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
@@ -47,15 +47,6 @@ public class ConversationControllerIntegrationTest {
     @Autowired
     private MockMvc mvc;
 
-    @Value("classpath:club/tempvs/message/createConversation.json")
-    private Resource createConversationResource;
-
-    @Value("classpath:club/tempvs/message/createConversationWithNoSender.json")
-    private Resource createConversationWithNoSenderResource;
-
-    @Value("classpath:club/tempvs/message/createConversationWithNoMessage.json")
-    private Resource createConversationWithNoMessageResource;
-
     private static ObjectMapper mapper = new ObjectMapper();
 
     @BeforeClass
@@ -65,23 +56,31 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testCreateConversation() throws Exception {
-        String createConversationJson = new String(Files.readAllBytes(createConversationResource.getFile().toPath()));
+        Long senderId = 4L;
+        Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+        String message = "myMessage";
+        String name = "conversation name";
+        String createConversationJson = getCreateConversationDtoJson(senderId, receivers, message, name);
 
         mvc.perform(post("/api/conversation")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("participants", is(Arrays.asList(1,2,3,4))))
+                .andExpect(jsonPath("participants", is(Arrays.asList(1, 2, 3, 4))))
+                .andExpect(jsonPath("admin", is(senderId.intValue())))
                 .andExpect(jsonPath("messages", hasSize(1)))
-                .andExpect(jsonPath("messages[0].text", is("myText")))
-                .andExpect(jsonPath("messages[0].author", is(4)))
-                .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1,2,3,4))));
+                .andExpect(jsonPath("messages[0].text", is(message)))
+                .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
+                .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1, 2, 3, 4))));
     }
 
     @Test
     public void testCreateConversationWithNoSender() throws Exception {
-        String createConversationJson = new String(Files.readAllBytes(createConversationWithNoSenderResource.getFile().toPath()));
+        Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+        String message = "myMessage";
+        String name = "conversation name";
+        String createConversationJson = getCreateConversationDtoJson(null, receivers, message, name);
 
         mvc.perform(post("/api/conversation")
                 .accept(APPLICATION_JSON_VALUE)
@@ -92,7 +91,10 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testCreateConversationWithNoMessage() throws Exception {
-        String createConversationJson = new String(Files.readAllBytes(createConversationWithNoMessageResource.getFile().toPath()));
+        Long senderId = 4L;
+        Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+        String name = "conversation name";
+        String createConversationJson = getCreateConversationDtoJson(senderId, receivers, null, name);
 
         mvc.perform(post("/api/conversation")
                 .accept(APPLICATION_JSON_VALUE)
@@ -115,11 +117,24 @@ public class ConversationControllerIntegrationTest {
 
         mvc.perform(get("/api/conversation/" + conversationId))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("id", is(conversationId.intValue())))
+                .andExpect(jsonPath("admin", is(senderId.intValue())))
                 .andExpect(jsonPath("participants", is(participantIds)))
                 .andExpect(jsonPath("messages", hasSize(messagesSize)))
                 .andExpect(jsonPath("messages[0].text", is(text)))
                 .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
                 .andExpect(jsonPath("messages[0].newFor", is(participantIds)));
+    }
+
+    private String getCreateConversationDtoJson(
+            Long senderId, Set<Long> receivers, String text, String name) throws Exception {
+        CreateConversationDto createConversationDto = new CreateConversationDto();
+        createConversationDto.setSender(senderId);
+        createConversationDto.setReceivers(receivers);
+        createConversationDto.setText(text);
+        createConversationDto.setName(name);
+
+        return mapper.writeValueAsString(createConversationDto);
     }
 
     private Conversation createConversation(Long senderId, Set<Long> receiverIds, String text, String name) {

@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.*;
 public class GetConversationDto {
 
     private Long id;
+    private Long admin;
     private Set<Long> participants = new HashSet<>();
     private List<MessageDto> messages = new ArrayList<>();
 
@@ -19,6 +20,7 @@ public class GetConversationDto {
 
     public GetConversationDto(Conversation conversation) {
         this.id = conversation.getId();
+        this.admin = conversation.getAdmin().getId();
         this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
         this.messages = conversation.getMessages().stream().map(MessageDto::new).collect(toList());
     }
@@ -29,6 +31,14 @@ public class GetConversationDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Long admin) {
+        this.admin = admin;
     }
 
     public Set<Long> getParticipants() {
@@ -58,13 +68,11 @@ public class GetConversationDto {
         }
 
         GetConversationDto that = (GetConversationDto) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(participants, that.participants) &&
-                Objects.equals(messages, that.messages);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, participants, messages);
+        return Objects.hash(id);
     }
 }
