@@ -5,6 +5,7 @@ import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.dto.GetConversationDto;
+import club.tempvs.message.dto.GetConversationsDto;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
@@ -18,7 +19,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -43,9 +46,13 @@ public class ConversationControllerTest {
     @Mock
     private Participant receiver;
     @Mock
+    private Participant participant;
+    @Mock
     private Conversation conversation;
     @Mock
     private GetConversationDto getConversationDto;
+    @Mock
+    private GetConversationsDto getConversationsDto;
 
     @Before
     public void setup() {
@@ -82,11 +89,7 @@ public class ConversationControllerTest {
         verify(messageService).createMessage(sender, receivers, text, false);
         verify(conversationService).createConversation(sender, receivers, name, message);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation);
-        verifyNoMoreInteractions(createConversationDto);
-        verifyNoMoreInteractions(participantService);
-        verifyNoMoreInteractions(messageService);
-        verifyNoMoreInteractions(conversationService);
-        verifyNoMoreInteractions(objectFactory);
+        verifyNoMoreInteractions(createConversationDto, participantService, messageService, conversationService, objectFactory);
 
         assertEquals("Result is a conversation", result, getConversationDto);
     }
@@ -102,9 +105,30 @@ public class ConversationControllerTest {
 
         verify(conversationService).getConversation(id);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation);
-        verifyNoMoreInteractions(conversationService);
-        verifyNoMoreInteractions(objectFactory);
+        verifyNoMoreInteractions(conversationService, objectFactory);
 
         assertEquals("Result is a conversation", result, getConversationDto);
+    }
+
+    @Test
+    public void testGetConversationsByParticipant() {
+        Long participantId = 1L;
+        int page = 0;
+        int size = 20;
+        List<Conversation> conversations = new ArrayList<>();
+        conversations.add(conversation);
+
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
+        when(objectFactory.getInstance(GetConversationsDto.class, conversations)).thenReturn(getConversationsDto);
+
+        GetConversationsDto result = conversationController.getConversationsByParticipant(participantId, page, size);
+
+        verify(participantService).getParticipant(participantId);
+        verify(conversationService).getConversationsByParticipant(participant, page, size);
+        verify(objectFactory).getInstance(GetConversationsDto.class, conversations);
+        verifyNoMoreInteractions(participantService, conversationService, objectFactory);
+
+        assertEquals("GetCoversationsDto is returned as a result", getConversationsDto, result);
     }
 }

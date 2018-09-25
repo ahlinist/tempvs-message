@@ -5,6 +5,7 @@ import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.dto.GetConversationDto;
+import club.tempvs.message.dto.GetConversationsDto;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.springframework.http.MediaType.*;
@@ -55,6 +57,16 @@ public class ConversationController {
     public GetConversationDto getConversation(@PathVariable("id") Long id) {
         Conversation conversation = conversationService.getConversation(id);
         return objectFactory.getInstance(GetConversationDto.class, conversation);
+    }
+
+    @RequestMapping(value="/conversation", method = GET, produces = APPLICATION_JSON_VALUE)
+    public GetConversationsDto getConversationsByParticipant(
+            @RequestParam("participant") Long participantId,
+            @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+        Participant participant = participantService.getParticipant(participantId);
+        List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
+        return objectFactory.getInstance(GetConversationsDto.class, conversations);
     }
 
     @ExceptionHandler(Exception.class)

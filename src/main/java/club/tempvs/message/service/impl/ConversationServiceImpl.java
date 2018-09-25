@@ -7,8 +7,13 @@ import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -49,5 +54,12 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.setLastMessage(message);
         message.setConversation(conversation);
         return conversationRepository.save(conversation);
+    }
+
+    public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
+        Set<Participant> participants = new HashSet<>();
+        participants.add(participant);
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
+        return conversationRepository.findByParticipantsIn(participants, pageable);
     }
 }

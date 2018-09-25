@@ -13,6 +13,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.*;
 
@@ -29,6 +32,8 @@ public class ConversationServiceTest {
     private Participant sender;
     @Mock
     private Participant receiver;
+    @Mock
+    private Participant participant;
     @Mock
     private Participant oneMoreReceiver;
     @Mock
@@ -65,12 +70,7 @@ public class ConversationServiceTest {
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
-        verifyNoMoreInteractions(conversation);
-        verifyNoMoreInteractions(sender);
-        verifyNoMoreInteractions(receiver);
-        verifyNoMoreInteractions(message);
-        verifyNoMoreInteractions(conversationRepository);
-
+        verifyNoMoreInteractions(conversation, sender, receiver, message, conversationRepository);
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
@@ -102,11 +102,7 @@ public class ConversationServiceTest {
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
-        verifyNoMoreInteractions(conversation);
-        verifyNoMoreInteractions(sender);
-        verifyNoMoreInteractions(receiver);
-        verifyNoMoreInteractions(message);
-        verifyNoMoreInteractions(conversationRepository);
+        verifyNoMoreInteractions(conversation, sender, receiver, message, conversationRepository);
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
@@ -119,7 +115,7 @@ public class ConversationServiceTest {
         Conversation result = conversationService.getConversation(conversationId);
 
         verify(conversationRepository).findById(conversationId);
-        verifyNoMoreInteractions(conversationRepository);
+        verifyNoMoreInteractions(conversationRepository, conversation);
 
         assertEquals("A conversation with given id is retrieved", result, conversation);
     }
@@ -148,11 +144,28 @@ public class ConversationServiceTest {
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation);
-        verifyNoMoreInteractions(conversationRepository);
-        verifyNoMoreInteractions(sender);
-        verifyNoMoreInteractions(receiver);
+        verifyNoMoreInteractions(conversation, conversationRepository, sender, receiver);
 
         assertEquals("Updated conversation is returned as a successful result", result, conversation);
+    }
+
+    @Test
+    public void testGetConversationsByParticipant() {
+        int page = 0;
+        int size = 20;
+        Set<Participant> participants = new HashSet<>();
+        participants.add(participant);
+        List<Conversation> conversations = new ArrayList<>();
+        conversations.add(conversation);
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage");
+
+        when(conversationRepository.findByParticipantsIn(participants, pageable)).thenReturn(conversations);
+
+        List<Conversation> result = conversationService.getConversationsByParticipant(participant, page, size);
+
+        verify(conversationRepository).findByParticipantsIn(participants, pageable);
+        verifyNoMoreInteractions(conversationRepository);
+
+        assertEquals("A list of one conversation is returned", result, conversations);
     }
 }
