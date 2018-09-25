@@ -8,19 +8,6 @@ import java.util.Arrays;
 public class ObjectFactoryImpl implements ObjectFactory {
 
     @Override
-    public <T> T getInstance(Class<T> clazz) {
-        T instance = null;
-
-        try {
-            instance = clazz.newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return instance;
-    }
-
-    @Override
     public <T> T getInstance(Class<T> clazz, Object... args) {
         T instance = null;
 
