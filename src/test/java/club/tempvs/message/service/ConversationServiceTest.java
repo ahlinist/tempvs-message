@@ -157,7 +157,7 @@ public class ConversationServiceTest {
         participants.add(participant);
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
-        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage");
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
 
         when(conversationRepository.findByParticipantsIn(participants, pageable)).thenReturn(conversations);
 
