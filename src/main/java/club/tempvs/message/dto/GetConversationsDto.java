@@ -2,7 +2,6 @@ package club.tempvs.message.dto;
 
 import club.tempvs.message.domain.Conversation;
 
-import java.util.ArrayList;
 import java.util.List;
 import static java.util.stream.Collectors.*;
 
@@ -14,7 +13,7 @@ public class GetConversationsDto {
 
     }
 
-    public GetConversationsDto(ArrayList<Conversation> conversations) {
+    public GetConversationsDto(List<Conversation> conversations) {
         this.conversations = conversations.stream().map(ConversationDto::new).collect(toList());
     }
 
