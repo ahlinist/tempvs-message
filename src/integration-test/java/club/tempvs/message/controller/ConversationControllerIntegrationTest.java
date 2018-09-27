@@ -141,6 +141,33 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("lastMessage.system", is(isSystem)));
     }
 
+    @Test
+    public void testGetConversationsByParticipant() throws Exception {
+        Long senderId = 1L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
+        String text = "text";
+        String name = "name";
+        List<Integer> participantIds = Arrays.asList(1, 2, 3, 4);
+
+        Conversation conversation = createConversation(senderId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+        List<Message> messages = conversation.getMessages();
+        int messagesSize = messages.size();
+        Long messageId = messages.get(0).getId();
+        Boolean isSystem = messages.get(0).getSystem();
+
+        mvc.perform(get("/api/conversation?participant=1&page=0&size=10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("conversations", hasSize(messagesSize)))
+                .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
+                .andExpect(jsonPath("conversations[0].name", is(name)))
+                .andExpect(jsonPath("conversations[0].lastMessage.id", is(messageId.intValue())))
+                .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
+                .andExpect(jsonPath("conversations[0].lastMessage.author", is(senderId.intValue())))
+                .andExpect(jsonPath("conversations[0].lastMessage.newFor", is(participantIds)))
+                .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)));
+    }
+
     private String getCreateConversationDtoJson(
             Long senderId, Set<Long> receivers, String text, String name) throws Exception {
         CreateConversationDto createConversationDto = new CreateConversationDto();
