@@ -13,8 +13,7 @@ public class ObjectFactoryImpl implements ObjectFactory {
     @Override
     public <T> T getInstance(Class<T> clazz, Object... args) {
         Class[] parameterTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
-        BiFunction<Class, Class, Boolean> typeMatcher =
-                (Class constrType, Class invokedType) -> constrType.isAssignableFrom(invokedType);
+        BiFunction<Class, Class, Boolean> typeMatcher = (constrType, invokedType) -> constrType.isAssignableFrom(invokedType);
 
         Predicate<Class[]> traverser = (Class[] classes) -> {
             for (int i = 0; i < parameterTypes.length; i++) {
@@ -26,10 +25,11 @@ public class ObjectFactoryImpl implements ObjectFactory {
             return true;
         };
 
-        Constructor[] constructors = clazz.getConstructors();
+        Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
         Constructor<T> constructor = Arrays.stream(constructors)
                 .filter(constr -> constr.getParameterCount() == parameterTypes.length)
-                .filter(constr -> traverser.test(constr.getParameterTypes())).findAny().get();
+                .filter(constr -> traverser.test(constr.getParameterTypes()))
+                .findAny().get();
 
         T instance = null;
 
