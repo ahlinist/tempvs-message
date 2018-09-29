@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.*;
 import static java.util.stream.Collectors.toSet;
 
-public class MessageDto {
+public class MessageDtoBean {
 
     private Long id;
     private String text;
@@ -16,11 +16,11 @@ public class MessageDto {
     private Set<Long> newFor = new HashSet<>();
     private Boolean isSystem;
 
-    public MessageDto() {
+    public MessageDtoBean() {
 
     }
 
-    public MessageDto(Message message) {
+    public MessageDtoBean(Message message) {
         this.id = message.getId();
         this.text = message.getText();
         this.author = message.getSender().getId();

@@ -4,20 +4,20 @@ import club.tempvs.message.domain.Conversation;
 
 import java.util.Objects;
 
-public class ConversationDto {
+public class ConversationDtoBean {
 
     private Long id;
     private String name;
-    private MessageDto lastMessage;
+    private MessageDtoBean lastMessage;
 
-    public ConversationDto() {
+    public ConversationDtoBean() {
 
     }
 
-    public ConversationDto(Conversation conversation) {
+    public ConversationDtoBean(Conversation conversation) {
         this.id = conversation.getId();
         this.name = conversation.getName();
-        this.lastMessage = new MessageDto(conversation.getLastMessage());
+        this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
     }
 
     public Long getId() {
@@ -36,11 +36,11 @@ public class ConversationDto {
         this.name = name;
     }
 
-    public MessageDto getLastMessage() {
+    public MessageDtoBean getLastMessage() {
         return lastMessage;
     }
 
-    public void setLastMessage(MessageDto lastMessage) {
+    public void setLastMessage(MessageDtoBean lastMessage) {
         this.lastMessage = lastMessage;
     }
 
@@ -54,7 +54,7 @@ public class ConversationDto {
             return false;
         }
 
-        ConversationDto that = (ConversationDto) o;
+        ConversationDtoBean that = (ConversationDtoBean) o;
         return id.equals(that.id) &&
                 name.equals(that.name) &&
                 lastMessage.equals(that.lastMessage);

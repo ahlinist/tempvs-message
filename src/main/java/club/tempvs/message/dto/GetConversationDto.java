@@ -12,8 +12,8 @@ public class GetConversationDto {
     private Long id;
     private Long admin;
     private Set<Long> participants = new HashSet<>();
-    private MessageDto lastMessage;
-    private List<MessageDto> messages = new ArrayList<>();
+    private MessageDtoBean lastMessage;
+    private List<MessageDtoBean> messages = new ArrayList<>();
 
     public GetConversationDto() {
 
@@ -23,8 +23,8 @@ public class GetConversationDto {
         this.id = conversation.getId();
         this.admin = conversation.getAdmin().getId();
         this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
-        this.lastMessage = new MessageDto(conversation.getLastMessage());
-        this.messages = conversation.getMessages().stream().map(MessageDto::new).collect(toList());
+        this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
+        this.messages = conversation.getMessages().stream().map(MessageDtoBean::new).collect(toList());
     }
 
     public Long getId() {
@@ -51,19 +51,19 @@ public class GetConversationDto {
         this.participants = participants;
     }
 
-    public MessageDto getLastMessage() {
+    public MessageDtoBean getLastMessage() {
         return lastMessage;
     }
 
-    public void setLastMessage(MessageDto lastMessage) {
+    public void setLastMessage(MessageDtoBean lastMessage) {
         this.lastMessage = lastMessage;
     }
 
-    public List<MessageDto> getMessages() {
+    public List<MessageDtoBean> getMessages() {
         return messages;
     }
 
-    public void setMessages(List<MessageDto> messages) {
+    public void setMessages(List<MessageDtoBean> messages) {
         this.messages = messages;
     }
 

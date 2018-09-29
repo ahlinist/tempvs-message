@@ -7,21 +7,21 @@ import static java.util.stream.Collectors.*;
 
 public class GetConversationsDto {
 
-    private List<ConversationDto> conversations;
+    private List<ConversationDtoBean> conversations;
 
     public GetConversationsDto() {
 
     }
 
     public GetConversationsDto(List<Conversation> conversations) {
-        this.conversations = conversations.stream().map(ConversationDto::new).collect(toList());
+        this.conversations = conversations.stream().map(ConversationDtoBean::new).collect(toList());
     }
 
-    public List<ConversationDto> getConversations() {
+    public List<ConversationDtoBean> getConversations() {
         return conversations;
     }
 
-    public void setConversations(List<ConversationDto> conversations) {
+    public void setConversations(List<ConversationDtoBean> conversations) {
         this.conversations = conversations;
     }
 }
