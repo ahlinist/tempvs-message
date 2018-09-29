@@ -2,11 +2,8 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
-import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.CreateConversationDto;
-import club.tempvs.message.service.ConversationService;
-import club.tempvs.message.service.MessageService;
-import club.tempvs.message.service.ParticipantService;
+import club.tempvs.message.util.EntityHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.BeforeClass;
@@ -24,8 +21,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 import java.util.*;
 
-import static java.util.stream.Collectors.*;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import static org.hamcrest.Matchers.*;
@@ -38,16 +33,12 @@ import static org.springframework.http.MediaType.*;
 @Transactional(propagation=Propagation.REQUIRED)
 public class ConversationControllerIntegrationTest {
 
-    @Autowired
-    private ParticipantService participantService;
-    @Autowired
-    private ConversationService conversationService;
-    @Autowired
-    private MessageService messageService;
+    private static ObjectMapper mapper = new ObjectMapper();
+
     @Autowired
     private MockMvc mvc;
-
-    private static ObjectMapper mapper = new ObjectMapper();
+    @Autowired
+    private EntityHelper entityHelper;
 
     @BeforeClass
     public static void setupSpec() {
@@ -116,7 +107,7 @@ public class ConversationControllerIntegrationTest {
         String name = "name";
         List<Integer> participantIds = Arrays.asList(1, 2, 3, 4);
 
-        Conversation conversation = createConversation(senderId, receiverIds, text, name);
+        Conversation conversation = entityHelper.createConversation(senderId, receiverIds, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         int messagesSize = messages.size();
@@ -149,7 +140,7 @@ public class ConversationControllerIntegrationTest {
         String name = "name";
         List<Integer> participantIds = Arrays.asList(1, 2, 3, 4);
 
-        Conversation conversation = createConversation(senderId, receiverIds, text, name);
+        Conversation conversation = entityHelper.createConversation(senderId, receiverIds, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         int messagesSize = messages.size();
@@ -192,12 +183,5 @@ public class ConversationControllerIntegrationTest {
         createConversationDto.setName(name);
 
         return mapper.writeValueAsString(createConversationDto);
-    }
-
-    private Conversation createConversation(Long senderId, Set<Long> receiverIds, String text, String name) {
-        Participant sender = participantService.createParticipant(senderId);
-        Set<Participant> receivers = receiverIds.stream().map(participantService::createParticipant).collect(toSet());
-        Message message = messageService.createMessage(sender, receivers, text, false);
-        return conversationService.createConversation(sender, receivers, name, message);
     }
 }
