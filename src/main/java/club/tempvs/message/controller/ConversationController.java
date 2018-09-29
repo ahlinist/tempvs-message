@@ -42,6 +42,7 @@ public class ConversationController {
     @RequestMapping(value="/conversation", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
+        createConversationDto.validate();
         Participant sender = participantService.getParticipant(createConversationDto.getSender());
         Set<Participant> receivers = createConversationDto.getReceivers().stream()
                 .map(participantService::getParticipant).collect(toSet());

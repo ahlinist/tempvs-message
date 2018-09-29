@@ -82,7 +82,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("Sender id is missing.")));
     }
 
     @Test
@@ -96,7 +97,24 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("Text is missing.")));
+    }
+
+    @Test
+    public void testCreateConversationWithNoReceivers() throws Exception {
+        Long senderId = 4L;
+        Set<Long> receivers = new HashSet<>();
+        String message = "myMessage";
+        String name = "conversation name";
+        String createConversationJson = getCreateConversationDtoJson(senderId, receivers, message, name);
+
+        mvc.perform(post("/api/conversation")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(createConversationJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("Receivers list is empty.")));
     }
 
     @Test

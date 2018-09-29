@@ -1,9 +1,11 @@
 package club.tempvs.message.dto;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-public class CreateConversationDto {
+public class CreateConversationDto implements ValidateableDto {
 
     private Long sender;
     private Set<Long> receivers = new HashSet<>();
@@ -44,5 +46,25 @@ public class CreateConversationDto {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void validate() {
+        List<String> errors = new ArrayList<>();
+
+        if (this.sender == null) {
+            errors.add("Sender id is missing.");
+        }
+
+        if (this.receivers == null || this.receivers.isEmpty()) {
+            errors.add("Receivers list is empty.");
+        }
+
+        if (this.text == null || this.text.isEmpty()) {
+            errors.add("Text is missing.");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(String.join("\n", errors));
+        }
     }
 }

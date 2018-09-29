@@ -75,6 +75,7 @@ public class ConversationControllerTest {
 
         GetConversationDto result = conversationController.createConversation(createConversationDto);
 
+        verify(createConversationDto).validate();
         verify(createConversationDto).getSender();
         verify(participantService).getParticipant(1L);
         verify(participantService).getParticipant(2L);
