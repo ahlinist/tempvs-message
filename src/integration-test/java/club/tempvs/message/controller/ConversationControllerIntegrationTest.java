@@ -168,6 +168,21 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)));
     }
 
+    @Test
+    public void testGetConversationsByParticipantForInvalidInput() throws Exception {
+        mvc.perform(get("/api/conversation?participant=1&page=0&size=-1"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/conversation?participant=1&page=0&size=0"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/conversation?participant=1&page=-1&size=20"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/conversation?participant=1&page=0&size=30"))
+                .andExpect(status().isBadRequest());
+    }
+
     private String getCreateConversationDtoJson(
             Long senderId, Set<Long> receivers, String text, String name) throws Exception {
         CreateConversationDto createConversationDto = new CreateConversationDto();
