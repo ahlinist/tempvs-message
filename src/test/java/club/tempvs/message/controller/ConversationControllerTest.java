@@ -3,9 +3,7 @@ package club.tempvs.message.controller;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
-import club.tempvs.message.dto.CreateConversationDto;
-import club.tempvs.message.dto.GetConversationDto;
-import club.tempvs.message.dto.GetConversationsDto;
+import club.tempvs.message.dto.*;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
@@ -19,10 +17,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationControllerTest {
@@ -138,7 +133,7 @@ public class ConversationControllerTest {
         int page = 0;
         int size = 200;
 
-        GetConversationsDto result = conversationController.getConversationsByParticipant(participantId, page, size);
+        conversationController.getConversationsByParticipant(participantId, page, size);
 
         verifyNoMoreInteractions(participantService, conversationService, objectFactory);
     }
