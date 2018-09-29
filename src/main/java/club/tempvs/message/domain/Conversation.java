@@ -28,7 +28,7 @@ public class Conversation {
     @OneToOne(cascade = CascadeType.ALL)
     private Message lastMessage;
 
-    @Size(min = 2)
+    @Size(min = 2, max = 20)
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Participant> participants = new LinkedHashSet<>();
 
