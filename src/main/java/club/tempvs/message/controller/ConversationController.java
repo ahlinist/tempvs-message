@@ -25,6 +25,8 @@ import static java.util.stream.Collectors.*;
 @RequestMapping("/api")
 public class ConversationController {
 
+    private static final int MAX_PAGE_SIZE = 20;
+
     private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
     private final ParticipantService participantService;
@@ -62,8 +64,12 @@ public class ConversationController {
     @RequestMapping(value="/conversation", method = GET, produces = APPLICATION_JSON_VALUE)
     public GetConversationsDto getConversationsByParticipant(
             @RequestParam("participant") Long participantId,
-            @RequestParam("page") int page,
-            @RequestParam("size") int size) {
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+        if (size > MAX_PAGE_SIZE) {
+            throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
+        }
+
         Participant participant = participantService.getParticipant(participantId);
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
         return objectFactory.getInstance(GetConversationsDto.class, conversations);
@@ -72,6 +78,12 @@ public class ConversationController {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String processValidationError(Exception ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String processIllegalArgumentException(IllegalArgumentException ex) {
         return ex.getMessage();
     }
 }
