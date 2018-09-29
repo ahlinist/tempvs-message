@@ -29,7 +29,7 @@ public class Conversation {
     private Message lastMessage;
 
     @Size(min = 2)
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<Participant> participants = new LinkedHashSet<>();
 
     @CreatedDate

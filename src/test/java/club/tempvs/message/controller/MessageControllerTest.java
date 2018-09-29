@@ -79,6 +79,7 @@ public class MessageControllerTest {
 
         SuccessDto result = messageController.addMessage(addMessageDto);
 
+        verify(addMessageDto).validate();
         verify(addMessageDto).getSender();
         verify(addMessageDto).getConversation();
         verify(addMessageDto).getText();
@@ -93,5 +94,34 @@ public class MessageControllerTest {
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
 
         assertEquals("SuccessDto is returned as a result", successDto, result);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddMessageForMissingConversation() {
+        Long senderId = 1L;
+        Long conversationId = 2L;
+        Set<Participant> participants = new HashSet<>();
+        participants.add(receiver);
+        String text = "new message text";
+        Boolean isSystem = Boolean.FALSE;
+
+        when(addMessageDto.getSender()).thenReturn(senderId);
+        when(addMessageDto.getConversation()).thenReturn(conversationId);
+        when(addMessageDto.getText()).thenReturn(text);
+        when(addMessageDto.getSystem()).thenReturn(isSystem);
+        when(participantService.getParticipant(senderId)).thenReturn(sender);
+        when(conversationService.getConversation(conversationId)).thenReturn(null);
+
+        messageController.addMessage(addMessageDto);
+
+        verify(addMessageDto).validate();
+        verify(addMessageDto).getSender();
+        verify(addMessageDto).getConversation();
+        verify(addMessageDto).getText();
+        verify(addMessageDto).getSystem();
+        verify(participantService).getParticipant(senderId);
+        verify(conversationService).getConversation(conversationId);
+        verifyNoMoreInteractions(
+                addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
     }
 }

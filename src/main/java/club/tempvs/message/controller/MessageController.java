@@ -10,9 +10,8 @@ import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
@@ -48,6 +47,7 @@ public class MessageController {
     @RequestMapping(value="/message", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public SuccessDto addMessage(@RequestBody AddMessageDto addMessageDto) {
+        addMessageDto.validate();
         Long senderId = addMessageDto.getSender();
         Long conversationId = addMessageDto.getConversation();
         String text = addMessageDto.getText();
@@ -55,10 +55,28 @@ public class MessageController {
 
         Participant sender = participantService.getParticipant(senderId);
         Conversation conversation = conversationService.getConversation(conversationId);
+
+        if (conversation == null) {
+            throw new IllegalArgumentException("Conversation with id " + conversationId + " doesn't exist.");
+        }
+
         Set<Participant> participants = conversation.getParticipants();
         Message message = messageService.createMessage(conversation, sender, participants, text, isSystem);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
 
         return objectFactory.getInstance(SuccessDto.class, updatedConversation != null);
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String processValidationError(Exception ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String processIllegalArgumentException(IllegalArgumentException ex) {
+        return ex.getMessage();
     }
 }

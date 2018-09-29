@@ -1,11 +1,14 @@
 package club.tempvs.message.dto;
 
-public class AddMessageDto {
+import java.util.ArrayList;
+import java.util.List;
+
+public class AddMessageDto implements ValidateableDto {
 
     private Long conversation;
     private Long sender;
     private String text;
-    private Boolean isSystem;
+    private Boolean isSystem = Boolean.FALSE;
 
     public AddMessageDto() {
 
@@ -41,5 +44,25 @@ public class AddMessageDto {
 
     public void setSystem(Boolean system) {
         isSystem = system;
+    }
+
+    public void validate() {
+        List<String> errors = new ArrayList<>();
+
+        if (this.conversation == null) {
+            errors.add("Conversation id is missing.");
+        }
+
+        if (this.sender == null) {
+            errors.add("Sender id is missing.");
+        }
+
+        if (this.text == null || this.text.isEmpty()) {
+            errors.add("Text is missing.");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(String.join("\n", errors));
+        }
     }
 }

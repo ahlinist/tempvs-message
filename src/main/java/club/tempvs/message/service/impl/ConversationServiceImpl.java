@@ -46,7 +46,7 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation getConversation(Long id) {
-        return conversationRepository.findById(id).get();
+        return conversationRepository.findById(id).orElse(null);
     }
 
     public Conversation addMessage(Conversation conversation, Message message) {

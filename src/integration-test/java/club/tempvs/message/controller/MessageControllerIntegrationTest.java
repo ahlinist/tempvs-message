@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
@@ -68,5 +67,48 @@ public class MessageControllerIntegrationTest {
                 .content(addMessageJson))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("success", is(true)));
+    }
+
+    @Test
+    public void testAddMessageWithNoConversationId() throws Exception {
+        Long senderId = 1L;
+        String newMessageText = "new message text";
+        Boolean isSystem = Boolean.FALSE;
+
+        AddMessageDto addMessageDto = new AddMessageDto();
+        addMessageDto.setConversation(null);
+        addMessageDto.setSender(senderId);
+        addMessageDto.setText(newMessageText);
+        addMessageDto.setSystem(isSystem);
+        String addMessageJson = mapper.writeValueAsString(addMessageDto);
+
+        mvc.perform(post("/api/message")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addMessageJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("Conversation id is missing.")));
+    }
+
+    @Test
+    public void testAddMessageForMissingConversationInDB() throws Exception {
+        Long senderId = 1L;
+        String newMessageText = "new message text";
+        Boolean isSystem = Boolean.FALSE;
+        Long missingConversationId = 2L;
+
+        AddMessageDto addMessageDto = new AddMessageDto();
+        addMessageDto.setConversation(missingConversationId);
+        addMessageDto.setSender(senderId);
+        addMessageDto.setText(newMessageText);
+        addMessageDto.setSystem(isSystem);
+        String addMessageJson = mapper.writeValueAsString(addMessageDto);
+
+        mvc.perform(post("/api/message")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addMessageJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
     }
 }
