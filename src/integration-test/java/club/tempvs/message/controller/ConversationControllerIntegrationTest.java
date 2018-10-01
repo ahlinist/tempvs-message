@@ -151,6 +151,29 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
+    public void testGetConversationForInvalidInput() throws Exception {
+        Long senderId = 1L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
+        String text = "text";
+        String name = "name";
+
+        Conversation conversation = entityHelper.createConversation(senderId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+
+        mvc.perform(get("/api/conversation/" + conversationId + "?page=0&size=-1"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/conversation/" + conversationId + "?page=0&size=0"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/conversation/" + conversationId + "?page=-1&size=20"))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(get("/api/conversation/" + conversationId + "?page=0&size=30"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void testGetConversationsByParticipant() throws Exception {
         Long senderId = 1L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));

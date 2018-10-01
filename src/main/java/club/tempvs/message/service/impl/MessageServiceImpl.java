@@ -1,23 +1,30 @@
 package club.tempvs.message.service.impl;
 
+import club.tempvs.message.dao.MessageRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 @Service
 public class MessageServiceImpl implements MessageService {
 
     private final ObjectFactory objectFactory;
+    private final MessageRepository messageRepository;
 
     @Autowired
-    public MessageServiceImpl(ObjectFactory objectFactory) {
+    public MessageServiceImpl(ObjectFactory objectFactory, MessageRepository messageRepository) {
         this.objectFactory = objectFactory;
+        this.messageRepository = messageRepository;
     }
 
     public Message createMessage(
@@ -33,5 +40,10 @@ public class MessageServiceImpl implements MessageService {
 
     public Message createMessage(Participant sender, Set<Participant> receivers, String text, Boolean isSystem) {
         return createMessage(null, sender, receivers, text, isSystem);
+    }
+
+    public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
+        return messageRepository.findByConversation(conversation, pageable);
     }
 }

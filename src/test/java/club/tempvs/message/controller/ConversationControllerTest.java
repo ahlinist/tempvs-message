@@ -62,6 +62,7 @@ public class ConversationControllerTest {
         receiverIds.add(2L);
         Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
+        List<Message> messages = Arrays.asList(message, message, message);
 
         when(createConversationDto.getSender()).thenReturn(1L);
         when(participantService.getParticipant(1L)).thenReturn(sender);
@@ -71,7 +72,8 @@ public class ConversationControllerTest {
         when(createConversationDto.getName()).thenReturn(name);
         when(messageService.createMessage(sender, receivers, text,false)).thenReturn(message);
         when(conversationService.createConversation(sender, receivers, name, message)).thenReturn(conversation);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation)).thenReturn(getConversationDto);
+        when(conversation.getMessages()).thenReturn(messages);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.createConversation(createConversationDto);
 
@@ -84,8 +86,9 @@ public class ConversationControllerTest {
         verify(createConversationDto).getName();
         verify(messageService).createMessage(sender, receivers, text, false);
         verify(conversationService).createConversation(sender, receivers, name, message);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation);
-        verifyNoMoreInteractions(createConversationDto, participantService, messageService, conversationService, objectFactory);
+        verify(conversation).getMessages();
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
 
         assertEquals("Result is a conversation", result, getConversationDto);
     }
@@ -93,17 +96,33 @@ public class ConversationControllerTest {
     @Test
     public void testGetConversation() {
         long id = 1L;
+        int page = 0;
+        int size = 20;
+        List<Message> messages = Arrays.asList(message, message, message);
 
         when(conversationService.getConversation(id)).thenReturn(conversation);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation)).thenReturn(getConversationDto);
+        when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.getConversation(id);
+        GetConversationDto result = conversationController.getConversation(id, page, size);
 
         verify(conversationService).getConversation(id);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation);
-        verifyNoMoreInteractions(conversationService, objectFactory);
+        verify(messageService).getMessagesFromConversation(conversation, page, size);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verifyNoMoreInteractions(message, conversationService, messageService, objectFactory, getConversationDto);
 
         assertEquals("Result is a conversation", result, getConversationDto);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetConversationForLargeAmountOfDataPerRequest() {
+        long id = 1L;
+        int page = 0;
+        int size = 21;
+
+        GetConversationDto result = conversationController.getConversation(id, page, size);
+
+        verifyNoMoreInteractions(message, conversationService, messageService, objectFactory, getConversationDto);
     }
 
     @Test

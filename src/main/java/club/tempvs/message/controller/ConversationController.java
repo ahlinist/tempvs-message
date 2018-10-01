@@ -51,13 +51,21 @@ public class ConversationController {
         boolean isSystem = false;
         Message message = messageService.createMessage(sender, receivers, text, isSystem);
         Conversation conversation = conversationService.createConversation(sender, receivers, name, message);
-        return objectFactory.getInstance(GetConversationDto.class, conversation);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, conversation.getMessages());
     }
 
     @RequestMapping(value="/conversation/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
-    public GetConversationDto getConversation(@PathVariable("id") Long id) {
+    public GetConversationDto getConversation(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+        if (size > MAX_PAGE_SIZE) {
+            throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
+        }
+
         Conversation conversation = conversationService.getConversation(id);
-        return objectFactory.getInstance(GetConversationDto.class, conversation);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages);
     }
 
     @RequestMapping(value="/conversation", method = GET, produces = APPLICATION_JSON_VALUE)

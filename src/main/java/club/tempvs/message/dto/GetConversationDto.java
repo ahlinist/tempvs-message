@@ -1,6 +1,7 @@
 package club.tempvs.message.dto;
 
 import club.tempvs.message.domain.Conversation;
+import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 
 import java.util.*;
@@ -19,12 +20,14 @@ public class GetConversationDto {
 
     }
 
-    public GetConversationDto(Conversation conversation) {
+    public GetConversationDto(Conversation conversation, List<Message> messages) {
+        Collections.reverse(messages);
+
         this.id = conversation.getId();
         this.admin = conversation.getAdmin().getId();
         this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
-        this.messages = conversation.getMessages().stream().map(MessageDtoBean::new).collect(toList());
+        this.messages = messages.stream().map(MessageDtoBean::new).collect(toList());
     }
 
     public Long getId() {
