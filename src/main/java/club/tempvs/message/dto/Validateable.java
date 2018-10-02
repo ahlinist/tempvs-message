@@ -1,5 +1,5 @@
 package club.tempvs.message.dto;
 
-public interface ValidateableDto {
+public interface Validateable {
     void validate();
 }

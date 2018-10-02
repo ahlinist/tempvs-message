@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CreateConversationDto implements ValidateableDto {
+public class CreateConversationDto implements Validateable {
 
     private Long sender;
     private Set<Long> receivers = new HashSet<>();

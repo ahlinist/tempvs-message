@@ -3,7 +3,7 @@ package club.tempvs.message.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddMessageDto implements ValidateableDto {
+public class AddMessageDto implements Validateable {
 
     private Long conversation;
     private Long sender;
