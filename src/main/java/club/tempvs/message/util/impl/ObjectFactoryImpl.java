@@ -1,5 +1,6 @@
-package club.tempvs.message.util;
+package club.tempvs.message.util.impl;
 
+import club.tempvs.message.util.ObjectFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Constructor;
