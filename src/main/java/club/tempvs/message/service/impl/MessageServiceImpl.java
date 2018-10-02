@@ -31,7 +31,7 @@ public class MessageServiceImpl implements MessageService {
             Conversation conversation, Participant sender, Set<Participant> receivers, String text, Boolean isSystem) {
         Message message = objectFactory.getInstance(Message.class);
         message.setConversation(conversation);
-        message.setSender(sender);
+        message.setAuthor(sender);
         message.setNewFor(receivers);
         message.setText(text);
         message.setSystem(isSystem);

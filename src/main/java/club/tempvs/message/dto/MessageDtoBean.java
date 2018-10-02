@@ -12,6 +12,7 @@ public class MessageDtoBean {
     private Long id;
     private String text;
     private Long author;
+    private Long subject;
     private Instant createdDate;
     private Set<Long> newFor = new HashSet<>();
     private Boolean isSystem;
@@ -21,9 +22,12 @@ public class MessageDtoBean {
     }
 
     public MessageDtoBean(Message message) {
+        Participant subject = message.getSubject();
+
         this.id = message.getId();
         this.text = message.getText();
-        this.author = message.getSender().getId();
+        this.author = message.getAuthor().getId();
+        this.subject = subject != null ? subject.getId() : null;
         this.createdDate = message.getCreatedDate();
         this.newFor = message.getNewFor().stream().map(Participant::getId).collect(toSet());
         this.isSystem = message.getSystem();
@@ -51,6 +55,14 @@ public class MessageDtoBean {
 
     public void setAuthor(Long author) {
         this.author = author;
+    }
+
+    public Long getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Long subject) {
+        this.subject = subject;
     }
 
     public Instant getCreatedDate() {

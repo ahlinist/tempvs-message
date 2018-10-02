@@ -57,7 +57,7 @@ public class MessageServiceTest {
 
         verify(objectFactory).getInstance(Message.class);
         verify(message).setConversation(conversation);
-        verify(message).setSender(sender);
+        verify(message).setAuthor(sender);
         verify(message).setNewFor(receivers);
         verify(message).setText(text);
         verify(message).setSystem(false);

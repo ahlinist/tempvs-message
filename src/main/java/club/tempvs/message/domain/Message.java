@@ -25,7 +25,10 @@ public class Message {
 
     @NotNull
     @OneToOne
-    private Participant sender;
+    private Participant author;
+
+    @OneToOne
+    private Participant subject;
 
     @ManyToMany
     private Set<Participant> newFor = new LinkedHashSet<>();
@@ -64,12 +67,20 @@ public class Message {
         this.conversation = conversation;
     }
 
-    public Participant getSender() {
-        return sender;
+    public Participant getAuthor() {
+        return author;
     }
 
-    public void setSender(Participant sender) {
-        this.sender = sender;
+    public void setAuthor(Participant author) {
+        this.author = author;
+    }
+
+    public Participant getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Participant subject) {
+        this.subject = subject;
     }
 
     public Set<Participant> getNewFor() {

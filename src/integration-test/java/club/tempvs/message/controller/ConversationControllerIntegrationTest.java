@@ -63,6 +63,7 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("messages", hasSize(1)))
                 .andExpect(jsonPath("messages[0].text", is(message)))
                 .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
+                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
                 .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1, 2, 3, 4))))
                 .andExpect(jsonPath("messages[0].system", is(false)))
                 .andExpect(jsonPath("lastMessage.text", is(message)))
@@ -141,6 +142,7 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("messages[0].id", is(messageId.intValue())))
                 .andExpect(jsonPath("messages[0].text", is(text)))
                 .andExpect(jsonPath("messages[0].author", is(senderId.intValue())))
+                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
                 .andExpect(jsonPath("messages[0].newFor", is(participantIds)))
                 .andExpect(jsonPath("messages[0].system", is(isSystem)))
                 .andExpect(jsonPath("lastMessage.id", is(messageId.intValue())))
@@ -196,6 +198,7 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("conversations[0].lastMessage.id", is(messageId.intValue())))
                 .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
                 .andExpect(jsonPath("conversations[0].lastMessage.author", is(senderId.intValue())))
+                .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
                 .andExpect(jsonPath("conversations[0].lastMessage.newFor", is(participantIds)))
                 .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)));
     }
