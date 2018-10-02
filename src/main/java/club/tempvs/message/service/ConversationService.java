@@ -12,4 +12,5 @@ public interface ConversationService {
     Conversation getConversation(Long id);
     List<Conversation> getConversationsByParticipant(Participant participant, int page, int size);
     Conversation addMessage(Conversation conversation, Message message);
+    Conversation removeParticipants(Conversation conversation, Participant remover, List<Participant> removed);
 }

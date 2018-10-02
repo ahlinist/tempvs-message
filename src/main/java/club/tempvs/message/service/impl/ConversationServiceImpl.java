@@ -62,4 +62,22 @@ public class ConversationServiceImpl implements ConversationService {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         return conversationRepository.findByParticipantsIn(participants, pageable);
     }
+
+    public Conversation removeParticipants(Conversation conversation, Participant remover, List<Participant> removed) {
+        Set<Participant> participants = conversation.getParticipants();
+
+        if (participants.size() <= 2) {
+            throw new IllegalArgumentException("Conversation has only 2 participants. One can't delete one of them.");
+        }
+
+        Participant admin = conversation.getAdmin();
+        boolean isSelfRemoval = removed.size() == 1 && removed.get(0).equals(remover);
+
+        if ((admin == null || !admin.equals(remover)) && !isSelfRemoval) {
+            throw new IllegalArgumentException("Participants can be removed only by admin or by themselves.");
+        }
+
+        conversation.removeParticipants(removed);
+        return conversationRepository.saveAndFlush(conversation);
+    }
 }

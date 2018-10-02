@@ -171,4 +171,94 @@ public class ConversationServiceTest {
 
         assertEquals("A list of one conversation is returned", result, conversations);
     }
+
+    @Test
+    public void testRemoveParticipant() {
+        List<Participant> removed = new ArrayList<>();
+        removed.add(receiver);
+
+        Set<Participant> participants = new HashSet<>();
+        participants.add(sender);
+        participants.add(receiver);
+        participants.add(oneMoreReceiver);
+        participants.add(participant);
+
+        when(conversation.getAdmin()).thenReturn(sender);
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+
+        verify(conversation).getAdmin();
+        verify(conversation).getParticipants();
+        verify(conversation).removeParticipants(removed);
+        verify(conversationRepository).saveAndFlush(conversation);
+        verifyNoMoreInteractions(conversation, conversationRepository);
+
+        assertEquals("Conversation is returned as a result", conversation, result);
+    }
+
+    @Test
+    public void testRemoveParticipantForSelfremoval() {
+        List<Participant> removed = new ArrayList<>();
+        removed.add(sender);
+
+        Set<Participant> participants = new HashSet<>();
+        participants.add(sender);
+        participants.add(receiver);
+        participants.add(oneMoreReceiver);
+        participants.add(participant);
+
+        when(conversation.getAdmin()).thenReturn(participant);
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+
+        verify(conversation).getAdmin();
+        verify(conversation).getParticipants();
+        verify(conversation).removeParticipants(removed);
+        verify(conversationRepository).saveAndFlush(conversation);
+        verifyNoMoreInteractions(conversation, conversationRepository);
+
+        assertEquals("Conversation is returned as a result", conversation, result);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveParticipantFor2MembersOnly() {
+        List<Participant> removed = new ArrayList<>();
+        removed.add(receiver);
+
+        Set<Participant> participants = new HashSet<>();
+        participants.add(sender);
+        participants.add(receiver);
+
+        when(conversation.getParticipants()).thenReturn(participants);
+
+        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+
+        verify(conversation).getParticipants();
+        verifyNoMoreInteractions(conversation, conversationRepository);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveParticipantByNonAdmin() {
+        List<Participant> removed = new ArrayList<>();
+        removed.add(receiver);
+
+        Set<Participant> participants = new HashSet<>();
+        participants.add(sender);
+        participants.add(receiver);
+        participants.add(oneMoreReceiver);
+        participants.add(participant);
+
+        when(conversation.getAdmin()).thenReturn(oneMoreReceiver);
+        when(conversation.getParticipants()).thenReturn(participants);
+
+        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+
+        verify(conversation).getAdmin();
+        verify(conversation).getParticipants();
+        verifyNoMoreInteractions(conversation, conversationRepository);
+    }
 }
