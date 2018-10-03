@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class CreateConversationDto implements Validateable {
 
-    private Long sender;
+    private Long author;
     private Set<Long> receivers = new HashSet<>();
     private String text;
     private String name;
@@ -16,12 +16,12 @@ public class CreateConversationDto implements Validateable {
 
     }
 
-    public Long getSender() {
-        return sender;
+    public Long getAuthor() {
+        return author;
     }
 
-    public void setSender(Long sender) {
-        this.sender = sender;
+    public void setAuthor(Long author) {
+        this.author = author;
     }
 
     public Set<Long> getReceivers() {
@@ -51,8 +51,8 @@ public class CreateConversationDto implements Validateable {
     public void validate() {
         List<String> errors = new ArrayList<>();
 
-        if (this.sender == null) {
-            errors.add("Sender id is missing.");
+        if (this.author == null) {
+            errors.add("Author id is missing.");
         }
 
         if (this.receivers == null || this.receivers.isEmpty()) {

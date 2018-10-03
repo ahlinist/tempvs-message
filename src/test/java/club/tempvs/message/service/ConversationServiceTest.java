@@ -29,7 +29,7 @@ public class ConversationServiceTest {
     @Mock
     private Conversation conversation;
     @Mock
-    private Participant sender;
+    private Participant author;
     @Mock
     private Participant receiver;
     @Mock
@@ -53,24 +53,24 @@ public class ConversationServiceTest {
         receivers.add(receiver);
 
         Set<Participant> participants = new LinkedHashSet<>();
-        participants.add(sender);
+        participants.add(author);
         participants.add(receiver);
 
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.createConversation(sender, receivers, conversationName, message);
+        Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
 
         verify(conversation).setParticipants(receivers);
-        verify(conversation).addParticipant(sender);
+        verify(conversation).addParticipant(author);
         verify(conversation).getParticipants();
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
-        verifyNoMoreInteractions(conversation, sender, receiver, message, conversationRepository);
+        verifyNoMoreInteractions(conversation, author, receiver, message, conversationRepository);
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
@@ -83,7 +83,7 @@ public class ConversationServiceTest {
         receivers.add(oneMoreReceiver);
 
         Set<Participant> participants = new LinkedHashSet<>();
-        participants.add(sender);
+        participants.add(author);
         participants.add(receiver);
         participants.add(oneMoreReceiver);
 
@@ -91,18 +91,18 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.createConversation(sender, receivers, conversationName, message);
+        Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
 
         verify(conversation).setParticipants(receivers);
-        verify(conversation).addParticipant(sender);
+        verify(conversation).addParticipant(author);
         verify(conversation).getParticipants();
-        verify(conversation).setAdmin(sender);
+        verify(conversation).setAdmin(author);
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
-        verifyNoMoreInteractions(conversation, sender, receiver, message, conversationRepository);
+        verifyNoMoreInteractions(conversation, author, receiver, message, conversationRepository);
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
@@ -147,7 +147,7 @@ public class ConversationServiceTest {
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, conversationRepository, sender, receiver);
+        verifyNoMoreInteractions(conversation, conversationRepository, author, receiver);
 
         assertEquals("Updated conversation is returned as a successful result", result, conversation);
     }
@@ -175,16 +175,16 @@ public class ConversationServiceTest {
     @Test
     public void testRemoveParticipant() {
         Set<Participant> participants = new HashSet<>();
-        participants.add(sender);
+        participants.add(author);
         participants.add(receiver);
         participants.add(oneMoreReceiver);
         participants.add(participant);
 
-        when(conversation.getAdmin()).thenReturn(sender);
+        when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.removeParticipant(conversation, sender, receiver);
+        Conversation result = conversationService.removeParticipant(conversation, author, receiver);
 
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
@@ -198,7 +198,7 @@ public class ConversationServiceTest {
     @Test
     public void testRemoveParticipantForSelfremoval() {
         Set<Participant> participants = new HashSet<>();
-        participants.add(sender);
+        participants.add(author);
         participants.add(receiver);
         participants.add(oneMoreReceiver);
         participants.add(participant);
@@ -207,11 +207,11 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.removeParticipant(conversation, sender, sender);
+        Conversation result = conversationService.removeParticipant(conversation, author, author);
 
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
-        verify(conversation).removeParticipant(sender);
+        verify(conversation).removeParticipant(author);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 
@@ -221,12 +221,12 @@ public class ConversationServiceTest {
     @Test(expected = IllegalArgumentException.class)
     public void testRemoveParticipantFor2MembersOnly() {
         Set<Participant> participants = new HashSet<>();
-        participants.add(sender);
+        participants.add(author);
         participants.add(receiver);
 
         when(conversation.getParticipants()).thenReturn(participants);
 
-        conversationService.removeParticipant(conversation, sender, receiver);
+        conversationService.removeParticipant(conversation, author, receiver);
 
         verify(conversation).getParticipants();
         verifyNoMoreInteractions(conversation, conversationRepository);
@@ -235,7 +235,7 @@ public class ConversationServiceTest {
     @Test(expected = IllegalArgumentException.class)
     public void testRemoveParticipantByNonAdmin() {
         Set<Participant> participants = new HashSet<>();
-        participants.add(sender);
+        participants.add(author);
         participants.add(receiver);
         participants.add(oneMoreReceiver);
         participants.add(participant);
@@ -243,7 +243,7 @@ public class ConversationServiceTest {
         when(conversation.getAdmin()).thenReturn(oneMoreReceiver);
         when(conversation.getParticipants()).thenReturn(participants);
 
-        conversationService.removeParticipant(conversation, sender, receiver);
+        conversationService.removeParticipant(conversation, author, receiver);
 
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();

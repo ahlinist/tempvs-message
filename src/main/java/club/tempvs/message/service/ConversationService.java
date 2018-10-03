@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface ConversationService {
-    Conversation createConversation(Participant sender, Set<Participant> receivers, String name, Message message);
+    Conversation createConversation(Participant author, Set<Participant> receivers, String name, Message message);
     Conversation getConversation(Long id);
     List<Conversation> getConversationsByParticipant(Participant participant, int page, int size);
     Conversation addMessage(Conversation conversation, Message message);

@@ -29,17 +29,17 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation createConversation(
-            Participant sender, Set<Participant> receivers, String name, Message message) {
+            Participant author, Set<Participant> receivers, String name, Message message) {
         Conversation conversation = objectFactory.getInstance(Conversation.class);
         conversation.setParticipants(receivers);
-        conversation.addParticipant(sender);
+        conversation.addParticipant(author);
         conversation.setName(name);
         conversation.addMessage(message);
         conversation.setLastMessage(message);
         message.setConversation(conversation);
 
         if (conversation.getParticipants().size() > 2) {
-            conversation.setAdmin(sender);
+            conversation.setAdmin(author);
         }
 
         return conversationRepository.saveAndFlush(conversation);

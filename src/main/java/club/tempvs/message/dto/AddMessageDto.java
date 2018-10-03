@@ -5,7 +5,7 @@ import java.util.List;
 
 public class AddMessageDto implements Validateable {
 
-    private Long sender;
+    private Long author;
     private String text;
     private Boolean isSystem = Boolean.FALSE;
 
@@ -13,12 +13,12 @@ public class AddMessageDto implements Validateable {
 
     }
 
-    public Long getSender() {
-        return sender;
+    public Long getAuthor() {
+        return author;
     }
 
-    public void setSender(Long sender) {
-        this.sender = sender;
+    public void setAuthor(Long author) {
+        this.author = author;
     }
 
     public String getText() {
@@ -40,8 +40,8 @@ public class AddMessageDto implements Validateable {
     public void validate() {
         List<String> errors = new ArrayList<>();
 
-        if (this.sender == null) {
-            errors.add("Sender id is missing.");
+        if (this.author == null) {
+            errors.add("Author id is missing.");
         }
 
         if (this.text == null || this.text.isEmpty()) {

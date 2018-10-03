@@ -27,7 +27,7 @@ public class MessageServiceTest {
     @Mock
     private Message message;
     @Mock
-    private Participant sender;
+    private Participant author;
     @Mock
     private Participant receiver1;
     @Mock
@@ -53,11 +53,11 @@ public class MessageServiceTest {
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
 
-        Message result = messageService.createMessage(conversation, sender, receivers, text, false);
+        Message result = messageService.createMessage(conversation, author, receivers, text, false);
 
         verify(objectFactory).getInstance(Message.class);
         verify(message).setConversation(conversation);
-        verify(message).setAuthor(sender);
+        verify(message).setAuthor(author);
         verify(message).setNewFor(receivers);
         verify(message).setText(text);
         verify(message).setSystem(false);

@@ -49,14 +49,14 @@ public class ConversationController {
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
         createConversationDto.validate();
-        Participant sender = participantService.getParticipant(createConversationDto.getSender());
+        Participant author = participantService.getParticipant(createConversationDto.getAuthor());
         Set<Participant> receivers = createConversationDto.getReceivers().stream()
                 .map(participantService::getParticipant).collect(toSet());
         String text = createConversationDto.getText();
         String name = createConversationDto.getName();
         boolean isSystem = false;
-        Message message = messageService.createMessage(sender, receivers, text, isSystem);
-        Conversation conversation = conversationService.createConversation(sender, receivers, name, message);
+        Message message = messageService.createMessage(author, receivers, text, isSystem);
+        Conversation conversation = conversationService.createConversation(author, receivers, name, message);
         return objectFactory.getInstance(GetConversationDto.class, conversation, conversation.getMessages());
     }
 
@@ -94,11 +94,10 @@ public class ConversationController {
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         addMessageDto.validate();
-        Long senderId = addMessageDto.getSender();
+        Long authorId = addMessageDto.getAuthor();
         String text = addMessageDto.getText();
         Boolean isSystem = addMessageDto.getSystem();
 
-        Participant sender = participantService.getParticipant(senderId);
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
@@ -106,8 +105,9 @@ public class ConversationController {
                     .body("Conversation with id " + conversationId + " doesn't exist.");
         }
 
+        Participant author = participantService.getParticipant(authorId);
         Set<Participant> participants = conversation.getParticipants();
-        Message message = messageService.createMessage(conversation, sender, participants, text, isSystem);
+        Message message = messageService.createMessage(conversation, author, participants, text, isSystem);
         conversationService.addMessage(conversation, message);
 
         return ResponseEntity.ok().build();

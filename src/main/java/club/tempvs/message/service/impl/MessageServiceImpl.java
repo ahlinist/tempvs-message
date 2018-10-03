@@ -28,18 +28,18 @@ public class MessageServiceImpl implements MessageService {
     }
 
     public Message createMessage(
-            Conversation conversation, Participant sender, Set<Participant> receivers, String text, Boolean isSystem) {
+            Conversation conversation, Participant author, Set<Participant> receivers, String text, Boolean isSystem) {
         Message message = objectFactory.getInstance(Message.class);
         message.setConversation(conversation);
-        message.setAuthor(sender);
+        message.setAuthor(author);
         message.setNewFor(receivers);
         message.setText(text);
         message.setSystem(isSystem);
         return message;
     }
 
-    public Message createMessage(Participant sender, Set<Participant> receivers, String text, Boolean isSystem) {
-        return createMessage(null, sender, receivers, text, isSystem);
+    public Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem) {
+        return createMessage(null, author, receivers, text, isSystem);
     }
 
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {

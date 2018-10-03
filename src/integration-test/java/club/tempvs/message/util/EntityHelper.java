@@ -16,17 +16,22 @@ import static java.util.stream.Collectors.toSet;
 @Component
 public class EntityHelper {
 
-    @Autowired
     private ParticipantService participantService;
-    @Autowired
     private ConversationService conversationService;
-    @Autowired
     private MessageService messageService;
 
-    public Conversation createConversation(Long senderId, Set<Long> receiverIds, String text, String name) {
-        Participant sender = participantService.createParticipant(senderId);
+    @Autowired
+    public EntityHelper(ParticipantService participantService,
+                        ConversationService conversationService, MessageService messageService) {
+        this.participantService = participantService;
+        this.conversationService = conversationService;
+        this.messageService = messageService;
+    }
+
+    public Conversation createConversation(Long authorId, Set<Long> receiverIds, String text, String name) {
+        Participant author = participantService.createParticipant(authorId);
         Set<Participant> receivers = receiverIds.stream().map(participantService::createParticipant).collect(toSet());
-        Message message = messageService.createMessage(sender, receivers, text, false);
-        return conversationService.createConversation(sender, receivers, name, message);
+        Message message = messageService.createMessage(author, receivers, text, false);
+        return conversationService.createConversation(author, receivers, name, message);
     }
 }
