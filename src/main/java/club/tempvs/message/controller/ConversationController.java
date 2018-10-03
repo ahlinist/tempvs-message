@@ -10,6 +10,7 @@ import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,7 +40,12 @@ public class ConversationController {
         this.messageService = messageService;
     }
 
-    @RequestMapping(value="/conversation", method = POST,
+    @RequestMapping("/ping")
+    public String getPong() {
+        return "pong!";
+    }
+
+    @RequestMapping(value="/conversations", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
         createConversationDto.validate();
@@ -54,7 +60,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, conversation, conversation.getMessages());
     }
 
-    @RequestMapping(value="/conversation/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
+    @RequestMapping(value="/conversations/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto getConversation(
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
@@ -68,7 +74,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages);
     }
 
-    @RequestMapping(value="/conversation", method = GET, produces = APPLICATION_JSON_VALUE)
+    @RequestMapping(value="/conversations", method = GET, produces = APPLICATION_JSON_VALUE)
     public GetConversationsDto getConversationsByParticipant(
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
@@ -80,6 +86,31 @@ public class ConversationController {
         Participant participant = participantService.getParticipant(participantId);
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
         return objectFactory.getInstance(GetConversationsDto.class, conversations);
+    }
+
+    @RequestMapping(value="/conversations/{conversationId}/messages", method = POST,
+            consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity addMessage(
+            @PathVariable("conversationId") Long conversationId,
+            @RequestBody AddMessageDto addMessageDto) {
+        addMessageDto.validate();
+        Long senderId = addMessageDto.getSender();
+        String text = addMessageDto.getText();
+        Boolean isSystem = addMessageDto.getSystem();
+
+        Participant sender = participantService.getParticipant(senderId);
+        Conversation conversation = conversationService.getConversation(conversationId);
+
+        if (conversation == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Conversation with id " + conversationId + " doesn't exist.");
+        }
+
+        Set<Participant> participants = conversation.getParticipants();
+        Message message = messageService.createMessage(conversation, sender, participants, text, isSystem);
+        conversationService.addMessage(conversation, message);
+
+        return ResponseEntity.ok().build();
     }
 
     @ExceptionHandler(Exception.class)

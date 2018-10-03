@@ -2,6 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
+import club.tempvs.message.dto.AddMessageDto;
 import club.tempvs.message.dto.CreateConversationDto;
 import club.tempvs.message.util.EntityHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +47,13 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
+    public void testGetPong() throws Exception {
+        mvc.perform(get("/api/ping").accept(TEXT_PLAIN))
+                .andExpect(status().isOk())
+                .andExpect(content().string(equalTo("pong!")));
+    }
+
+    @Test
     public void testCreateConversation() throws Exception {
         Long senderId = 4L;
         Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
@@ -53,7 +61,7 @@ public class ConversationControllerIntegrationTest {
         String name = "conversation name";
         String createConversationJson = getCreateConversationDtoJson(senderId, receivers, message, name);
 
-        mvc.perform(post("/api/conversation")
+        mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
@@ -79,7 +87,7 @@ public class ConversationControllerIntegrationTest {
         String name = "conversation name";
         String createConversationJson = getCreateConversationDtoJson(null, receivers, message, name);
 
-        mvc.perform(post("/api/conversation")
+        mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
@@ -94,7 +102,7 @@ public class ConversationControllerIntegrationTest {
         String name = "conversation name";
         String createConversationJson = getCreateConversationDtoJson(senderId, receivers, null, name);
 
-        mvc.perform(post("/api/conversation")
+        mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
@@ -110,7 +118,7 @@ public class ConversationControllerIntegrationTest {
         String name = "conversation name";
         String createConversationJson = getCreateConversationDtoJson(senderId, receivers, message, name);
 
-        mvc.perform(post("/api/conversation")
+        mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson))
@@ -133,7 +141,7 @@ public class ConversationControllerIntegrationTest {
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getSystem();
 
-        mvc.perform(get("/api/conversation/" + conversationId))
+        mvc.perform(get("/api/conversations/" + conversationId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("id", is(conversationId.intValue())))
                 .andExpect(jsonPath("admin", is(senderId.intValue())))
@@ -162,16 +170,16 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(senderId, receiverIds, text, name);
         Long conversationId = conversation.getId();
 
-        mvc.perform(get("/api/conversation/" + conversationId + "?page=0&size=-1"))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1"))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversation/" + conversationId + "?page=0&size=0"))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0"))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversation/" + conversationId + "?page=-1&size=20"))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20"))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversation/" + conversationId + "?page=0&size=30"))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=30"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -190,7 +198,7 @@ public class ConversationControllerIntegrationTest {
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getSystem();
 
-        mvc.perform(get("/api/conversation?participant=1&page=0&size=10"))
+        mvc.perform(get("/api/conversations?participant=1&page=0&size=10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("conversations", hasSize(messagesSize)))
                 .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
@@ -205,17 +213,54 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testGetConversationsByParticipantForInvalidInput() throws Exception {
-        mvc.perform(get("/api/conversation?participant=1&page=0&size=-1"))
+        mvc.perform(get("/api/conversations?participant=1&page=0&size=-1"))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversation?participant=1&page=0&size=0"))
+        mvc.perform(get("/api/conversations?participant=1&page=0&size=0"))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversation?participant=1&page=-1&size=20"))
+        mvc.perform(get("/api/conversations?participant=1&page=-1&size=20"))
                 .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversation?participant=1&page=0&size=30"))
+        mvc.perform(get("/api/conversations?participant=1&page=0&size=30"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testAddMessage() throws Exception {
+        Long senderId = 1L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
+        String text = "text";
+        String name = "name";
+        String newMessageText = "new message text";
+        Boolean isSystem = Boolean.FALSE;
+
+        Conversation conversation = entityHelper.createConversation(senderId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+        String addMessageJson = getAddMessageDtoJson(senderId, newMessageText, isSystem);
+
+        mvc.perform(post("/api/conversations/" + conversationId + "/messages")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addMessageJson))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testAddMessageForMissingConversationInDB() throws Exception {
+        Long senderId = 1L;
+        String newMessageText = "new message text";
+        Boolean isSystem = Boolean.FALSE;
+        Long missingConversationId = 2L;
+
+        String addMessageJson = getAddMessageDtoJson(senderId, newMessageText, isSystem);
+
+        mvc.perform(post("/api/conversations/" + missingConversationId + "/messages")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addMessageJson))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
     }
 
     private String getCreateConversationDtoJson(
@@ -227,5 +272,13 @@ public class ConversationControllerIntegrationTest {
         createConversationDto.setName(name);
 
         return mapper.writeValueAsString(createConversationDto);
+    }
+
+    private String getAddMessageDtoJson(Long senderId, String text, boolean isSystem) throws Exception {
+        AddMessageDto addMessageDto = new AddMessageDto();
+        addMessageDto.setSender(senderId);
+        addMessageDto.setText(text);
+        addMessageDto.setSystem(isSystem);
+        return mapper.writeValueAsString(addMessageDto);
     }
 }

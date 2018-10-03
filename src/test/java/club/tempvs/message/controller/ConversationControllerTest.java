@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -48,10 +49,17 @@ public class ConversationControllerTest {
     private GetConversationDto getConversationDto;
     @Mock
     private GetConversationsDto getConversationsDto;
+    @Mock
+    private AddMessageDto addMessageDto;
 
     @Before
     public void setup() {
         conversationController = new ConversationController(objectFactory, conversationService, participantService, messageService);
+    }
+
+    @Test
+    public void testGetPong() {
+        assertEquals("getPong() method returns 'pong!' string", "pong!", conversationController.getPong());
     }
 
     @Test
@@ -156,5 +164,69 @@ public class ConversationControllerTest {
         conversationController.getConversationsByParticipant(participantId, page, size);
 
         verifyNoMoreInteractions(participantService, conversationService, objectFactory);
+    }
+
+    @Test
+    public void testAddMessage() {
+        Long senderId = 1L;
+        Long conversationId = 2L;
+        Set<Participant> participants = new HashSet<>();
+        participants.add(receiver);
+        String text = "new message text";
+        Boolean isSystem = Boolean.FALSE;
+
+        when(addMessageDto.getSender()).thenReturn(senderId);
+        when(addMessageDto.getText()).thenReturn(text);
+        when(addMessageDto.getSystem()).thenReturn(isSystem);
+        when(participantService.getParticipant(senderId)).thenReturn(sender);
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(messageService.createMessage(conversation, sender, participants, text, isSystem)).thenReturn(message);
+        when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
+
+        ResponseEntity result = conversationController.addMessage(conversationId, addMessageDto);
+
+        verify(addMessageDto).validate();
+        verify(addMessageDto).getSender();
+        verify(addMessageDto).getText();
+        verify(addMessageDto).getSystem();
+        verify(participantService).getParticipant(senderId);
+        verify(conversationService).getConversation(conversationId);
+        verify(conversation).getParticipants();
+        verify(messageService).createMessage(conversation, sender, participants, text, isSystem);
+        verify(conversationService).addMessage(conversation, message);
+        verifyNoMoreInteractions(
+                addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
+
+        assertTrue("Status code 200 is returned", result.getStatusCodeValue() == 200);
+    }
+
+    @Test
+    public void testAddMessageForMissingConversation() {
+        Long senderId = 1L;
+        Long conversationId = 2L;
+        Set<Participant> participants = new HashSet<>();
+        participants.add(receiver);
+        String text = "new message text";
+        Boolean isSystem = Boolean.FALSE;
+
+        when(addMessageDto.getSender()).thenReturn(senderId);
+        when(addMessageDto.getText()).thenReturn(text);
+        when(addMessageDto.getSystem()).thenReturn(isSystem);
+        when(participantService.getParticipant(senderId)).thenReturn(sender);
+        when(conversationService.getConversation(conversationId)).thenReturn(null);
+
+        ResponseEntity result = conversationController.addMessage(conversationId, addMessageDto);
+
+        verify(addMessageDto).validate();
+        verify(addMessageDto).getSender();
+        verify(addMessageDto).getText();
+        verify(addMessageDto).getSystem();
+        verify(participantService).getParticipant(senderId);
+        verify(conversationService).getConversation(conversationId);
+        verifyNoMoreInteractions(
+                addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
+
+        assertTrue("Status code 404 is returned", result.getStatusCodeValue() == 404);
     }
 }

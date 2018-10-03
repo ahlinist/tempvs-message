@@ -5,21 +5,12 @@ import java.util.List;
 
 public class AddMessageDto implements Validateable {
 
-    private Long conversation;
     private Long sender;
     private String text;
     private Boolean isSystem = Boolean.FALSE;
 
     public AddMessageDto() {
 
-    }
-
-    public Long getConversation() {
-        return conversation;
-    }
-
-    public void setConversation(Long conversation) {
-        this.conversation = conversation;
     }
 
     public Long getSender() {
@@ -48,10 +39,6 @@ public class AddMessageDto implements Validateable {
 
     public void validate() {
         List<String> errors = new ArrayList<>();
-
-        if (this.conversation == null) {
-            errors.add("Conversation id is missing.");
-        }
 
         if (this.sender == null) {
             errors.add("Sender id is missing.");
