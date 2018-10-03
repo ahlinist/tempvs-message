@@ -174,9 +174,6 @@ public class ConversationServiceTest {
 
     @Test
     public void testRemoveParticipant() {
-        List<Participant> removed = new ArrayList<>();
-        removed.add(receiver);
-
         Set<Participant> participants = new HashSet<>();
         participants.add(sender);
         participants.add(receiver);
@@ -187,11 +184,11 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+        Conversation result = conversationService.removeParticipant(conversation, sender, receiver);
 
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
-        verify(conversation).removeParticipants(removed);
+        verify(conversation).removeParticipant(receiver);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 
@@ -200,9 +197,6 @@ public class ConversationServiceTest {
 
     @Test
     public void testRemoveParticipantForSelfremoval() {
-        List<Participant> removed = new ArrayList<>();
-        removed.add(sender);
-
         Set<Participant> participants = new HashSet<>();
         participants.add(sender);
         participants.add(receiver);
@@ -213,11 +207,11 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+        Conversation result = conversationService.removeParticipant(conversation, sender, sender);
 
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
-        verify(conversation).removeParticipants(removed);
+        verify(conversation).removeParticipant(sender);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 
@@ -226,16 +220,13 @@ public class ConversationServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testRemoveParticipantFor2MembersOnly() {
-        List<Participant> removed = new ArrayList<>();
-        removed.add(receiver);
-
         Set<Participant> participants = new HashSet<>();
         participants.add(sender);
         participants.add(receiver);
 
         when(conversation.getParticipants()).thenReturn(participants);
 
-        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+        conversationService.removeParticipant(conversation, sender, receiver);
 
         verify(conversation).getParticipants();
         verifyNoMoreInteractions(conversation, conversationRepository);
@@ -243,9 +234,6 @@ public class ConversationServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testRemoveParticipantByNonAdmin() {
-        List<Participant> removed = new ArrayList<>();
-        removed.add(receiver);
-
         Set<Participant> participants = new HashSet<>();
         participants.add(sender);
         participants.add(receiver);
@@ -255,7 +243,7 @@ public class ConversationServiceTest {
         when(conversation.getAdmin()).thenReturn(oneMoreReceiver);
         when(conversation.getParticipants()).thenReturn(participants);
 
-        Conversation result = conversationService.removeParticipants(conversation, sender, removed);
+        conversationService.removeParticipant(conversation, sender, receiver);
 
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();

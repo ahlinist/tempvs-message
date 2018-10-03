@@ -63,7 +63,7 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.findByParticipantsIn(participants, pageable);
     }
 
-    public Conversation removeParticipants(Conversation conversation, Participant remover, List<Participant> removed) {
+    public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.size() <= 2) {
@@ -71,13 +71,13 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         Participant admin = conversation.getAdmin();
-        boolean isSelfRemoval = removed.size() == 1 && removed.get(0).equals(remover);
+        boolean isSelfRemoval = removed.equals(remover);
 
         if ((admin == null || !admin.equals(remover)) && !isSelfRemoval) {
             throw new IllegalArgumentException("Participants can be removed only by admin or by themselves.");
         }
 
-        conversation.removeParticipants(removed);
+        conversation.removeParticipant(removed);
         return conversationRepository.saveAndFlush(conversation);
     }
 }

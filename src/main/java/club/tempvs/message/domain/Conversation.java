@@ -91,8 +91,8 @@ public class Conversation {
         this.participants.add(participant);
     }
 
-    public void removeParticipants(Collection<Participant> participants) {
-        this.participants.removeAll(participants);
+    public void removeParticipant(Participant participant) {
+        this.participants.remove(participant);
     }
 
     public Instant getCreatedDate() {
