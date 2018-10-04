@@ -80,4 +80,21 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.removeParticipant(removed);
         return conversationRepository.saveAndFlush(conversation);
     }
+
+    public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {
+        Set<Participant> participants = conversation.getParticipants();
+
+        if (participants.size() == 20) {
+            throw new IllegalArgumentException("Conversation may have only 20 participants max.");
+        }
+
+        Participant admin = conversation.getAdmin();
+
+        if ((admin == null || !admin.equals(adder))) {
+            throw new IllegalArgumentException("Participants can be added only by admin.");
+        }
+
+        conversation.addParticipant(added);
+        return conversationRepository.saveAndFlush(conversation);
+    }
 }

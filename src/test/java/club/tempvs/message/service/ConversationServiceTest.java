@@ -249,4 +249,27 @@ public class ConversationServiceTest {
         verify(conversation).getParticipants();
         verifyNoMoreInteractions(conversation, conversationRepository);
     }
+
+    @Test
+    public void testAddParticipant() {
+        Set<Participant> participants = new HashSet<>();
+        participants.add(author);
+        participants.add(receiver);
+        participants.add(oneMoreReceiver);
+        participants.add(participant);
+
+        when(conversation.getAdmin()).thenReturn(author);
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.addParticipant(conversation, author, receiver);
+
+        verify(conversation).getAdmin();
+        verify(conversation).getParticipants();
+        verify(conversation).addParticipant(receiver);
+        verify(conversationRepository).saveAndFlush(conversation);
+        verifyNoMoreInteractions(conversation, conversationRepository);
+
+        assertEquals("Conversation is returned as a result", conversation, result);
+    }
 }
