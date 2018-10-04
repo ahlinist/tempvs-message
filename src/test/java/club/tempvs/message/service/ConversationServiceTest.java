@@ -39,11 +39,13 @@ public class ConversationServiceTest {
     @Mock
     private ObjectFactory objectFactory;
     @Mock
+    private MessageService messageService;
+    @Mock
     private ConversationRepository conversationRepository;
 
     @Before
     public void setup() {
-        this.conversationService = new ConversationServiceImpl(objectFactory, conversationRepository);
+        this.conversationService = new ConversationServiceImpl(objectFactory, messageService, conversationRepository);
     }
 
     @Test
@@ -173,7 +175,9 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testRemoveParticipant() {
+    public void testAddParticipant() {
+        String text = "conversation.add.participant";
+        Boolean isSystem = Boolean.TRUE;
         Set<Participant> participants = new HashSet<>();
         participants.add(author);
         participants.add(receiver);
@@ -182,6 +186,35 @@ public class ConversationServiceTest {
 
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
+        when(messageService.createMessage(conversation, author, participants, text, isSystem, receiver)).thenReturn(message);
+        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.addParticipant(conversation, author, receiver);
+
+        verify(conversation).getAdmin();
+        verify(conversation).getParticipants();
+        verify(conversation).addParticipant(receiver);
+        verify(messageService).createMessage(conversation, author, participants, text, isSystem, receiver);
+        verify(conversation).addMessage(message);
+        verify(conversationRepository).saveAndFlush(conversation);
+        verifyNoMoreInteractions(conversation, conversationRepository);
+
+        assertEquals("Conversation is returned as a result", conversation, result);
+    }
+
+    @Test
+    public void testRemoveParticipant() {
+        String text = "conversation.remove.participant";
+        Boolean isSystem = Boolean.TRUE;
+        Set<Participant> participants = new HashSet<>();
+        participants.add(author);
+        participants.add(receiver);
+        participants.add(oneMoreReceiver);
+        participants.add(participant);
+
+        when(conversation.getAdmin()).thenReturn(author);
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(messageService.createMessage(conversation, author, participants, text, isSystem, receiver)).thenReturn(message);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, receiver);
@@ -189,6 +222,8 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(receiver);
+        verify(messageService).createMessage(conversation, author, participants, text, isSystem, receiver);
+        verify(conversation).addMessage(message);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 
@@ -197,6 +232,8 @@ public class ConversationServiceTest {
 
     @Test
     public void testRemoveParticipantForSelfremoval() {
+        String text = "conversation.selfremove.participant";
+        Boolean isSystem = Boolean.TRUE;
         Set<Participant> participants = new HashSet<>();
         participants.add(author);
         participants.add(receiver);
@@ -205,6 +242,7 @@ public class ConversationServiceTest {
 
         when(conversation.getAdmin()).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(participants);
+        when(messageService.createMessage(conversation, author, participants, text, isSystem)).thenReturn(message);
         when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, author);
@@ -212,6 +250,8 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(author);
+        verify(messageService).createMessage(conversation, author, participants, text, isSystem);
+        verify(conversation).addMessage(message);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 
@@ -248,28 +288,5 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verifyNoMoreInteractions(conversation, conversationRepository);
-    }
-
-    @Test
-    public void testAddParticipant() {
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
-        participants.add(oneMoreReceiver);
-        participants.add(participant);
-
-        when(conversation.getAdmin()).thenReturn(author);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
-
-        Conversation result = conversationService.addParticipant(conversation, author, receiver);
-
-        verify(conversation).getAdmin();
-        verify(conversation).getParticipants();
-        verify(conversation).addParticipant(receiver);
-        verify(conversationRepository).saveAndFlush(conversation);
-        verifyNoMoreInteractions(conversation, conversationRepository);
-
-        assertEquals("Conversation is returned as a result", conversation, result);
     }
 }

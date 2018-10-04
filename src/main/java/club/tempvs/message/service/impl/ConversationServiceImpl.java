@@ -5,6 +5,7 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.ConversationService;
+import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -19,12 +20,19 @@ import java.util.Set;
 @Service
 public class ConversationServiceImpl implements ConversationService {
 
+    private static final String PARTICIPANT_ADDED_MESSAGE = "conversation.add.participant";
+    private static final String PARTICIPANT_REMOVED_MESSAGE = "conversation.remove.participant";
+    private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
+
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
+    private final MessageService messageService;
 
     @Autowired
-    public ConversationServiceImpl(ObjectFactory objectFactory, ConversationRepository conversationRepository) {
+    public ConversationServiceImpl(
+            ObjectFactory objectFactory, MessageService messageService, ConversationRepository conversationRepository) {
         this.objectFactory = objectFactory;
+        this.messageService = messageService;
         this.conversationRepository = conversationRepository;
     }
 
@@ -63,6 +71,27 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.findByParticipantsIn(participants, pageable);
     }
 
+    public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {
+        Set<Participant> participants = conversation.getParticipants();
+
+        if (participants.size() == 20) {
+            throw new IllegalArgumentException("Conversation may have only 20 participants max.");
+        }
+
+        Participant admin = conversation.getAdmin();
+
+        if ((admin == null || !admin.equals(adder))) {
+            throw new IllegalArgumentException("Participants can be added only by admin.");
+        }
+
+        conversation.addParticipant(added);
+        Boolean isSystem = Boolean.TRUE;
+        Message message = messageService.createMessage(
+                conversation, adder, participants, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
+        conversation.addMessage(message);
+        return conversationRepository.saveAndFlush(conversation);
+    }
+
     public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {
         Set<Participant> participants = conversation.getParticipants();
 
@@ -78,23 +107,20 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation.removeParticipant(removed);
-        return conversationRepository.saveAndFlush(conversation);
-    }
+        Boolean isSystem = Boolean.TRUE;
 
-    public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {
-        Set<Participant> participants = conversation.getParticipants();
+        Message message;
 
-        if (participants.size() == 20) {
-            throw new IllegalArgumentException("Conversation may have only 20 participants max.");
+        if (isSelfRemoval) {
+            message = messageService.createMessage(
+                    conversation, remover, participants, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem);
+
+        } else {
+            message = messageService.createMessage(
+                    conversation, remover, participants, PARTICIPANT_REMOVED_MESSAGE, isSystem, removed);
         }
 
-        Participant admin = conversation.getAdmin();
-
-        if ((admin == null || !admin.equals(adder))) {
-            throw new IllegalArgumentException("Participants can be added only by admin.");
-        }
-
-        conversation.addParticipant(added);
+        conversation.addMessage(message);
         return conversationRepository.saveAndFlush(conversation);
     }
 }
