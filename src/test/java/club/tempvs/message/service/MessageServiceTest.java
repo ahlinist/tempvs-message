@@ -33,6 +33,8 @@ public class MessageServiceTest {
     @Mock
     private Participant receiver2;
     @Mock
+    private Participant subject;
+    @Mock
     private Conversation conversation;
     @Mock
     private ObjectFactory objectFactory;
@@ -53,7 +55,7 @@ public class MessageServiceTest {
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
 
-        Message result = messageService.createMessage(conversation, author, receivers, text, false);
+        Message result = messageService.createMessage(conversation, author, receivers, text, false, subject);
 
         verify(objectFactory).getInstance(Message.class);
         verify(message).setConversation(conversation);
@@ -61,6 +63,7 @@ public class MessageServiceTest {
         verify(message).setNewFor(receivers);
         verify(message).setText(text);
         verify(message).setSystem(false);
+        verify(message).setSubject(subject);
         verifyNoMoreInteractions(objectFactory);
         verifyNoMoreInteractions(message);
 

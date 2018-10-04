@@ -9,6 +9,9 @@ import java.util.Set;
 
 public interface MessageService {
     Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem);
-    Message createMessage(Conversation conversation, Participant author, Set<Participant> receivers, String text, Boolean isSystem);
+    Message createMessage(Conversation conversation, Participant author, Set<Participant> receivers, String text,
+                          Boolean isSystem);
+    Message createMessage(Conversation conversation, Participant author, Set<Participant> receivers, String text,
+                          Boolean isSystem, Participant subject);
     List<Message> getMessagesFromConversation(Conversation conversation, int page, int size);
 }
