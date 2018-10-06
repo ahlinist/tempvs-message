@@ -30,14 +30,14 @@ public class ObjectFactoryImpl implements ObjectFactory {
         Constructor<T> constructor = Arrays.stream(constructors)
                 .filter(constr -> constr.getParameterCount() == parameterTypes.length)
                 .filter(constr -> traverser.test(constr.getParameterTypes()))
-                .findAny().get();
+                .findAny().orElseThrow(() -> new RuntimeException("ObjectFactory: Constructor not found."));
 
-        T instance = null;
+        T instance;
 
         try {
             instance = constructor.newInstance(args);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         return instance;
