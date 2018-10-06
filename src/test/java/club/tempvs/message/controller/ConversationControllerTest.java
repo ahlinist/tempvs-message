@@ -9,6 +9,7 @@ import club.tempvs.message.dto.*;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
+import club.tempvs.message.util.AuthHelper;
 import club.tempvs.message.util.ObjectFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +40,8 @@ public class ConversationControllerTest {
     @Mock
     private ObjectFactory objectFactory;
     @Mock
+    private AuthHelper authHelper;
+    @Mock
     private CreateConversationDto createConversationDto;
     @Mock
     private Message message;
@@ -61,7 +64,8 @@ public class ConversationControllerTest {
 
     @Before
     public void setup() {
-        conversationController = new ConversationController(objectFactory, conversationService, participantService, messageService);
+        conversationController = new ConversationController(objectFactory, conversationService, participantService,
+                messageService, authHelper);
     }
 
     @Test
@@ -71,6 +75,7 @@ public class ConversationControllerTest {
 
     @Test
     public void testCreateConversation() {
+        String token = "token";
         String text = "text";
         String name = "name";
         Set<Long> receiverIds = new HashSet<>();
@@ -90,7 +95,7 @@ public class ConversationControllerTest {
         when(conversation.getMessages()).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.createConversation(createConversationDto);
+        GetConversationDto result = conversationController.createConversation(token, createConversationDto);
 
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
@@ -110,6 +115,7 @@ public class ConversationControllerTest {
 
     @Test
     public void testGetConversation() {
+        String token = "token";
         long id = 1L;
         int page = 0;
         int size = 20;
@@ -119,7 +125,7 @@ public class ConversationControllerTest {
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.getConversation(id, page, size);
+        GetConversationDto result = conversationController.getConversation(token, id, page, size);
 
         verify(conversationService).getConversation(id);
         verify(messageService).getMessagesFromConversation(conversation, page, size);
@@ -131,17 +137,19 @@ public class ConversationControllerTest {
 
     @Test(expected = BadRequestException.class)
     public void testGetConversationForLargeAmountOfDataPerRequest() {
+        String token = "token";
         long id = 1L;
         int page = 0;
         int size = 21;
 
-        conversationController.getConversation(id, page, size);
+        conversationController.getConversation(token, id, page, size);
 
         verifyNoMoreInteractions(message, conversationService, messageService, objectFactory, getConversationDto);
     }
 
     @Test
     public void testGetConversationsByParticipant() {
+        String token = "token";
         Long participantId = 1L;
         int page = 0;
         int size = 20;
@@ -152,7 +160,7 @@ public class ConversationControllerTest {
         when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
         when(objectFactory.getInstance(GetConversationsDto.class, conversations)).thenReturn(getConversationsDto);
 
-        GetConversationsDto result = conversationController.getConversationsByParticipant(participantId, page, size);
+        GetConversationsDto result = conversationController.getConversationsByParticipant(token, participantId, page, size);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversationsByParticipant(participant, page, size);
@@ -164,17 +172,19 @@ public class ConversationControllerTest {
 
     @Test(expected = BadRequestException.class)
     public void testGetConversationsByParticipantForLargeAmountOfDataBeingRetrieved() {
+        String token = "token";
         Long participantId = 1L;
         int page = 0;
         int size = 200;
 
-        conversationController.getConversationsByParticipant(participantId, page, size);
+        conversationController.getConversationsByParticipant(token, participantId, page, size);
 
         verifyNoMoreInteractions(participantService, conversationService, objectFactory);
     }
 
     @Test
     public void testAddMessage() {
+        String token = "token";
         Long authorId = 1L;
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
@@ -191,7 +201,7 @@ public class ConversationControllerTest {
         when(messageService.createMessage(conversation, author, participants, text, isSystem)).thenReturn(message);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
 
-        ResponseEntity result = conversationController.addMessage(conversationId, addMessageDto);
+        ResponseEntity result = conversationController.addMessage(token, conversationId, addMessageDto);
 
         verify(addMessageDto).validate();
         verify(addMessageDto).getAuthor();
@@ -210,6 +220,7 @@ public class ConversationControllerTest {
 
     @Test
     public void testAddMessageForMissingConversation() {
+        String token = "token";
         Long authorId = 1L;
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
@@ -222,7 +233,7 @@ public class ConversationControllerTest {
         when(addMessageDto.getSystem()).thenReturn(isSystem);
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        ResponseEntity result = conversationController.addMessage(conversationId, addMessageDto);
+        ResponseEntity result = conversationController.addMessage(token, conversationId, addMessageDto);
 
         verify(addMessageDto).validate();
         verify(addMessageDto).getAuthor();
@@ -237,6 +248,7 @@ public class ConversationControllerTest {
 
     @Test
     public void testUpdateParticipantsForAdd() {
+        String token = "token";
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
@@ -254,7 +266,7 @@ public class ConversationControllerTest {
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.updateParticipants(conversationId, updateParticipantsDto);
+        GetConversationDto result = conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
 
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
@@ -273,6 +285,7 @@ public class ConversationControllerTest {
 
     @Test
     public void testUpdateParticipantsForRemove() {
+        String token = "token";
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
@@ -290,7 +303,7 @@ public class ConversationControllerTest {
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.updateParticipants(conversationId, updateParticipantsDto);
+        GetConversationDto result = conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
 
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
@@ -309,6 +322,7 @@ public class ConversationControllerTest {
 
     @Test(expected = NotFoundException.class)
     public void testUpdateParticipantsForEmptyConversation() {
+        String token = "token";
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
@@ -318,7 +332,7 @@ public class ConversationControllerTest {
         when(updateParticipantsDto.getSubject()).thenReturn(subjectId);
         when(updateParticipantsDto.getAction()).thenReturn(removeAction);
 
-        conversationController.updateParticipants(conversationId, updateParticipantsDto);
+        conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
 
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);

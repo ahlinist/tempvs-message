@@ -2,6 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.api.BadRequestException;
 import club.tempvs.message.api.NotFoundException;
+import club.tempvs.message.api.UnauthorizedException;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -9,6 +10,7 @@ import club.tempvs.message.dto.*;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
+import club.tempvs.message.util.AuthHelper;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -33,14 +35,19 @@ public class ConversationController {
     private final ConversationService conversationService;
     private final ParticipantService participantService;
     private final MessageService messageService;
+    private final AuthHelper authHelper;
 
     @Autowired
-    public ConversationController(ObjectFactory objectFactory, ConversationService conversationService,
-                                  ParticipantService participantService, MessageService messageService) {
+    public ConversationController(ObjectFactory objectFactory,
+                                  ConversationService conversationService,
+                                  ParticipantService participantService,
+                                  MessageService messageService,
+                                  AuthHelper authHelper) {
         this.objectFactory = objectFactory;
         this.conversationService = conversationService;
         this.participantService = participantService;
         this.messageService = messageService;
+        this.authHelper = authHelper;
     }
 
     @RequestMapping("/ping")
@@ -50,7 +57,9 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
+    public GetConversationDto createConversation(@RequestHeader("Authorization") String token,
+            @RequestBody CreateConversationDto createConversationDto) {
+        authHelper.authenticate(token);
         createConversationDto.validate();
         Participant author = participantService.getParticipant(createConversationDto.getAuthor());
         Set<Participant> receivers = createConversationDto.getReceivers().stream()
@@ -65,9 +74,12 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto getConversation(
+            @RequestHeader("Authorization") String token,
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+        authHelper.authenticate(token);
+
         if (size > MAX_PAGE_SIZE) {
             throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
@@ -79,9 +91,12 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations", method = GET, produces = APPLICATION_JSON_VALUE)
     public GetConversationsDto getConversationsByParticipant(
+            @RequestHeader("Authorization") String token,
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+        authHelper.authenticate(token);
+
         if (size > MAX_PAGE_SIZE) {
             throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
@@ -94,8 +109,10 @@ public class ConversationController {
     @RequestMapping(value="/conversations/{conversationId}/messages", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity addMessage(
+            @RequestHeader("Authorization") String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
+        authHelper.authenticate(token);
         addMessageDto.validate();
         Long authorId = addMessageDto.getAuthor();
         String text = addMessageDto.getText();
@@ -119,8 +136,10 @@ public class ConversationController {
     @RequestMapping(value="/conversations/{conversationId}/participants", method = PATCH,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto updateParticipants(
+            @RequestHeader("Authorization") String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateParticipantsDto updateParticipantsDto) {
+        authHelper.authenticate(token);
         updateParticipantsDto.validate();
         Long initiatorId = updateParticipantsDto.getInitiator();
         Long subjectId = updateParticipantsDto.getSubject();
@@ -163,6 +182,12 @@ public class ConversationController {
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String returnNotFound(NotFoundException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public String returnUnauthorized(UnauthorizedException ex) {
         return ex.getMessage();
     }
 }

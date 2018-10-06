@@ -32,6 +32,7 @@ import static org.springframework.http.MediaType.*;
 @AutoConfigureMockMvc
 public class ConversationControllerIntegrationTest {
 
+    private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
     private static ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
@@ -62,20 +63,21 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(createConversationJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("participants", is(Arrays.asList(1, 2, 3, 4))))
-                .andExpect(jsonPath("admin", is(authorId.intValue())))
-                .andExpect(jsonPath("messages", hasSize(1)))
-                .andExpect(jsonPath("messages[0].text", is(message)))
-                .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1, 2, 3, 4))))
-                .andExpect(jsonPath("messages[0].system", is(false)))
-                .andExpect(jsonPath("lastMessage.text", is(message)))
-                .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
-                .andExpect(jsonPath("lastMessage.newFor", is(Arrays.asList(1, 2, 3, 4))))
-                .andExpect(jsonPath("lastMessage.system", is(false)));
+                .content(createConversationJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("participants", is(Arrays.asList(1, 2, 3, 4))))
+                    .andExpect(jsonPath("admin", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages", hasSize(1)))
+                    .andExpect(jsonPath("messages[0].text", is(message)))
+                    .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(1, 2, 3, 4))))
+                    .andExpect(jsonPath("messages[0].system", is(false)))
+                    .andExpect(jsonPath("lastMessage.text", is(message)))
+                    .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.newFor", is(Arrays.asList(1, 2, 3, 4))))
+                    .andExpect(jsonPath("lastMessage.system", is(false)));
     }
 
     @Test
@@ -88,9 +90,10 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(createConversationJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(equalTo("Author id is missing.")));
+                .content(createConversationJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().string(equalTo("Author id is missing.")));
     }
 
     @Test
@@ -103,9 +106,10 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(createConversationJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(equalTo("Text is missing.")));
+                .content(createConversationJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().string(equalTo("Text is missing.")));
     }
 
     @Test
@@ -119,9 +123,10 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(createConversationJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(equalTo("Receivers list is empty.")));
+                .content(createConversationJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().string(equalTo("Receivers list is empty.")));
     }
 
     @Test
@@ -139,23 +144,24 @@ public class ConversationControllerIntegrationTest {
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getSystem();
 
-        mvc.perform(get("/api/conversations/" + conversationId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("id", is(conversationId.intValue())))
-                .andExpect(jsonPath("admin", is(authorId.intValue())))
-                .andExpect(jsonPath("participants", is(participantIds)))
-                .andExpect(jsonPath("messages", hasSize(messagesSize)))
-                .andExpect(jsonPath("messages[0].id", is(messageId.intValue())))
-                .andExpect(jsonPath("messages[0].text", is(text)))
-                .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("messages[0].newFor", is(participantIds)))
-                .andExpect(jsonPath("messages[0].system", is(isSystem)))
-                .andExpect(jsonPath("lastMessage.id", is(messageId.intValue())))
-                .andExpect(jsonPath("lastMessage.text", is(text)))
-                .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
-                .andExpect(jsonPath("lastMessage.newFor", is(participantIds)))
-                .andExpect(jsonPath("lastMessage.system", is(isSystem)));
+        mvc.perform(get("/api/conversations/" + conversationId)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("id", is(conversationId.intValue())))
+                    .andExpect(jsonPath("admin", is(authorId.intValue())))
+                    .andExpect(jsonPath("participants", is(participantIds)))
+                    .andExpect(jsonPath("messages", hasSize(messagesSize)))
+                    .andExpect(jsonPath("messages[0].id", is(messageId.intValue())))
+                    .andExpect(jsonPath("messages[0].text", is(text)))
+                    .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].newFor", is(participantIds)))
+                    .andExpect(jsonPath("messages[0].system", is(isSystem)))
+                    .andExpect(jsonPath("lastMessage.id", is(messageId.intValue())))
+                    .andExpect(jsonPath("lastMessage.text", is(text)))
+                    .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.newFor", is(participantIds)))
+                    .andExpect(jsonPath("lastMessage.system", is(isSystem)));
     }
 
     @Test
@@ -168,17 +174,21 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=30"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=30")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -194,32 +204,37 @@ public class ConversationControllerIntegrationTest {
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getSystem();
 
-        mvc.perform(get("/api/conversations?participant=" + authorId + "&page=0&size=10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("conversations", hasSize(1)))
-                .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
-                .andExpect(jsonPath("conversations[0].name", is(name)))
-                .andExpect(jsonPath("conversations[0].lastMessage.id", is(messageId.intValue())))
-                .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
-                .andExpect(jsonPath("conversations[0].lastMessage.author", is(authorId.intValue())))
-                .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(4)))
-                .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)));
+        mvc.perform(get("/api/conversations?participant=" + authorId + "&page=0&size=10")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("conversations", hasSize(1)))
+                    .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
+                    .andExpect(jsonPath("conversations[0].name", is(name)))
+                    .andExpect(jsonPath("conversations[0].lastMessage.id", is(messageId.intValue())))
+                    .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
+                    .andExpect(jsonPath("conversations[0].lastMessage.author", is(authorId.intValue())))
+                    .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(4)))
+                    .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)));
     }
 
     @Test
     public void testGetConversationsByParticipantForInvalidInput() throws Exception {
-        mvc.perform(get("/api/conversations?participant=1&page=0&size=-1"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations?participant=1&page=0&size=-1")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversations?participant=1&page=0&size=0"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations?participant=1&page=0&size=0")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversations?participant=1&page=-1&size=20"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations?participant=1&page=-1&size=20")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
 
-        mvc.perform(get("/api/conversations?participant=1&page=0&size=30"))
-                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/conversations?participant=1&page=0&size=30")
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -238,8 +253,9 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(post("/api/conversations/" + conversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(addMessageJson))
-                .andExpect(status().isOk());
+                .content(addMessageJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk());
     }
 
     @Test
@@ -254,9 +270,10 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(post("/api/conversations/" + missingConversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(addMessageJson))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
+                .content(addMessageJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
     }
 
     @Test
@@ -285,7 +302,8 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(addParticipantJson))
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
                     .andExpect(jsonPath("admin", is(authorId.intValue())))
@@ -334,27 +352,28 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(addParticipantJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("id", is(conversationId.intValue())))
-                .andExpect(jsonPath("admin", is(authorId.intValue())))
-                .andExpect(jsonPath("participants", hasSize(participantIds.size() - 1)))
-                .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
-                .andExpect(jsonPath("messages[0].text", is(text)))
-                .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("messages[0].newFor", hasSize(receiverIds.size() + 1)))
-                .andExpect(jsonPath("messages[0].system", is(Boolean.FALSE)))
-                .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
-                .andExpect(jsonPath("messages[1].author", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[1].subject", is(removedParticipantId.intValue())))
-                .andExpect(jsonPath("messages[1].newFor", hasSize(participantIds.size() - 1)))
-                .andExpect(jsonPath("messages[1].system", is(Boolean.TRUE)))
-                .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
-                .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
-                .andExpect(jsonPath("lastMessage.newFor", hasSize(participantIds.size() - 1)))
-                .andExpect(jsonPath("lastMessage.system", is(Boolean.TRUE)))
-                .andExpect(jsonPath("lastMessage.subject", is(removedParticipantId.intValue())));
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("id", is(conversationId.intValue())))
+                    .andExpect(jsonPath("admin", is(authorId.intValue())))
+                    .andExpect(jsonPath("participants", hasSize(participantIds.size() - 1)))
+                    .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
+                    .andExpect(jsonPath("messages[0].text", is(text)))
+                    .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].newFor", hasSize(receiverIds.size() + 1)))
+                    .andExpect(jsonPath("messages[0].system", is(Boolean.FALSE)))
+                    .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("messages[1].author", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[1].subject", is(removedParticipantId.intValue())))
+                    .andExpect(jsonPath("messages[1].newFor", hasSize(participantIds.size() - 1)))
+                    .andExpect(jsonPath("messages[1].system", is(Boolean.TRUE)))
+                    .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.newFor", hasSize(participantIds.size() - 1)))
+                    .andExpect(jsonPath("lastMessage.system", is(Boolean.TRUE)))
+                    .andExpect(jsonPath("lastMessage.subject", is(removedParticipantId.intValue())));
     }
 
     @Test
@@ -373,7 +392,8 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(patch("/api/conversations/" + nonExistentConversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(addParticipantJson))
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(content().string(equalTo("Conversation with id '444' has not been found.")));
     }
