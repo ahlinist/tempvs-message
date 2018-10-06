@@ -187,7 +187,7 @@ public class ConversationServiceTest {
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(conversation, author, participants, text, isSystem, receiver)).thenReturn(message);
-        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.addParticipant(conversation, author, receiver);
 
@@ -196,7 +196,8 @@ public class ConversationServiceTest {
         verify(conversation).addParticipant(receiver);
         verify(messageService).createMessage(conversation, author, participants, text, isSystem, receiver);
         verify(conversation).addMessage(message);
-        verify(conversationRepository).saveAndFlush(conversation);
+        verify(conversation).setLastMessage(message);
+        verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 
         assertEquals("Conversation is returned as a result", conversation, result);
@@ -215,7 +216,7 @@ public class ConversationServiceTest {
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(conversation, author, participants, text, isSystem, receiver)).thenReturn(message);
-        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, receiver);
 
@@ -224,7 +225,9 @@ public class ConversationServiceTest {
         verify(conversation).removeParticipant(receiver);
         verify(messageService).createMessage(conversation, author, participants, text, isSystem, receiver);
         verify(conversation).addMessage(message);
-        verify(conversationRepository).saveAndFlush(conversation);
+        verify(message).setConversation(conversation);
+        verify(conversation).setLastMessage(message);
+        verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 
         assertEquals("Conversation is returned as a result", conversation, result);
@@ -243,7 +246,7 @@ public class ConversationServiceTest {
         when(conversation.getAdmin()).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(conversation, author, participants, text, isSystem)).thenReturn(message);
-        when(conversationRepository.saveAndFlush(conversation)).thenReturn(conversation);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, author);
 
@@ -252,8 +255,10 @@ public class ConversationServiceTest {
         verify(conversation).removeParticipant(author);
         verify(messageService).createMessage(conversation, author, participants, text, isSystem);
         verify(conversation).addMessage(message);
-        verify(conversationRepository).saveAndFlush(conversation);
-        verifyNoMoreInteractions(conversation, conversationRepository);
+        verify(conversation).setLastMessage(message);
+        verify(message).setConversation(conversation);
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(conversation, message, messageService, conversationRepository);
 
         assertEquals("Conversation is returned as a result", conversation, result);
     }

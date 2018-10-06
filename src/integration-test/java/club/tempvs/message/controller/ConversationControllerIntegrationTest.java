@@ -4,6 +4,7 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.dto.AddMessageDto;
 import club.tempvs.message.dto.CreateConversationDto;
+import club.tempvs.message.dto.UpdateParticipantsDto;
 import club.tempvs.message.util.EntityHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -15,8 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -31,7 +30,6 @@ import static org.springframework.http.MediaType.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional(propagation=Propagation.REQUIRED)
 public class ConversationControllerIntegrationTest {
 
     private static ObjectMapper mapper = new ObjectMapper();
@@ -185,29 +183,27 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testGetConversationsByParticipant() throws Exception {
-        Long authorId = 1L;
+        Long authorId = 10L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
         String name = "name";
-        List<Integer> participantIds = Arrays.asList(1, 2, 3, 4);
 
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
-        int messagesSize = messages.size();
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getSystem();
 
-        mvc.perform(get("/api/conversations?participant=1&page=0&size=10"))
+        mvc.perform(get("/api/conversations?participant=" + authorId + "&page=0&size=10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("conversations", hasSize(messagesSize)))
+                .andExpect(jsonPath("conversations", hasSize(1)))
                 .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
                 .andExpect(jsonPath("conversations[0].name", is(name)))
                 .andExpect(jsonPath("conversations[0].lastMessage.id", is(messageId.intValue())))
                 .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
                 .andExpect(jsonPath("conversations[0].lastMessage.author", is(authorId.intValue())))
                 .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("conversations[0].lastMessage.newFor", is(participantIds)))
+                .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(4)))
                 .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)));
     }
 
@@ -261,6 +257,125 @@ public class ConversationControllerIntegrationTest {
                 .content(addMessageJson))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
+    }
+
+    @Test
+    public void testUpdateParticipantsForAdd() throws Exception {
+        Long authorId = 1L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
+        String text = "text";
+        String name = "name";
+        Long addedParticipantId = 5L;
+        Set<Long> participantIds = new HashSet<>(receiverIds);
+        participantIds.add(authorId);
+        participantIds.add(addedParticipantId);
+
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+        int messagesInitialSize = conversation.getMessages().size();
+        String participantAddedMessage = "conversation.add.participant";
+
+        UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
+        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
+        updateParticipantsDto.setInitiator(authorId);
+        updateParticipantsDto.setSubject(addedParticipantId);
+
+        String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
+
+        mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("id", is(conversationId.intValue())))
+                    .andExpect(jsonPath("admin", is(authorId.intValue())))
+                    .andExpect(jsonPath("participants", hasSize(participantIds.size())))
+                    .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
+                    .andExpect(jsonPath("messages[0].text", is(text)))
+                    .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].newFor", hasSize(receiverIds.size() + 1)))
+                    .andExpect(jsonPath("messages[0].system", is(Boolean.FALSE)))
+                    .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("messages[1].author", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[1].subject", is(addedParticipantId.intValue())))
+                    .andExpect(jsonPath("messages[1].newFor", hasSize(participantIds.size())))
+                    .andExpect(jsonPath("messages[1].system", is(Boolean.TRUE)))
+                    .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.newFor", hasSize(participantIds.size())))
+                    .andExpect(jsonPath("lastMessage.system", is(Boolean.TRUE)))
+                    .andExpect(jsonPath("lastMessage.subject", is(addedParticipantId.intValue())));
+    }
+
+    @Test
+    public void testUpdateParticipantsForRemove() throws Exception {
+        Long authorId = 1L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
+        String text = "text";
+        String name = "name";
+        Long removedParticipantId = 4L;
+        Set<Long> participantIds = new HashSet<>(receiverIds);
+        participantIds.add(authorId);
+        participantIds.add(removedParticipantId);
+
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+        int messagesInitialSize = conversation.getMessages().size();
+        String participantAddedMessage = "conversation.remove.participant";
+
+        UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
+        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.REMOVE);
+        updateParticipantsDto.setInitiator(authorId);
+        updateParticipantsDto.setSubject(removedParticipantId);
+
+        String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
+
+        mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id", is(conversationId.intValue())))
+                .andExpect(jsonPath("admin", is(authorId.intValue())))
+                .andExpect(jsonPath("participants", hasSize(participantIds.size() - 1)))
+                .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
+                .andExpect(jsonPath("messages[0].text", is(text)))
+                .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
+                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                .andExpect(jsonPath("messages[0].newFor", hasSize(receiverIds.size() + 1)))
+                .andExpect(jsonPath("messages[0].system", is(Boolean.FALSE)))
+                .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
+                .andExpect(jsonPath("messages[1].author", is(authorId.intValue())))
+                .andExpect(jsonPath("messages[1].subject", is(removedParticipantId.intValue())))
+                .andExpect(jsonPath("messages[1].newFor", hasSize(participantIds.size() - 1)))
+                .andExpect(jsonPath("messages[1].system", is(Boolean.TRUE)))
+                .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
+                .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
+                .andExpect(jsonPath("lastMessage.newFor", hasSize(participantIds.size() - 1)))
+                .andExpect(jsonPath("lastMessage.system", is(Boolean.TRUE)))
+                .andExpect(jsonPath("lastMessage.subject", is(removedParticipantId.intValue())));
+    }
+
+    @Test
+    public void testUpdateParticipantsForNonExistentConversation() throws Exception {
+        Long authorId = 1L;
+        Long removedParticipantId = 4L;
+        Long nonExistentConversationId = 444L;
+
+        UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
+        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.REMOVE);
+        updateParticipantsDto.setInitiator(authorId);
+        updateParticipantsDto.setSubject(removedParticipantId);
+
+        String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
+
+        mvc.perform(patch("/api/conversations/" + nonExistentConversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().string(equalTo("Conversation with id '444' has not been found.")));
     }
 
     private String getCreateConversationDtoJson(

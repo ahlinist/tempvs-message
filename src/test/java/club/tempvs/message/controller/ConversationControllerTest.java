@@ -23,6 +23,9 @@ import java.util.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationControllerTest {
 
+    private static UpdateParticipantsDto.Action addAction = UpdateParticipantsDto.Action.ADD;
+    private static UpdateParticipantsDto.Action removeAction = UpdateParticipantsDto.Action.REMOVE;
+
     private ConversationController conversationController;
 
     @Mock
@@ -51,6 +54,8 @@ public class ConversationControllerTest {
     private GetConversationsDto getConversationsDto;
     @Mock
     private AddMessageDto addMessageDto;
+    @Mock
+    private UpdateParticipantsDto updateParticipantsDto;
 
     @Before
     public void setup() {
@@ -128,7 +133,7 @@ public class ConversationControllerTest {
         int page = 0;
         int size = 21;
 
-        GetConversationDto result = conversationController.getConversation(id, page, size);
+        conversationController.getConversation(id, page, size);
 
         verifyNoMoreInteractions(message, conversationService, messageService, objectFactory, getConversationDto);
     }
@@ -226,5 +231,98 @@ public class ConversationControllerTest {
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
 
         assertTrue("Status code 404 is returned", result.getStatusCodeValue() == 404);
+    }
+
+    @Test
+    public void testUpdateParticipantsForAdd() {
+        Long conversationId = 1L;
+        Long initiatorId = 2L;
+        Long subjectId = 3L;
+        int page = 0;
+        int max = 20;
+        List<Message> messages = Arrays.asList(message, message);
+
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(updateParticipantsDto.getInitiator()).thenReturn(initiatorId);
+        when(updateParticipantsDto.getSubject()).thenReturn(subjectId);
+        when(updateParticipantsDto.getAction()).thenReturn(addAction);
+        when(participantService.getParticipant(initiatorId)).thenReturn(author);
+        when(participantService.getParticipant(subjectId)).thenReturn(receiver);
+        when(conversationService.addParticipant(conversation, author, receiver)).thenReturn(conversation);
+        when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+
+        GetConversationDto result = conversationController.updateParticipants(conversationId, updateParticipantsDto);
+
+        verify(updateParticipantsDto).validate();
+        verify(conversationService).getConversation(conversationId);
+        verify(updateParticipantsDto).getInitiator();
+        verify(updateParticipantsDto).getSubject();
+        verify(updateParticipantsDto).getAction();
+        verify(participantService).getParticipant(initiatorId);
+        verify(participantService).getParticipant(subjectId);
+        verify(conversationService).addParticipant(conversation, author, receiver);
+        verify(messageService).getMessagesFromConversation(conversation, page, max);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
+
+        assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
+    }
+
+    @Test
+    public void testUpdateParticipantsForRemove() {
+        Long conversationId = 1L;
+        Long initiatorId = 2L;
+        Long subjectId = 3L;
+        int page = 0;
+        int max = 20;
+        List<Message> messages = Arrays.asList(message, message);
+
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(updateParticipantsDto.getInitiator()).thenReturn(initiatorId);
+        when(updateParticipantsDto.getSubject()).thenReturn(subjectId);
+        when(updateParticipantsDto.getAction()).thenReturn(removeAction);
+        when(participantService.getParticipant(initiatorId)).thenReturn(author);
+        when(participantService.getParticipant(subjectId)).thenReturn(receiver);
+        when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
+        when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+
+        GetConversationDto result = conversationController.updateParticipants(conversationId, updateParticipantsDto);
+
+        verify(updateParticipantsDto).validate();
+        verify(conversationService).getConversation(conversationId);
+        verify(updateParticipantsDto).getInitiator();
+        verify(updateParticipantsDto).getSubject();
+        verify(updateParticipantsDto).getAction();
+        verify(participantService).getParticipant(initiatorId);
+        verify(participantService).getParticipant(subjectId);
+        verify(conversationService).removeParticipant(conversation, author, receiver);
+        verify(messageService).getMessagesFromConversation(conversation, page, max);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
+
+        assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testUpdateParticipantsForEmptyConversation() {
+        Long conversationId = 1L;
+        Long initiatorId = 2L;
+        Long subjectId = 3L;
+
+        when(conversationService.getConversation(conversationId)).thenReturn(null);
+        when(updateParticipantsDto.getInitiator()).thenReturn(initiatorId);
+        when(updateParticipantsDto.getSubject()).thenReturn(subjectId);
+        when(updateParticipantsDto.getAction()).thenReturn(removeAction);
+
+        conversationController.updateParticipants(conversationId, updateParticipantsDto);
+
+        verify(updateParticipantsDto).validate();
+        verify(conversationService).getConversation(conversationId);
+        verify(updateParticipantsDto).getInitiator();
+        verify(updateParticipantsDto).getSubject();
+        verify(updateParticipantsDto).getAction();
+        verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
     }
 }

@@ -88,8 +88,7 @@ public class ConversationServiceImpl implements ConversationService {
         Boolean isSystem = Boolean.TRUE;
         Message message = messageService.createMessage(
                 conversation, adder, participants, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
-        conversation.addMessage(message);
-        return conversationRepository.saveAndFlush(conversation);
+        return addMessage(conversation, message);
     }
 
     public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {
@@ -120,7 +119,6 @@ public class ConversationServiceImpl implements ConversationService {
                     conversation, remover, participants, PARTICIPANT_REMOVED_MESSAGE, isSystem, removed);
         }
 
-        conversation.addMessage(message);
-        return conversationRepository.saveAndFlush(conversation);
+        return addMessage(conversation, message);
     }
 }

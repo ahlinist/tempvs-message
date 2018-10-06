@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.*;
 @RequestMapping("/api")
 public class ConversationController {
 
+    private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 20;
 
     private final ObjectFactory objectFactory;
@@ -113,6 +114,38 @@ public class ConversationController {
         return ResponseEntity.ok().build();
     }
 
+    @RequestMapping(value="/conversations/{conversationId}/participants", method = PATCH,
+            consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public GetConversationDto updateParticipants(
+            @PathVariable("conversationId") Long conversationId,
+            @RequestBody UpdateParticipantsDto updateParticipantsDto) {
+        updateParticipantsDto.validate();
+        Long initiatorId = updateParticipantsDto.getInitiator();
+        Long subjectId = updateParticipantsDto.getSubject();
+        UpdateParticipantsDto.Action action = updateParticipantsDto.getAction();
+        Conversation conversation = conversationService.getConversation(conversationId);
+
+        if (conversation == null) {
+            throw new IllegalStateException("Conversation with id '" + conversationId + "' has not been found.");
+        }
+
+        Participant initiator = participantService.getParticipant(initiatorId);
+        Participant subject = participantService.getParticipant(subjectId);
+
+        Conversation result;
+
+        if (action == UpdateParticipantsDto.Action.ADD) {
+            result = conversationService.addParticipant(conversation, initiator, subject);
+        } else if (action == UpdateParticipantsDto.Action.REMOVE) {
+            result = conversationService.removeParticipant(conversation, initiator, subject);
+        } else {
+            throw new RuntimeException("Action '" + action + "' is not supported.");
+        }
+
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String processValidationError(Exception ex) {
@@ -122,6 +155,12 @@ public class ConversationController {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String processIllegalArgumentException(IllegalArgumentException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String processIllegalArgumentException(IllegalStateException ex) {
         return ex.getMessage();
     }
 }
