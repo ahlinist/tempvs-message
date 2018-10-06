@@ -1,5 +1,7 @@
 package club.tempvs.message.controller;
 
+import club.tempvs.message.api.BadRequestException;
+import club.tempvs.message.api.NotFoundException;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -67,7 +69,7 @@ public class ConversationController {
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
         if (size > MAX_PAGE_SIZE) {
-            throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
+            throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
         Conversation conversation = conversationService.getConversation(id);
@@ -81,7 +83,7 @@ public class ConversationController {
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
         if (size > MAX_PAGE_SIZE) {
-            throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
+            throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
         Participant participant = participantService.getParticipant(participantId);
@@ -126,7 +128,7 @@ public class ConversationController {
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
-            throw new IllegalStateException("Conversation with id '" + conversationId + "' has not been found.");
+            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
         Participant initiator = participantService.getParticipant(initiatorId);
@@ -152,15 +154,15 @@ public class ConversationController {
         return ex.getMessage();
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({BadRequestException.class, IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String processIllegalArgumentException(IllegalArgumentException ex) {
+    public String returnBadRequest(Exception ex) {
         return ex.getMessage();
     }
 
-    @ExceptionHandler(IllegalStateException.class)
+    @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String processIllegalArgumentException(IllegalStateException ex) {
+    public String returnNotFound(NotFoundException ex) {
         return ex.getMessage();
     }
 }

@@ -1,5 +1,6 @@
 package club.tempvs.message.service;
 
+import club.tempvs.message.api.BadRequestException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -263,7 +264,7 @@ public class ConversationServiceTest {
         assertEquals("Conversation is returned as a result", conversation, result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = BadRequestException.class)
     public void testRemoveParticipantFor2MembersOnly() {
         Set<Participant> participants = new HashSet<>();
         participants.add(author);
@@ -277,7 +278,7 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(conversation, conversationRepository);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = BadRequestException.class)
     public void testRemoveParticipantByNonAdmin() {
         Set<Participant> participants = new HashSet<>();
         participants.add(author);

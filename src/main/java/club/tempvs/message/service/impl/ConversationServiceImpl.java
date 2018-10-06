@@ -1,5 +1,6 @@
 package club.tempvs.message.service.impl;
 
+import club.tempvs.message.api.BadRequestException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -75,13 +76,13 @@ public class ConversationServiceImpl implements ConversationService {
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.size() == 20) {
-            throw new IllegalArgumentException("Conversation may have only 20 participants max.");
+            throw new BadRequestException("Conversation may have only 20 participants max.");
         }
 
         Participant admin = conversation.getAdmin();
 
         if ((admin == null || !admin.equals(adder))) {
-            throw new IllegalArgumentException("Participants can be added only by admin.");
+            throw new BadRequestException("Participants can be added only by admin.");
         }
 
         conversation.addParticipant(added);
@@ -95,14 +96,14 @@ public class ConversationServiceImpl implements ConversationService {
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.size() <= 2) {
-            throw new IllegalArgumentException("Conversation has only 2 participants. One can't delete one of them.");
+            throw new BadRequestException("Conversation has only 2 participants. One can't delete one of them.");
         }
 
         Participant admin = conversation.getAdmin();
         boolean isSelfRemoval = removed.equals(remover);
 
         if ((admin == null || !admin.equals(remover)) && !isSelfRemoval) {
-            throw new IllegalArgumentException("Participants can be removed only by admin or by themselves.");
+            throw new BadRequestException("Participants can be removed only by admin or by themselves.");
         }
 
         conversation.removeParticipant(removed);

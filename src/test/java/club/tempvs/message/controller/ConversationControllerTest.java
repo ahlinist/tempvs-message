@@ -1,5 +1,7 @@
 package club.tempvs.message.controller;
 
+import club.tempvs.message.api.BadRequestException;
+import club.tempvs.message.api.NotFoundException;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -127,7 +129,7 @@ public class ConversationControllerTest {
         assertEquals("Result is a conversation", result, getConversationDto);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = BadRequestException.class)
     public void testGetConversationForLargeAmountOfDataPerRequest() {
         long id = 1L;
         int page = 0;
@@ -160,7 +162,7 @@ public class ConversationControllerTest {
         assertEquals("GetCoversationsDto is returned as a result", getConversationsDto, result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = BadRequestException.class)
     public void testGetConversationsByParticipantForLargeAmountOfDataBeingRetrieved() {
         Long participantId = 1L;
         int page = 0;
@@ -305,7 +307,7 @@ public class ConversationControllerTest {
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = NotFoundException.class)
     public void testUpdateParticipantsForEmptyConversation() {
         Long conversationId = 1L;
         Long initiatorId = 2L;

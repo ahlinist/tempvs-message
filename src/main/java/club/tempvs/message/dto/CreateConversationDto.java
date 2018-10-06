@@ -1,5 +1,7 @@
 package club.tempvs.message.dto;
 
+import club.tempvs.message.api.BadRequestException;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -64,7 +66,7 @@ public class CreateConversationDto implements Validateable {
         }
 
         if (!errors.isEmpty()) {
-            throw new IllegalArgumentException(String.join("\n", errors));
+            throw new BadRequestException(String.join("\n", errors));
         }
     }
 }
