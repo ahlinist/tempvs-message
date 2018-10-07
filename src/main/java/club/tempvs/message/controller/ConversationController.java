@@ -57,7 +57,8 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public GetConversationDto createConversation(@RequestHeader("Authorization") String token,
+    public GetConversationDto createConversation(
+            @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
         createConversationDto.validate();
@@ -74,7 +75,7 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto getConversation(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
@@ -91,7 +92,7 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations", method = GET, produces = APPLICATION_JSON_VALUE)
     public GetConversationsDto getConversationsByParticipant(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token,
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
@@ -109,7 +110,7 @@ public class ConversationController {
     @RequestMapping(value="/conversations/{conversationId}/messages", method = POST,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity addMessage(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
@@ -136,7 +137,7 @@ public class ConversationController {
     @RequestMapping(value="/conversations/{conversationId}/participants", method = PATCH,
             consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto updateParticipants(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateParticipantsDto updateParticipantsDto) {
         authHelper.authenticate(token);
