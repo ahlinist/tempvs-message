@@ -24,6 +24,7 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String PARTICIPANT_ADDED_MESSAGE = "conversation.add.participant";
     private static final String PARTICIPANT_REMOVED_MESSAGE = "conversation.remove.participant";
     private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
+    private static final String CONFERENCE_CREATED = "conversation.conference.created";
 
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
@@ -54,7 +55,7 @@ public class ConversationServiceImpl implements ConversationService {
             conversation.setType(Conversation.Type.DIALOGUE);
         }
 
-        return conversationRepository.saveAndFlush(conversation);
+        return conversationRepository.save(conversation);
     }
 
     public Conversation getConversation(Long id) {
@@ -76,23 +77,37 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {
-        Set<Participant> participants = conversation.getParticipants();
+        Set<Participant> initialParticipants = conversation.getParticipants();
 
-        if (participants.size() == 20) {
-            throw new BadRequestException("Conversation may have only 20 participants max.");
+        if (initialParticipants.size() == 20) {
+            throw new IllegalArgumentException("Conversation may have only 20 participants max.");
         }
 
         Participant admin = conversation.getAdmin();
+        Conversation.Type type = conversation.getType();
 
-        if ((admin == null || !admin.equals(adder))) {
-            throw new BadRequestException("Participants can be added only by admin.");
+        if (type == Conversation.Type.CONFERENCE &&(admin == null || !admin.equals(adder))) {
+            throw new IllegalArgumentException("Participants can be added only by admin.");
         }
 
-        conversation.addParticipant(added);
-        conversation.setType(Conversation.Type.CONFERENCE);
+        Message message;
         Boolean isSystem = Boolean.TRUE;
-        Message message = messageService.createMessage(
-                conversation, adder, participants, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
+        Set<Participant> participants = new HashSet<>(initialParticipants);
+        participants.add(added);
+
+        if (type == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
+            conversation = objectFactory.getInstance(Conversation.class);
+            conversation.setAdmin(adder);
+            message = messageService.createMessage(
+                    conversation, adder, participants, CONFERENCE_CREATED, isSystem);
+        } else {
+            message = messageService.createMessage(
+                    conversation, adder, participants, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
+        }
+
+        conversation.setParticipants(participants);
+        conversation.setType(Conversation.Type.CONFERENCE);
+
         return addMessage(conversation, message);
     }
 
@@ -100,14 +115,14 @@ public class ConversationServiceImpl implements ConversationService {
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.size() <= 2) {
-            throw new BadRequestException("Conversation has only 2 participants. One can't delete one of them.");
+            throw new IllegalArgumentException("Conversation has only 2 participants. One can't delete one of them.");
         }
 
         Participant admin = conversation.getAdmin();
         boolean isSelfRemoval = removed.equals(remover);
 
         if ((admin == null || !admin.equals(remover)) && !isSelfRemoval) {
-            throw new BadRequestException("Participants can be removed only by admin or by themselves.");
+            throw new IllegalArgumentException("Participants can be removed only by admin or by themselves.");
         }
 
         conversation.removeParticipant(removed);
