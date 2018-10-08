@@ -33,6 +33,7 @@ import static org.springframework.http.MediaType.*;
 public class ConversationControllerIntegrationTest {
 
     private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
+    private static final String CONFERENCE = Conversation.Type.CONFERENCE.toString();
     private static ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
@@ -77,7 +78,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("lastMessage.text", is(message)))
                     .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
                     .andExpect(jsonPath("lastMessage.newFor", is(Arrays.asList(1, 2, 3, 4))))
-                    .andExpect(jsonPath("lastMessage.system", is(false)));
+                    .andExpect(jsonPath("lastMessage.system", is(false)))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
     @Test
@@ -161,7 +163,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("lastMessage.text", is(text)))
                     .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
                     .andExpect(jsonPath("lastMessage.newFor", is(participantIds)))
-                    .andExpect(jsonPath("lastMessage.system", is(isSystem)));
+                    .andExpect(jsonPath("lastMessage.system", is(isSystem)))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
     @Test
@@ -215,7 +218,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("conversations[0].lastMessage.author", is(authorId.intValue())))
                     .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
                     .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(4)))
-                    .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)));
+                    .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
+                    .andExpect(jsonPath("conversations[0].type", is(CONFERENCE)));
     }
 
     @Test
@@ -323,7 +327,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
                     .andExpect(jsonPath("lastMessage.newFor", hasSize(participantIds.size())))
                     .andExpect(jsonPath("lastMessage.system", is(Boolean.TRUE)))
-                    .andExpect(jsonPath("lastMessage.subject", is(addedParticipantId.intValue())));
+                    .andExpect(jsonPath("lastMessage.subject", is(addedParticipantId.intValue())))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
     @Test
@@ -373,7 +378,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
                     .andExpect(jsonPath("lastMessage.newFor", hasSize(participantIds.size() - 1)))
                     .andExpect(jsonPath("lastMessage.system", is(Boolean.TRUE)))
-                    .andExpect(jsonPath("lastMessage.subject", is(removedParticipantId.intValue())));
+                    .andExpect(jsonPath("lastMessage.subject", is(removedParticipantId.intValue())))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
     @Test

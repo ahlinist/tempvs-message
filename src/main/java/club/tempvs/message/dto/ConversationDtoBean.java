@@ -7,6 +7,7 @@ import java.util.Objects;
 public class ConversationDtoBean {
 
     private Long id;
+    private String type;
     private String name;
     private MessageDtoBean lastMessage;
 
@@ -17,6 +18,7 @@ public class ConversationDtoBean {
     public ConversationDtoBean(Conversation conversation) {
         this.id = conversation.getId();
         this.name = conversation.getName();
+        this.type = conversation.getType().toString();
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
     }
 
@@ -26,6 +28,14 @@ public class ConversationDtoBean {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getName() {
@@ -55,13 +65,11 @@ public class ConversationDtoBean {
         }
 
         ConversationDtoBean that = (ConversationDtoBean) o;
-        return id.equals(that.id) &&
-                name.equals(that.name) &&
-                lastMessage.equals(that.lastMessage);
+        return id.equals(that.id) && type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, lastMessage);
+        return Objects.hash(id, type);
     }
 }

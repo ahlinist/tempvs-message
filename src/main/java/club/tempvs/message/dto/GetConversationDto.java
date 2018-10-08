@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.*;
 public class GetConversationDto {
 
     private Long id;
+    private String type;
     private Long admin;
     private Set<Long> participants = new HashSet<>();
     private MessageDtoBean lastMessage;
@@ -24,6 +25,7 @@ public class GetConversationDto {
         Collections.reverse(messages);
 
         this.id = conversation.getId();
+        this.type = conversation.getType().toString();
         this.admin = conversation.getAdmin().getId();
         this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
@@ -36,6 +38,14 @@ public class GetConversationDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Long getAdmin() {
@@ -81,11 +91,11 @@ public class GetConversationDto {
         }
 
         GetConversationDto that = (GetConversationDto) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(id, that.id) && Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, type);
     }
 }

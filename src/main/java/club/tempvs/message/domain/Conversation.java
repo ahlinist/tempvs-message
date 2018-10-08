@@ -5,6 +5,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.util.*;
@@ -17,6 +18,9 @@ public class Conversation {
     @GeneratedValue
     private Long id;
     private String name;
+
+    @NotNull
+    private Type type;
 
     @NotEmpty
     @OneToMany(cascade = CascadeType.ALL)
@@ -41,6 +45,14 @@ public class Conversation {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 
     public String getName() {
@@ -114,11 +126,16 @@ public class Conversation {
         }
 
         Conversation that = (Conversation) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(id, that.id) &&
+                Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, type);
+    }
+
+    public enum Type {
+        DIALOGUE, CONFERENCE
     }
 }

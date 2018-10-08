@@ -71,6 +71,7 @@ public class ConversationServiceTest {
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
+        verify(conversation).setType(Conversation.Type.DIALOGUE);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation, author, receiver, message, conversationRepository);
@@ -103,6 +104,7 @@ public class ConversationServiceTest {
         verify(conversation).setName(conversationName);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
+        verify(conversation).setType(Conversation.Type.CONFERENCE);
         verify(message).setConversation(conversation);
         verify(conversationRepository).saveAndFlush(conversation);
         verifyNoMoreInteractions(conversation, author, receiver, message, conversationRepository);
@@ -198,6 +200,7 @@ public class ConversationServiceTest {
         verify(messageService).createMessage(conversation, author, participants, text, isSystem, receiver);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
+        verify(conversation).setType(Conversation.Type.CONFERENCE);
         verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(conversation, conversationRepository);
 

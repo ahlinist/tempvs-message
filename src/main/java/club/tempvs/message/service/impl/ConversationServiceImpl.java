@@ -49,6 +49,9 @@ public class ConversationServiceImpl implements ConversationService {
 
         if (conversation.getParticipants().size() > 2) {
             conversation.setAdmin(author);
+            conversation.setType(Conversation.Type.CONFERENCE);
+        } else {
+            conversation.setType(Conversation.Type.DIALOGUE);
         }
 
         return conversationRepository.saveAndFlush(conversation);
@@ -86,6 +89,7 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation.addParticipant(added);
+        conversation.setType(Conversation.Type.CONFERENCE);
         Boolean isSystem = Boolean.TRUE;
         Message message = messageService.createMessage(
                 conversation, adder, participants, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
