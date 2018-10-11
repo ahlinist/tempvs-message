@@ -92,3 +92,19 @@ task liquibaseDiffChangelog(type: JavaExec) {
     args "--driver=org.postgresql.Driver"
     args "diffChangeLog"
 }
+
+task liquibaseGenerateChangeLog(type: JavaExec) {
+    group = "liquibase"
+
+    classpath sourceSets.main.runtimeClasspath
+    classpath configurations.liquibaseRuntime
+    main = "liquibase.integration.commandline.Main"
+
+    args "--changeLogFile=" + 'src/main/resources/db/main.groovy'
+    args "--referenceUrl=" + 'hibernate:spring:club.tempvs.message.domain?dialect=org.hibernate.dialect.PostgreSQL95Dialect&hibernate.physical_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy'
+    args "--username=" + System.getenv('JDBC_DATABASE_USERNAME')
+    args "--password=" + System.getenv('JDBC_DATABASE_PASSWORD')
+    args "--url=" + System.getenv('JDBC_DATABASE_URL')
+    args "--driver=org.postgresql.Driver"
+    args "generateChangeLog"
+}

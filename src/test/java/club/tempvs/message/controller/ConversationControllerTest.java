@@ -80,14 +80,17 @@ public class ConversationControllerTest {
         String name = "name";
         Set<Long> receiverIds = new HashSet<>();
         receiverIds.add(2L);
+        receiverIds.add(3L);
         Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
+        receivers.add(participant);
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(createConversationDto.getAuthor()).thenReturn(1L);
+        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
         when(participantService.getParticipant(1L)).thenReturn(author);
         when(participantService.getParticipant(2L)).thenReturn(receiver);
-        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
+        when(participantService.getParticipant(3L)).thenReturn(participant);
         when(createConversationDto.getText()).thenReturn(text);
         when(createConversationDto.getName()).thenReturn(name);
         when(messageService.createMessage(author, receivers, text,false)).thenReturn(message);
@@ -99,14 +102,62 @@ public class ConversationControllerTest {
 
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
+        verify(createConversationDto).getReceivers();
         verify(participantService).getParticipant(1L);
         verify(participantService).getParticipant(2L);
-        verify(createConversationDto).getReceivers();
+        verify(participantService).getParticipant(3L);
         verify(createConversationDto).getText();
         verify(createConversationDto).getName();
         verify(messageService).createMessage(author, receivers, text, false);
         verify(conversationService).createConversation(author, receivers, name, message);
         verify(conversation).getMessages();
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
+
+        assertEquals("Result is a conversation", result, getConversationDto);
+    }
+
+    @Test
+    public void testCreateConversationForExistentDialogue() {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        String token = "token";
+        String text = "text";
+        String name = "name";
+        Set<Long> receiverIds = new HashSet<>();
+        receiverIds.add(2L);
+        Set<Participant> receivers = new HashSet<>();
+        receivers.add(receiver);
+        Set<Participant> participants = new HashSet<>();
+        participants.add(author);
+        participants.add(receiver);
+        List<Message> messages = Arrays.asList(message, message, message);
+
+        when(createConversationDto.getAuthor()).thenReturn(authorId);
+        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
+        when(participantService.getParticipant(authorId)).thenReturn(author);
+        when(participantService.getParticipant(receiverId)).thenReturn(receiver);
+        when(createConversationDto.getText()).thenReturn(text);
+        when(createConversationDto.getName()).thenReturn(name);
+        when(messageService.createMessage(author, receivers, text,false)).thenReturn(message);
+        when(conversationService.findConversation(participants, Conversation.Type.DIALOGUE)).thenReturn(conversation);
+        when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
+        when(messageService.getMessagesFromConversation(conversation)).thenReturn(messages);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+
+        GetConversationDto result = conversationController.createConversation(token, createConversationDto);
+
+        verify(createConversationDto).validate();
+        verify(createConversationDto).getAuthor();
+        verify(createConversationDto).getReceivers();
+        verify(participantService).getParticipant(authorId);
+        verify(participantService).getParticipant(receiverId);
+        verify(createConversationDto).getText();
+        verify(createConversationDto).getName();
+        verify(messageService).createMessage(author, receivers, text, false);
+        verify(conversationService).findConversation(participants, Conversation.Type.DIALOGUE);
+        verify(conversationService).addMessage(conversation, message);
+        verify(messageService).getMessagesFromConversation(conversation);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
         verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
 

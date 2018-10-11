@@ -17,10 +17,6 @@ public class Participant {
     @Id
     private Long id;
 
-    @ManyToMany(mappedBy = "participants")
-    @BatchSize(size = 20)
-    private List<Conversation> conversations = new ArrayList<>();
-    
     @CreatedDate
     private Instant createdDate;
 
@@ -30,18 +26,6 @@ public class Participant {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public List<Conversation> getConversations() {
-        return conversations;
-    }
-
-    public void setConversations(List<Conversation> conversations) {
-        this.conversations = conversations;
-    }
-
-    public void addConversation(Conversation conversation) {
-        this.conversations.add(conversation);
     }
 
     public Instant getCreatedDate() {

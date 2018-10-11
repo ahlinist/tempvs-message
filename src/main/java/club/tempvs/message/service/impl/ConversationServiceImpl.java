@@ -141,4 +141,8 @@ public class ConversationServiceImpl implements ConversationService {
 
         return addMessage(conversation, message);
     }
+
+    public Conversation findConversation(Set<Participant> participants, Conversation.Type type) {
+        return conversationRepository.findOneByParticipantsInAndType(participants, Conversation.Type.DIALOGUE);
+    }
 }

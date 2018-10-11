@@ -1,24 +1,16 @@
 package club.tempvs.message.controller;
 
-import club.tempvs.message.api.BadRequestException;
-import club.tempvs.message.api.NotFoundException;
-import club.tempvs.message.api.UnauthorizedException;
-import club.tempvs.message.domain.Conversation;
-import club.tempvs.message.domain.Message;
-import club.tempvs.message.domain.Participant;
+import club.tempvs.message.api.*;
+import club.tempvs.message.domain.*;
 import club.tempvs.message.dto.*;
-import club.tempvs.message.service.ConversationService;
-import club.tempvs.message.service.MessageService;
-import club.tempvs.message.service.ParticipantService;
-import club.tempvs.message.util.AuthHelper;
-import club.tempvs.message.util.ObjectFactory;
+import club.tempvs.message.service.*;
+import club.tempvs.message.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
@@ -69,8 +61,27 @@ public class ConversationController {
         String name = createConversationDto.getName();
         boolean isSystem = false;
         Message message = messageService.createMessage(author, receivers, text, isSystem);
-        Conversation conversation = conversationService.createConversation(author, receivers, name, message);
-        return objectFactory.getInstance(GetConversationDto.class, conversation, conversation.getMessages());
+        Set<Participant> participants = new HashSet<>();
+        participants.add(author);
+        participants.addAll(receivers);
+        Conversation conversation = null;
+        List<Message> messages = null;
+
+        if (participants.size() == 2) {
+            conversation = conversationService.findConversation(participants, Conversation.Type.DIALOGUE);
+
+            if (conversation != null) {
+                conversation = conversationService.addMessage(conversation, message);
+                messages = messageService.getMessagesFromConversation(conversation);
+            }
+        }
+
+        if (conversation == null) {
+            conversation = conversationService.createConversation(author, receivers, name, message);
+            messages = conversation.getMessages();
+        }
+
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages);
     }
 
     @RequestMapping(value="/conversations/{id}", method = GET, produces = APPLICATION_JSON_VALUE)

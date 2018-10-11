@@ -22,11 +22,12 @@ public class GetConversationDto {
     }
 
     public GetConversationDto(Conversation conversation, List<Message> messages) {
+        Participant admin = conversation.getAdmin();
         Collections.reverse(messages);
 
         this.id = conversation.getId();
         this.type = conversation.getType().toString();
-        this.admin = conversation.getAdmin().getId();
+        this.admin = admin != null ? admin.getId() : null;
         this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
         this.messages = messages.stream().map(MessageDtoBean::new).collect(toList());

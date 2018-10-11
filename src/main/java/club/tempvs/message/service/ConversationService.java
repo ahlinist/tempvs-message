@@ -14,4 +14,5 @@ public interface ConversationService {
     Conversation addMessage(Conversation conversation, Message message);
     Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed);
     Conversation addParticipant(Conversation conversation, Participant adder, Participant added);
+    Conversation findConversation(Set<Participant> participants, Conversation.Type type);
 }

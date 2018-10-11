@@ -31,7 +31,7 @@ public class Message {
     private Participant subject;
 
     @ManyToMany
-    private Set<Participant> newFor = new LinkedHashSet<>();
+    private Set<Participant> newFor = new HashSet<>();
 
     @NotBlank
     private String text;

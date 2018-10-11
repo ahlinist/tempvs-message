@@ -52,10 +52,10 @@ public class ConversationServiceTest {
     @Test
     public void testCreateConversationOf2Participants() {
         String conversationName = "name";
-        Set<Participant> receivers = new LinkedHashSet<>();
+        Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
 
-        Set<Participant> participants = new LinkedHashSet<>();
+        Set<Participant> participants = new HashSet<>();
         participants.add(author);
         participants.add(receiver);
 
@@ -82,11 +82,11 @@ public class ConversationServiceTest {
     @Test
     public void testCreateConversationOf3Participants() {
         String conversationName = "name";
-        Set<Participant> receivers = new LinkedHashSet<>();
+        Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
         receivers.add(oneMoreReceiver);
 
-        Set<Participant> participants = new LinkedHashSet<>();
+        Set<Participant> participants = new HashSet<>();
         participants.add(author);
         participants.add(receiver);
         participants.add(oneMoreReceiver);
@@ -143,7 +143,7 @@ public class ConversationServiceTest {
 
     @Test
     public void testAddMessage() {
-        Set<Participant> receivers = new LinkedHashSet<>();
+        Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
@@ -335,5 +335,20 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verifyNoMoreInteractions(conversation, conversationRepository);
+    }
+
+    @Test
+    public void testFindConversation() {
+        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
+
+        when(conversationRepository.findOneByParticipantsInAndType(participants, Conversation.Type.DIALOGUE))
+                .thenReturn(conversation);
+
+        Conversation result = conversationService.findConversation(participants, Conversation.Type.DIALOGUE);
+
+        verify(conversationRepository).findOneByParticipantsInAndType(participants, Conversation.Type.DIALOGUE);
+        verifyNoMoreInteractions(conversationRepository, conversation, author, receiver);
+
+        assertEquals("Conversation is returned as a result", conversation, result);
     }
 }

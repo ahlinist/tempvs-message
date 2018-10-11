@@ -23,6 +23,7 @@ public class Conversation {
     private Type type;
 
     @NotEmpty
+    @OrderColumn
     @OneToMany(cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
 
@@ -34,7 +35,7 @@ public class Conversation {
 
     @Size(min = 2, max = 20)
     @ManyToMany(fetch = FetchType.EAGER)
-    private Set<Participant> participants = new LinkedHashSet<>();
+    private Set<Participant> participants = new HashSet<>();
 
     @CreatedDate
     private Instant createdDate;

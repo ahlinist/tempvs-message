@@ -10,4 +10,5 @@ import java.util.Set;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
     List<Conversation> findByParticipantsIn(Set<Participant> participants, Pageable pageable);
+    Conversation findOneByParticipantsInAndType(Set<Participant> participants, Conversation.Type type);
 }

@@ -49,7 +49,7 @@ public class MessageServiceTest {
     @Test
     public void testCreateMessage() {
         String text = "text";
-        Set<Participant> receivers = new LinkedHashSet<>();
+        Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver1);
         receivers.add(receiver2);
 
@@ -80,6 +80,23 @@ public class MessageServiceTest {
         when(messageRepository.findByConversation(conversation, pageable)).thenReturn(messages);
 
         List<Message> result = messageService.getMessagesFromConversation(conversation, page, size);
+
+        verify(messageRepository).findByConversation(conversation, pageable);
+        verifyNoMoreInteractions(message, messageRepository);
+
+        assertEquals("A list of messages is returned", messages, result);
+    }
+
+    @Test
+    public void testGetMessagesFromConversationWithDefaultParams() {
+        int page = 0;
+        int size = 20;
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
+        List<Message> messages = Arrays.asList(message, message, message);
+
+        when(messageRepository.findByConversation(conversation, pageable)).thenReturn(messages);
+
+        List<Message> result = messageService.getMessagesFromConversation(conversation);
 
         verify(messageRepository).findByConversation(conversation, pageable);
         verifyNoMoreInteractions(message, messageRepository);

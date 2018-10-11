@@ -34,6 +34,7 @@ public class ConversationControllerIntegrationTest {
 
     private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
     private static final String CONFERENCE = Conversation.Type.CONFERENCE.toString();
+    private static final String DIALOGUE = Conversation.Type.DIALOGUE.toString();
     private static ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
@@ -80,6 +81,43 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("lastMessage.newFor", is(Arrays.asList(1, 2, 3, 4))))
                     .andExpect(jsonPath("lastMessage.system", is(false)))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
+    }
+
+    @Test
+    public void testCreateConversationForExistendDialogue() throws Exception {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        Set<Long> receivers = new HashSet<>(Arrays.asList(receiverId));
+        String oldMessage = "my old message";
+        String newMessage = "my new message";
+        String name = null;
+        entityHelper.createConversation(authorId, receivers, oldMessage, name);
+        String createConversationJson = getCreateConversationDtoJson(authorId, receivers, newMessage, name);
+
+        mvc.perform(post("/api/conversations")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(createConversationJson)
+                .header("Authorization",TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("participants", is(Arrays.asList(authorId.intValue(), receiverId.intValue()))))
+                .andExpect(jsonPath("admin", isEmptyOrNullString()))
+                .andExpect(jsonPath("messages", hasSize(2)))
+                .andExpect(jsonPath("messages[0].text", is(oldMessage)))
+                .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
+                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                .andExpect(jsonPath("messages[0].newFor", is(Arrays.asList(authorId.intValue(), receiverId.intValue()))))
+                .andExpect(jsonPath("messages[0].system", is(false)))
+                .andExpect(jsonPath("messages[1].text", is(newMessage)))
+                .andExpect(jsonPath("messages[1].author", is(authorId.intValue())))
+                .andExpect(jsonPath("messages[1].subject", isEmptyOrNullString()))
+                .andExpect(jsonPath("messages[1].newFor", is(Arrays.asList(receiverId.intValue()))))
+                .andExpect(jsonPath("messages[1].system", is(false)))
+                .andExpect(jsonPath("lastMessage.text", is(newMessage)))
+                .andExpect(jsonPath("lastMessage.author", is(authorId.intValue())))
+                .andExpect(jsonPath("lastMessage.newFor", is(Arrays.asList(receiverId.intValue()))))
+                .andExpect(jsonPath("lastMessage.system", is(false)))
+                .andExpect(jsonPath("type", is(DIALOGUE)));
     }
 
     @Test

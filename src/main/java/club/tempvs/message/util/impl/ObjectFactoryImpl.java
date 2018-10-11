@@ -37,6 +37,7 @@ public class ObjectFactoryImpl implements ObjectFactory {
         try {
             instance = constructor.newInstance(args);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
 

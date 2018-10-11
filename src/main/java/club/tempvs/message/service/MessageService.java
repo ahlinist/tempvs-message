@@ -14,4 +14,5 @@ public interface MessageService {
     Message createMessage(Conversation conversation, Participant author, Set<Participant> receivers, String text,
                           Boolean isSystem, Participant subject);
     List<Message> getMessagesFromConversation(Conversation conversation, int page, int size);
+    List<Message> getMessagesFromConversation(Conversation conversation);
 }

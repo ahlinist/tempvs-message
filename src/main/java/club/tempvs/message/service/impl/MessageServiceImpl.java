@@ -18,6 +18,9 @@ import java.util.Set;
 @Service
 public class MessageServiceImpl implements MessageService {
 
+    private static final int DEFAULT_PAGE_NUMBER = 0;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
     private final ObjectFactory objectFactory;
     private final MessageRepository messageRepository;
 
@@ -51,5 +54,9 @@ public class MessageServiceImpl implements MessageService {
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         return messageRepository.findByConversation(conversation, pageable);
+    }
+
+    public List<Message> getMessagesFromConversation(Conversation conversation) {
+        return getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
     }
 }
