@@ -38,7 +38,6 @@ dependencies {
     compile "org.postgresql:postgresql:${postgresVersion}"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
     compile "org.liquibase:liquibase-core:${liquibaseVersion}"
-    compile "org.liquibase:liquibase-groovy-dsl:${liquibaseGroovyDSLVersion}"
     //testing
     integrationTestCompile "org.springframework.boot:spring-boot-starter-test:${springbootVersion}"
     integrationTestRuntime 'com.h2database:h2:1.4.194'
@@ -46,7 +45,6 @@ dependencies {
     testCompile 'org.mockito:mockito-core:2.18.3'
     //liquibase
     liquibaseRuntime "org.liquibase:liquibase-core:${liquibaseVersion}"
-    liquibaseRuntime "org.liquibase:liquibase-groovy-dsl:${liquibaseGroovyDSLVersion}"
     liquibaseRuntime "org.postgresql:postgresql:${postgresVersion}"
     liquibaseRuntime 'org.liquibase.ext:liquibase-hibernate5:3.6'
 }
@@ -84,7 +82,7 @@ task liquibaseDiffChangelog(type: JavaExec) {
     classpath configurations.liquibaseRuntime
     main = "liquibase.integration.commandline.Main"
 
-    args "--changeLogFile=" + 'src/main/resources/db/main.groovy'
+    args "--changeLogFile=" + 'src/main/resources/db/changelog/db.changelog-master.yaml'
     args "--referenceUrl=" + 'hibernate:spring:club.tempvs.message.domain?dialect=org.hibernate.dialect.PostgreSQL95Dialect&hibernate.physical_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy'
     args "--username=" + System.getenv('JDBC_DATABASE_USERNAME')
     args "--password=" + System.getenv('JDBC_DATABASE_PASSWORD')
@@ -100,7 +98,7 @@ task liquibaseGenerateChangeLog(type: JavaExec) {
     classpath configurations.liquibaseRuntime
     main = "liquibase.integration.commandline.Main"
 
-    args "--changeLogFile=" + 'src/main/resources/db/main.groovy'
+    args "--changeLogFile=" + 'src/main/resources/db/changelog/db.changelog-master.yaml'
     args "--referenceUrl=" + 'hibernate:spring:club.tempvs.message.domain?dialect=org.hibernate.dialect.PostgreSQL95Dialect&hibernate.physical_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy'
     args "--username=" + System.getenv('JDBC_DATABASE_USERNAME')
     args "--password=" + System.getenv('JDBC_DATABASE_PASSWORD')
