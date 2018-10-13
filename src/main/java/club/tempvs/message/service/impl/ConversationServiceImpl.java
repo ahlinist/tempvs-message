@@ -142,7 +142,13 @@ public class ConversationServiceImpl implements ConversationService {
         return addMessage(conversation, message);
     }
 
-    public Conversation findConversation(Set<Participant> participants, Conversation.Type type) {
-        return conversationRepository.findOneByParticipantsInAndType(participants, Conversation.Type.DIALOGUE);
+    public Conversation findDialogue(Participant author, Participant receiver) {
+        Set<Participant> authorSet = new HashSet<>();
+        authorSet.add(author);
+        Set<Participant> receiverSet = new HashSet<>();
+        receiverSet.add(receiver);
+
+        return conversationRepository
+                .findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet);
     }
 }

@@ -1,6 +1,5 @@
 package club.tempvs.message.service;
 
-import club.tempvs.message.api.BadRequestException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -339,14 +338,16 @@ public class ConversationServiceTest {
 
     @Test
     public void testFindConversation() {
-        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
+        Set<Participant> authorSet = new HashSet<>(Arrays.asList(author));
+        Set<Participant> receiverSet = new HashSet<>(Arrays.asList(receiver));
 
-        when(conversationRepository.findOneByParticipantsInAndType(participants, Conversation.Type.DIALOGUE))
+        when(conversationRepository
+                .findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet))
                 .thenReturn(conversation);
 
-        Conversation result = conversationService.findConversation(participants, Conversation.Type.DIALOGUE);
+        Conversation result = conversationService.findDialogue(author, receiver);
 
-        verify(conversationRepository).findOneByParticipantsInAndType(participants, Conversation.Type.DIALOGUE);
+        verify(conversationRepository).findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet);
         verifyNoMoreInteractions(conversationRepository, conversation, author, receiver);
 
         assertEquals("Conversation is returned as a result", conversation, result);

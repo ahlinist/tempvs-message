@@ -140,7 +140,7 @@ public class ConversationControllerTest {
         when(createConversationDto.getText()).thenReturn(text);
         when(createConversationDto.getName()).thenReturn(name);
         when(messageService.createMessage(author, receivers, text,false)).thenReturn(message);
-        when(conversationService.findConversation(participants, Conversation.Type.DIALOGUE)).thenReturn(conversation);
+        when(conversationService.findDialogue(author, receiver)).thenReturn(conversation);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
@@ -155,7 +155,7 @@ public class ConversationControllerTest {
         verify(createConversationDto).getText();
         verify(createConversationDto).getName();
         verify(messageService).createMessage(author, receivers, text, false);
-        verify(conversationService).findConversation(participants, Conversation.Type.DIALOGUE);
+        verify(conversationService).findDialogue(author, receiver);
         verify(conversationService).addMessage(conversation, message);
         verify(messageService).getMessagesFromConversation(conversation);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);

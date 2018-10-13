@@ -68,7 +68,7 @@ public class ConversationController {
         List<Message> messages = null;
 
         if (participants.size() == 2) {
-            conversation = conversationService.findConversation(participants, Conversation.Type.DIALOGUE);
+            conversation = conversationService.findDialogue(author, receivers.iterator().next());
 
             if (conversation != null) {
                 conversation = conversationService.addMessage(conversation, message);
