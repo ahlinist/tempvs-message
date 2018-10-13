@@ -274,7 +274,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
                     .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(4)))
                     .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
-                    .andExpect(jsonPath("conversations[0].type", is(CONFERENCE)));
+                    .andExpect(jsonPath("conversations[0].type", is(CONFERENCE)))
+                    .andExpect(jsonPath("conversations[0].participants", hasSize(4)));
     }
 
     @Test

@@ -1,8 +1,10 @@
 package club.tempvs.message.dto;
 
 import club.tempvs.message.domain.Conversation;
+import club.tempvs.message.domain.Participant;
 
-import java.util.Objects;
+import java.util.*;
+import static java.util.stream.Collectors.*;
 
 public class ConversationDtoBean {
 
@@ -10,6 +12,7 @@ public class ConversationDtoBean {
     private String type;
     private String name;
     private MessageDtoBean lastMessage;
+    private Set<Long> participants = new HashSet<>();
 
     public ConversationDtoBean() {
 
@@ -20,6 +23,7 @@ public class ConversationDtoBean {
         this.name = conversation.getName();
         this.type = conversation.getType().toString();
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
+        this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
     }
 
     public Long getId() {
@@ -52,6 +56,14 @@ public class ConversationDtoBean {
 
     public void setLastMessage(MessageDtoBean lastMessage) {
         this.lastMessage = lastMessage;
+    }
+
+    public Set<Long> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(Set<Long> participants) {
+        this.participants = participants;
     }
 
     @Override
