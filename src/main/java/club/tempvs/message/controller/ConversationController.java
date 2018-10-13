@@ -67,7 +67,9 @@ public class ConversationController {
         Conversation conversation = null;
         List<Message> messages = null;
 
-        if (participants.size() == 2) {
+        if (participants.size() < 2) {
+            throw new BadRequestException("Conversation must contain at least 2 participants.");
+        } else if (participants.size() == 2) {
             conversation = conversationService.findDialogue(author, receivers.iterator().next());
 
             if (conversation != null) {

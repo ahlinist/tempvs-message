@@ -164,6 +164,34 @@ public class ConversationControllerTest {
         assertEquals("Result is a conversation", result, getConversationDto);
     }
 
+    @Test(expected = BadRequestException.class)
+    public void testCreateConversationWith1Participant() {
+        Long authorId = 1L;
+        String token = "token";
+        String text = "text";
+        String name = "name";
+        Set<Long> receiverIds = new HashSet<>();
+        Set<Participant> receivers = new HashSet<>();
+
+        when(createConversationDto.getAuthor()).thenReturn(authorId);
+        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
+        when(participantService.getParticipant(authorId)).thenReturn(author);
+        when(createConversationDto.getText()).thenReturn(text);
+        when(createConversationDto.getName()).thenReturn(name);
+        when(messageService.createMessage(author, receivers, text,false)).thenReturn(message);
+
+        conversationController.createConversation(token, createConversationDto);
+
+        verify(createConversationDto).validate();
+        verify(createConversationDto).getAuthor();
+        verify(createConversationDto).getReceivers();
+        verify(participantService).getParticipant(authorId);
+        verify(createConversationDto).getText();
+        verify(createConversationDto).getName();
+        verify(messageService).createMessage(author, receivers, text, false);
+        verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
+    }
+
     @Test
     public void testGetConversation() {
         String token = "token";

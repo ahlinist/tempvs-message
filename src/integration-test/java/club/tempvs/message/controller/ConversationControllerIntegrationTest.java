@@ -137,6 +137,23 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
+    public void testCreateConversationWithAuthorEqualReceiver() throws Exception {
+        Long author = 1L;
+        Set<Long> receivers = new HashSet<>(Arrays.asList(1L));
+        String message = "myMessage";
+        String name = "conversation name";
+        String createConversationJson = getCreateConversationDtoJson(author, receivers, message, name);
+
+        mvc.perform(post("/api/conversations")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(createConversationJson)
+                .header("Authorization",TOKEN))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("Conversation must contain at least 2 participants.")));
+    }
+
+    @Test
     public void testCreateConversationWithNoMessage() throws Exception {
         Long authorId = 4L;
         Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
