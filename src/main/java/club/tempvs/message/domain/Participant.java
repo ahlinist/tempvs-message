@@ -1,13 +1,10 @@
 package club.tempvs.message.domain;
 
-import org.hibernate.annotations.BatchSize;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -17,8 +14,14 @@ public class Participant {
     @Id
     private Long id;
 
+    private String name;
+
     @CreatedDate
     private Instant createdDate;
+
+    public Participant() {
+
+    }
 
     public Long getId() {
         return id;
@@ -26,6 +29,14 @@ public class Participant {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Instant getCreatedDate() {
@@ -47,11 +58,12 @@ public class Participant {
         }
 
         Participant that = (Participant) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(id, that.id)
+                && Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, name);
     }
 }

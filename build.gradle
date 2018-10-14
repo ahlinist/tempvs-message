@@ -82,7 +82,7 @@ task liquibaseDiffChangelog(type: JavaExec) {
     classpath configurations.liquibaseRuntime
     main = "liquibase.integration.commandline.Main"
 
-    args "--changeLogFile=" + 'src/main/resources/db/changelog/db.changelog-master.yaml'
+    args "--changeLogFile=" + 'src/main/resources/db/changelog/changes/' + System.getenv('LIQUIBASE_DIFF_FILENAME')
     args "--referenceUrl=" + 'hibernate:spring:club.tempvs.message.domain?dialect=org.hibernate.dialect.PostgreSQL95Dialect&hibernate.physical_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy'
     args "--username=" + System.getenv('JDBC_DATABASE_USERNAME')
     args "--password=" + System.getenv('JDBC_DATABASE_PASSWORD')

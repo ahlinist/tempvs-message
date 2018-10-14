@@ -1,0 +1,292 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1539416337487-1
+      author: albvs (generated)
+      changes:
+        - createSequence:
+            sequenceName: hibernate_sequence
+  - changeSet:
+      id: 1539416337487-2
+      author: albvs (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: conversationPK
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: created_date
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: type
+                  type: INTEGER
+              - column:
+                  name: admin_id
+                  type: BIGINT
+              - column:
+                  name: last_message_id
+                  type: BIGINT
+            tableName: conversation
+  - changeSet:
+      id: 1539416337487-3
+      author: albvs (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    primaryKey: true
+                  name: conversation_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: messages_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    primaryKey: true
+                  name: messages_order
+                  type: INTEGER
+            tableName: conversation_messages
+  - changeSet:
+      id: 1539416337487-4
+      author: albvs (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    primaryKey: true
+                  name: conversation_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    primaryKey: true
+                  name: participants_id
+                  type: BIGINT
+            tableName: conversation_participants
+  - changeSet:
+      id: 1539416337487-5
+      author: albvs (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: messagePK
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: created_date
+                  type: TIMESTAMP WITHOUT TIME ZONE
+              - column:
+                  name: is_system
+                  type: BOOLEAN
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+              - column:
+                  name: author_id
+                  type: BIGINT
+              - column:
+                  name: conversation_id
+                  type: BIGINT
+              - column:
+                  name: subject_id
+                  type: BIGINT
+            tableName: message
+  - changeSet:
+      id: 1539416337487-6
+      author: albvs (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    primaryKey: true
+                  name: message_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    primaryKey: true
+                  name: new_for_id
+                  type: BIGINT
+            tableName: message_new_for
+  - changeSet:
+      id: 1539416337487-7
+      author: albvs (generated)
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: participantPK
+                  name: id
+                  type: BIGINT
+              - column:
+                  name: created_date
+                  type: TIMESTAMP WITHOUT TIME ZONE
+            tableName: participant
+  - changeSet:
+      id: 1539416337487-8
+      author: albvs (generated)
+      changes:
+        - addUniqueConstraint:
+            columnNames: messages_id
+            constraintName: UK_163cga9b82cbl0obssg58gkvm
+            tableName: conversation_messages
+  - changeSet:
+      id: 1539416337487-9
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: admin_id
+            baseTableName: conversation
+            constraintName: FK6acvhq2obstf3p05xnwefer58
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: participant
+            validate: true
+  - changeSet:
+      id: 1539416337487-10
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: subject_id
+            baseTableName: message
+            constraintName: FK6q5mk8iu92f785knvkt8101fs
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: participant
+            validate: true
+  - changeSet:
+      id: 1539416337487-11
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: conversation_id
+            baseTableName: message
+            constraintName: FK6yskk3hxw5sklwgi25y6d5u1l
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: conversation
+            validate: true
+  - changeSet:
+      id: 1539416337487-12
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: participants_id
+            baseTableName: conversation_participants
+            constraintName: FK8l5rmj9qli0xc7s7esnhb1wag
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: participant
+            validate: true
+  - changeSet:
+      id: 1539416337487-13
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: message_id
+            baseTableName: message_new_for
+            constraintName: FKbx2078jgnc8qpnyie2hs8lxxk
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: message
+            validate: true
+  - changeSet:
+      id: 1539416337487-14
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: conversation_id
+            baseTableName: conversation_participants
+            constraintName: FKjot5c0f9ococ0amkh0bfbpln8
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: conversation
+            validate: true
+  - changeSet:
+      id: 1539416337487-15
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: new_for_id
+            baseTableName: message_new_for
+            constraintName: FKlhq9pc1151mumxii25g12uxvk
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: participant
+            validate: true
+  - changeSet:
+      id: 1539416337487-16
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: conversation_id
+            baseTableName: conversation_messages
+            constraintName: FKowwk6j0v3ydi001gu4m5lb39d
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: conversation
+            validate: true
+  - changeSet:
+      id: 1539416337487-17
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: author_id
+            baseTableName: message
+            constraintName: FKrhnlglarcehf9y79wd9q0m438
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: participant
+            validate: true
+  - changeSet:
+      id: 1539416337487-18
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: last_message_id
+            baseTableName: conversation
+            constraintName: FKsm3966podppo987o2etdjci1r
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: message
+            validate: true
+  - changeSet:
+      id: 1539416337487-19
+      author: albvs (generated)
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: messages_id
+            baseTableName: conversation_messages
+            constraintName: FKsrkwqqihpmo60bbny5xibdx3r
+            deferrable: false
+            initiallyDeferred: false
+            referencedColumnNames: id
+            referencedTableName: message
+            validate: true
+
