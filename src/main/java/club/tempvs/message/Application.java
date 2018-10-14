@@ -22,8 +22,12 @@ public class Application {
     @Bean
     public ConnectionFactory amqpConnectionFactory() throws Exception {
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setUri(CLOUDAMQP_URL);
-        connectionFactory.setConnectionTimeout(CLOUDAMQP_CONNECTION_TIMEOUT);
+
+        if (CLOUDAMQP_URL != null) {
+            connectionFactory.setUri(CLOUDAMQP_URL);
+            connectionFactory.setConnectionTimeout(CLOUDAMQP_CONNECTION_TIMEOUT);
+        }
+
         return connectionFactory;
     }
 }
