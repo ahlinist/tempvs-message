@@ -4,6 +4,10 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Participant;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static java.util.stream.Collectors.*;
 
 public class ConversationDtoBean {
@@ -12,18 +16,21 @@ public class ConversationDtoBean {
     private String type;
     private String name;
     private MessageDtoBean lastMessage;
-    private Set<Long> participants = new HashSet<>();
+    private String conversant;
 
     public ConversationDtoBean() {
 
     }
 
-    public ConversationDtoBean(Conversation conversation) {
+    public ConversationDtoBean(Conversation conversation, Participant self) {
+        Stream<Participant> participantStream = conversation.getParticipants().stream();
+
         this.id = conversation.getId();
         this.name = conversation.getName();
         this.type = conversation.getType().toString();
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
-        this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
+        this.conversant = participantStream.filter(participant -> !participant.equals(self))
+                .map(Participant::getName).collect(Collectors.joining(", "));
     }
 
     public Long getId() {
@@ -58,12 +65,12 @@ public class ConversationDtoBean {
         this.lastMessage = lastMessage;
     }
 
-    public Set<Long> getParticipants() {
-        return participants;
+    public String getConversant() {
+        return conversant;
     }
 
-    public void setParticipants(Set<Long> participants) {
-        this.participants = participants;
+    public void setConversant(String conversant) {
+        this.conversant = conversant;
     }
 
     @Override

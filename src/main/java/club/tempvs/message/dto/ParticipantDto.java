@@ -1,5 +1,7 @@
 package club.tempvs.message.dto;
 
+import club.tempvs.message.domain.Participant;
+
 public class ParticipantDto {
 
     Long id;
@@ -7,6 +9,11 @@ public class ParticipantDto {
 
     public ParticipantDto() {
 
+    }
+
+    public ParticipantDto(Participant participant) {
+        this.id = participant.getId();
+        this.name = participant.getName();
     }
 
     public Long getId() {

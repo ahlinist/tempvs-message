@@ -117,7 +117,7 @@ public class ConversationController {
 
         Participant participant = participantService.getParticipant(participantId);
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
-        return objectFactory.getInstance(GetConversationsDto.class, conversations);
+        return objectFactory.getInstance(GetConversationsDto.class, conversations, participant);
     }
 
     @RequestMapping(value="/conversations/{conversationId}/messages", method = POST,

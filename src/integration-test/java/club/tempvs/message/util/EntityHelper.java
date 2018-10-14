@@ -29,8 +29,9 @@ public class EntityHelper {
     }
 
     public Conversation createConversation(Long authorId, Set<Long> receiverIds, String text, String name) {
-        Participant author = participantService.createParticipant(authorId, "");
-        Set<Participant> receivers = receiverIds.stream().map(id -> participantService.createParticipant(id, "")).collect(toSet());
+        String participantName = "name";
+        Participant author = participantService.createParticipant(authorId, participantName);
+        Set<Participant> receivers = receiverIds.stream().map(id -> participantService.createParticipant(id, participantName)).collect(toSet());
         Message message = messageService.createMessage(author, receivers, text, false);
         return conversationService.createConversation(author, receivers, name, message);
     }

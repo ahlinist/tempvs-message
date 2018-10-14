@@ -237,13 +237,13 @@ public class ConversationControllerTest {
 
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
-        when(objectFactory.getInstance(GetConversationsDto.class, conversations)).thenReturn(getConversationsDto);
+        when(objectFactory.getInstance(GetConversationsDto.class, conversations, participant)).thenReturn(getConversationsDto);
 
         GetConversationsDto result = conversationController.getConversationsByParticipant(token, participantId, page, size);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversationsByParticipant(participant, page, size);
-        verify(objectFactory).getInstance(GetConversationsDto.class, conversations);
+        verify(objectFactory).getInstance(GetConversationsDto.class, conversations, participant);
         verifyNoMoreInteractions(participantService, conversationService, objectFactory);
 
         assertEquals("GetCoversationsDto is returned as a result", getConversationsDto, result);

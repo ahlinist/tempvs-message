@@ -14,9 +14,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -31,7 +31,7 @@ import static org.springframework.http.MediaType.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 public class ConversationControllerIntegrationTest {
 
     private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
@@ -259,6 +259,35 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testGetConversationsByParticipant() throws Exception {
         Long authorId = 10L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L));
+        String text = "text";
+        String name = "name";
+
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+        List<Message> messages = conversation.getMessages();
+        Long messageId = messages.get(0).getId();
+        Boolean isSystem = messages.get(0).getSystem();
+
+        mvc.perform(get("/api/conversations?participant=" + authorId + "&page=0&size=10")
+                .header("Authorization",TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("conversations", hasSize(1)))
+                .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
+                .andExpect(jsonPath("conversations[0].name", is(name)))
+                .andExpect(jsonPath("conversations[0].lastMessage.id", is(messageId.intValue())))
+                .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
+                .andExpect(jsonPath("conversations[0].lastMessage.author", is(authorId.intValue())))
+                .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
+                .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(2)))
+                .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
+                .andExpect(jsonPath("conversations[0].type", is(DIALOGUE)))
+                .andExpect(jsonPath("conversations[0].conversant", is("name")));
+    }
+
+    @Test
+    public void testGetConversationsByParticipantWithMultipleConversants() throws Exception {
+        Long authorId = 10L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
         String name = "name";
@@ -282,7 +311,7 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(4)))
                     .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
                     .andExpect(jsonPath("conversations[0].type", is(CONFERENCE)))
-                    .andExpect(jsonPath("conversations[0].participants", hasSize(4)));
+                    .andExpect(jsonPath("conversations[0].conversant", is("name, name, name")));
     }
 
     @Test
@@ -465,7 +494,7 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[0].text", is(text)))
                     .andExpect(jsonPath("messages[0].author", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
-                    .andExpect(jsonPath("messages[0].newFor", hasSize(receiverIds.size() + 1)))
+                    .andExpect(jsonPath("messages[0].newFor", hasSize(receiverIds.size())))
                     .andExpect(jsonPath("messages[0].system", is(Boolean.FALSE)))
                     .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
                     .andExpect(jsonPath("messages[1].author", is(authorId.intValue())))
