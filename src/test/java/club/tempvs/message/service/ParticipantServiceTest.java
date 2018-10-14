@@ -33,17 +33,17 @@ public class ParticipantServiceTest {
 
     @Test
     public void testCreateParticipant() {
-        when(objectFactory.getInstance(Participant.class)).thenReturn(participant);
+        Long participantId = 1L;
+        String participantName = "firstName lastName";
+
+        when(objectFactory.getInstance(Participant.class, participantId, participantName)).thenReturn(participant);
         when(participantRepository.save(participant)).thenReturn(participant);
 
-        Participant result = participantService.createParticipant(1L);
+        Participant result = participantService.createParticipant(participantId, participantName);
 
-        verify(objectFactory).getInstance(Participant.class);
-        verify(participant).setId(1L);
+        verify(objectFactory).getInstance(Participant.class, participantId, participantName);
         verify(participantRepository).save(participant);
-        verifyNoMoreInteractions(participant);
-        verifyNoMoreInteractions(objectFactory);
-        verifyNoMoreInteractions(participantRepository);
+        verifyNoMoreInteractions(participant, objectFactory, participantRepository);
 
         assertTrue("A participant instance is returned", result instanceof Participant);
     }
@@ -55,26 +55,58 @@ public class ParticipantServiceTest {
         Participant result = participantService.getParticipant(1L);
 
         verify(participantRepository).findById(1L);
-        verifyNoMoreInteractions(participantRepository);
+        verifyNoMoreInteractions(participant, objectFactory, participantRepository);
 
         assertEquals("A participant instance is returned", result, participant);
     }
 
     @Test
     public void testGetParticipantForNoneFound() {
-        when(participantRepository.findById(1L)).thenReturn(Optional.empty());
-        when(objectFactory.getInstance(Participant.class)).thenReturn(participant);
+        Long participantId = 1L;
+
+        when(participantRepository.findById(participantId)).thenReturn(Optional.empty());
+
+        Participant result = participantService.getParticipant(participantId);
+
+        verify(participantRepository).findById(participantId);
+        verifyNoMoreInteractions(participant, objectFactory, participantRepository);
+
+        assertEquals("Null is returned", result, null);
+    }
+
+    @Test
+    public void testRefreshParticipant() {
+        Long participantId = 1L;
+        String participantName = "firstName lastName";
+
+        when(participantRepository.findById(participantId)).thenReturn(Optional.of(participant));
         when(participantRepository.save(participant)).thenReturn(participant);
 
-        Participant result = participantService.getParticipant(1L);
+        Participant result = participantService.refreshParticipant(participantId, participantName);
 
-        verify(participantRepository).findById(1L);
-        verify(objectFactory).getInstance(Participant.class);
-        verify(participant).setId(1L);
+        verify(participantRepository).findById(participantId);
+        verify(participant).setName(participantName);
         verify(participantRepository).save(participant);
-        verifyNoMoreInteractions(participant);
-        verifyNoMoreInteractions(objectFactory);
-        verifyNoMoreInteractions(participantRepository);
+        verifyNoMoreInteractions(participant, objectFactory, participantRepository);
+
+        assertEquals("A participant instance is returned", result, participant);
+    }
+
+    @Test
+    public void testRefreshParticipantForNonExistent() {
+        Long participantId = 1L;
+        String participantName = "firstName lastName";
+
+        when(participantRepository.findById(participantId)).thenReturn(Optional.empty());
+        when(objectFactory.getInstance(Participant.class, participantId, participantName)).thenReturn(participant);
+        when(participantRepository.save(participant)).thenReturn(participant);
+
+        Participant result = participantService.refreshParticipant(participantId, participantName);
+
+        verify(participantRepository).findById(participantId);
+        verify(objectFactory).getInstance(Participant.class, participantId, participantName);
+        verify(participantRepository).save(participant);
+        verifyNoMoreInteractions(participant, objectFactory, participantRepository);
 
         assertEquals("A participant instance is returned", result, participant);
     }

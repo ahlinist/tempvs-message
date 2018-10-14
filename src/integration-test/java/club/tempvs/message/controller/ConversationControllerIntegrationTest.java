@@ -14,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,6 +31,7 @@ import static org.springframework.http.MediaType.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ConversationControllerIntegrationTest {
 
     private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
@@ -62,6 +64,11 @@ public class ConversationControllerIntegrationTest {
         String name = "conversation name";
         String createConversationJson = getCreateConversationDtoJson(authorId, receivers, message, name);
 
+        entityHelper.createParticipant(1L, "");
+        entityHelper.createParticipant(2L, "");
+        entityHelper.createParticipant(3L, "");
+        entityHelper.createParticipant(4L, "");
+
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
@@ -84,7 +91,7 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testCreateConversationForExistendDialogue() throws Exception {
+    public void testCreateConversationForExistentDialogue() throws Exception {
         Long authorId = 1L;
         Long receiverId = 2L;
         Set<Long> receivers = new HashSet<>(Arrays.asList(receiverId));
@@ -347,6 +354,11 @@ public class ConversationControllerIntegrationTest {
         participantIds.add(authorId);
         participantIds.add(addedParticipantId);
 
+        entityHelper.createParticipant(1L, "");
+        entityHelper.createParticipant(2L, "");
+        entityHelper.createParticipant(3L, "");
+        entityHelper.createParticipant(4L, "");
+        entityHelper.createParticipant(5L, "");
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
         int messagesInitialSize = conversation.getMessages().size();
@@ -385,6 +397,36 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("lastMessage.system", is(Boolean.TRUE)))
                     .andExpect(jsonPath("lastMessage.subject", is(addedParticipantId.intValue())))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
+    }
+
+    @Test
+    public void testUpdateParticipantsForAddAndNotExistentSubject() throws Exception {
+        Long authorId = 1L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
+        String text = "text";
+        String name = "name";
+        Long addedParticipantId = 5L;
+        Set<Long> participantIds = new HashSet<>(receiverIds);
+        participantIds.add(authorId);
+        participantIds.add(addedParticipantId);
+
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+
+        UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
+        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
+        updateParticipantsDto.setInitiator(authorId);
+        updateParticipantsDto.setSubject(addedParticipantId);
+
+        String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
+
+        mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("Participant with id 5 does not exist")));
     }
 
     @Test

@@ -165,7 +165,16 @@ public class ConversationController {
         }
 
         Participant initiator = participantService.getParticipant(initiatorId);
+
+        if (initiator == null) {
+            throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
+        }
+
         Participant subject = participantService.getParticipant(subjectId);
+
+        if (subject == null) {
+            throw new BadRequestException("Participant with id " + subjectId + " does not exist");
+        }
 
         Conversation result;
 

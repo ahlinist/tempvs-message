@@ -19,13 +19,24 @@ public class ParticipantServiceImpl implements ParticipantService {
         this.participantRepository = participantRepository;
     }
 
-    public Participant createParticipant(Long id) {
-        Participant participant = objectFactory.getInstance(Participant.class);
-        participant.setId(id);
+    public Participant createParticipant(Long id, String name) {
+        Participant participant = objectFactory.getInstance(Participant.class, id, name);
         return participantRepository.save(participant);
     }
 
     public Participant getParticipant(Long id) {
-        return participantRepository.findById(id).orElseGet(() -> createParticipant(id));
+        return participantRepository.findById(id).orElse(null);
+    }
+
+    public Participant refreshParticipant(Long id, String name) {
+        Participant participant = getParticipant(id);
+
+        if (participant != null) {
+            participant.setName(name);
+        } else {
+            participant = objectFactory.getInstance(Participant.class, id, name);
+        }
+
+        return participantRepository.save(participant);
     }
 }
