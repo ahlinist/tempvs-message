@@ -1,6 +1,5 @@
 package club.tempvs.message.service.impl;
 
-import club.tempvs.message.api.BadRequestException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -13,12 +12,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Service
+@Transactional
 public class ConversationServiceImpl implements ConversationService {
 
     private static final String PARTICIPANT_ADDED_MESSAGE = "conversation.add.participant";
