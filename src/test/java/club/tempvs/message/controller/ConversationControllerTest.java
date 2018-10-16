@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.*;
@@ -234,19 +235,25 @@ public class ConversationControllerTest {
         int size = 20;
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
+        List<ConversationDtoBean> conversationDtoBeans = new ArrayList<>();
+        conversationDtoBeans.add(new ConversationDtoBean());
 
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
         when(objectFactory.getInstance(GetConversationsDto.class, conversations, participant)).thenReturn(getConversationsDto);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
+        when(getConversationsDto.getConversations()).thenReturn(conversationDtoBeans);
 
-        GetConversationsDto result = conversationController.getConversationsByParticipant(token, participantId, page, size);
+        ResponseEntity result = conversationController.getConversationsByParticipant(token, participantId, page, size);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversationsByParticipant(participant, page, size);
         verify(objectFactory).getInstance(GetConversationsDto.class, conversations, participant);
-        verifyNoMoreInteractions(participantService, conversationService, objectFactory);
+        verify(objectFactory).getInstance(HttpHeaders.class);
+        verify(getConversationsDto).getConversations();
+        verifyNoMoreInteractions(participantService, conversationService, objectFactory, getConversationsDto);
 
-        assertEquals("GetCoversationsDto is returned as a result", getConversationsDto, result);
+        assertEquals("GetCoversationsDto is returned as a result", getConversationsDto, result.getBody());
     }
 
     @Test(expected = BadRequestException.class)
@@ -419,5 +426,64 @@ public class ConversationControllerTest {
         verify(updateParticipantsDto).getSubject();
         verify(updateParticipantsDto).getAction();
         verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
+    }
+
+    @Test
+    public void testCountConversations() {
+        String token = "token";
+        Long participantId = 1L;
+        long conversationsCount = 3L;
+        boolean isNew = false;
+
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(conversationService.countConversations(participant, isNew)).thenReturn(conversationsCount);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
+
+        ResponseEntity result = conversationController.countConversations(token, participantId, isNew);
+
+        verify(authHelper).authenticate(token);
+        verify(participantService).getParticipant(participantId);
+        verify(conversationService).countConversations(participant, isNew);
+        verify(objectFactory).getInstance(HttpHeaders.class);
+        verifyNoMoreInteractions(participantService, participant, authHelper, objectFactory);
+
+        assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
+    }
+
+    @Test
+    public void testCountConversationsForNew() {
+        String token = "token";
+        Long participantId = 1L;
+        long conversationsCount = 3L;
+        boolean isNew = true;
+
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(conversationService.countConversations(participant, isNew)).thenReturn(conversationsCount);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
+
+        ResponseEntity result = conversationController.countConversations(token, participantId, isNew);
+
+        verify(authHelper).authenticate(token);
+        verify(participantService).getParticipant(participantId);
+        verify(conversationService).countConversations(participant, isNew);
+        verify(objectFactory).getInstance(HttpHeaders.class);
+        verifyNoMoreInteractions(participantService, participant, authHelper);
+
+        assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testCountNewConversationsForMissingParticipant() {
+        String token = "token";
+        Long participantId = 1L;
+        boolean isNew = false;
+
+        when(participantService.getParticipant(participantId)).thenReturn(null);
+
+        conversationController.countConversations(token, participantId, isNew);
+
+        verify(authHelper).authenticate(token);
+        verify(participantService).getParticipant(participantId);
+        verifyNoMoreInteractions(participantService, participant, authHelper);
     }
 }

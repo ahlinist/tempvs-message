@@ -15,4 +15,5 @@ public interface ConversationService {
     Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed);
     Conversation addParticipant(Conversation conversation, Participant adder, Participant added);
     Conversation findDialogue(Participant author, Participant receiver);
+    long countConversations(Participant participant, boolean isNew);
 }

@@ -12,4 +12,6 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     List<Conversation> findByParticipantsIn(Set<Participant> participants, Pageable pageable);
     Conversation findOneByTypeAndParticipantsContainsAndParticipantsContains(
             Conversation.Type type, Set<Participant> authorSet, Set<Participant> receiverSet);
+    long countByMessagesNewForIn(Set<Participant> participants);
+    long countByParticipantsIn(Set<Participant> participants);
 }

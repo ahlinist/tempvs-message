@@ -37,6 +37,7 @@ public class ConversationControllerIntegrationTest {
     private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
     private static final String CONFERENCE = Conversation.Type.CONFERENCE.toString();
     private static final String DIALOGUE = Conversation.Type.DIALOGUE.toString();
+    private static final String COUNT_HEADER = "X-Total-Count";
     private static ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
@@ -282,7 +283,8 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(2)))
                 .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
                 .andExpect(jsonPath("conversations[0].type", is(DIALOGUE)))
-                .andExpect(jsonPath("conversations[0].conversant", is("name")));
+                .andExpect(jsonPath("conversations[0].conversant", is("name")))
+                .andExpect(header().string(COUNT_HEADER, String.valueOf(1)));
     }
 
     @Test
@@ -311,7 +313,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("conversations[0].lastMessage.newFor", hasSize(4)))
                     .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
                     .andExpect(jsonPath("conversations[0].type", is(CONFERENCE)))
-                    .andExpect(jsonPath("conversations[0].conversant", is("name, name, name")));
+                    .andExpect(jsonPath("conversations[0].conversant", is("name, name, name")))
+                    .andExpect(header().string(COUNT_HEADER, String.valueOf(1)));
     }
 
     @Test
@@ -529,6 +532,26 @@ public class ConversationControllerIntegrationTest {
                 .header("Authorization",TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(content().string(equalTo("Conversation with id '444' has not been found.")));
+    }
+
+    @Test
+    public void testCountNewConversations() throws Exception {
+        Long authorId = 1L;
+        Long receiver1Id = 2L;
+        Long receiver2Id = 3L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiver1Id, receiver2Id));
+        String text = "text";
+        String name = "name";
+        boolean isNew = true;
+
+        entityHelper.createConversation(authorId, receiverIds, text, name);
+        entityHelper.createConversation(authorId, receiverIds, text, name);
+        entityHelper.createConversation(authorId, receiverIds, text, name);
+
+        mvc.perform(head("/api/conversations?participant=" + receiver1Id + "&new=" + isNew)
+                .header("Authorization",TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(header().string(COUNT_HEADER, String.valueOf(3)));
     }
 
     private String getCreateConversationDtoJson(

@@ -6,7 +6,7 @@ import club.tempvs.message.dto.*;
 import club.tempvs.message.service.*;
 import club.tempvs.message.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +22,7 @@ public class ConversationController {
 
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 20;
+    private static final String COUNT_HEADER = "X-Total-Count";
 
     private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
@@ -42,13 +43,12 @@ public class ConversationController {
         this.authHelper = authHelper;
     }
 
-    @RequestMapping("/ping")
+    @GetMapping("/ping")
     public String getPong() {
         return "pong!";
     }
 
-    @RequestMapping(value="/conversations", method = POST,
-            consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value="/conversations", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto createConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody CreateConversationDto createConversationDto) {
@@ -86,7 +86,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages);
     }
 
-    @RequestMapping(value="/conversations/{id}", method = GET, produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value="/conversations/{id}", produces = APPLICATION_JSON_VALUE)
     public GetConversationDto getConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("id") Long id,
@@ -103,8 +103,8 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages);
     }
 
-    @RequestMapping(value="/conversations", method = GET, produces = APPLICATION_JSON_VALUE)
-    public GetConversationsDto getConversationsByParticipant(
+    @GetMapping(value="/conversations", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
@@ -117,11 +117,36 @@ public class ConversationController {
 
         Participant participant = participantService.getParticipant(participantId);
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
-        return objectFactory.getInstance(GetConversationsDto.class, conversations, participant);
+        GetConversationsDto result = objectFactory.getInstance(GetConversationsDto.class, conversations, participant);
+
+        int conversationsCount = result.getConversations().size();
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(COUNT_HEADER, String.valueOf(conversationsCount));
+
+        return ResponseEntity.status(HttpStatus.OK.value()).headers(headers).body(result);
     }
 
-    @RequestMapping(value="/conversations/{conversationId}/messages", method = POST,
-            consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @RequestMapping(value="/conversations", method = HEAD)
+    public ResponseEntity countConversations(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestParam("participant") Long participantId,
+            @RequestParam("new") Boolean isNew) {
+        authHelper.authenticate(token);
+        Participant participant = participantService.getParticipant(participantId);
+
+        if (participant == null) {
+            throw new BadRequestException("No participant with id " + participantId + " found.");
+        }
+
+        long result = conversationService.countConversations(participant, isNew);
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(COUNT_HEADER, String.valueOf(result));
+
+        return ResponseEntity.ok().headers(headers).build();
+    }
+
+    @PostMapping(value="/conversations/{conversationId}/messages", consumes = APPLICATION_JSON_VALUE,
+            produces = APPLICATION_JSON_VALUE)
     public ResponseEntity addMessage(
             @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("conversationId") Long conversationId,
@@ -147,8 +172,8 @@ public class ConversationController {
         return ResponseEntity.ok().build();
     }
 
-    @RequestMapping(value="/conversations/{conversationId}/participants", method = PATCH,
-            consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PatchMapping(value="/conversations/{conversationId}/participants", consumes = APPLICATION_JSON_VALUE,
+            produces = APPLICATION_JSON_VALUE)
     public GetConversationDto updateParticipants(
             @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("conversationId") Long conversationId,
