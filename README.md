@@ -11,6 +11,7 @@ The following env variables need to be set:
  * JDBC_DATABASE_URL
  * JDBC_DATABASE_USERNAME
  * JDBC_DATABASE_PASSWORD
+ * CLOUDAMQP_URL (used for participants refreshing)
 
 ## Running installations
 ### Stage
