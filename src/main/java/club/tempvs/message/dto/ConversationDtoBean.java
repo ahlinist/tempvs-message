@@ -4,11 +4,8 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Participant;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.*;
 
 public class ConversationDtoBean {
 
@@ -28,7 +25,7 @@ public class ConversationDtoBean {
         this.id = conversation.getId();
         this.name = conversation.getName();
         this.type = conversation.getType().toString();
-        this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
+        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self);
         this.conversant = participantStream.filter(participant -> !participant.equals(self))
                 .map(Participant::getName).collect(Collectors.joining(", "));
     }

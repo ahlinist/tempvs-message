@@ -30,7 +30,7 @@ public class Message {
     @OneToOne
     private Participant subject;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<Participant> newFor = new HashSet<>();
 
     @NotBlank

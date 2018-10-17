@@ -97,7 +97,7 @@ public class ConversationControllerTest {
         when(messageService.createMessage(author, receivers, text,false)).thenReturn(message);
         when(conversationService.createConversation(author, receivers, name, message)).thenReturn(conversation);
         when(conversation.getMessages()).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.createConversation(token, createConversationDto);
 
@@ -112,10 +112,10 @@ public class ConversationControllerTest {
         verify(messageService).createMessage(author, receivers, text, false);
         verify(conversationService).createConversation(author, receivers, name, message);
         verify(conversation).getMessages();
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
 
-        assertEquals("Result is a conversation", result, getConversationDto);
+        assertEquals("Result is a getConversationDto", result, getConversationDto);
     }
 
     @Test
@@ -144,7 +144,7 @@ public class ConversationControllerTest {
         when(conversationService.findDialogue(author, receiver)).thenReturn(conversation);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.createConversation(token, createConversationDto);
 
@@ -159,7 +159,7 @@ public class ConversationControllerTest {
         verify(conversationService).findDialogue(author, receiver);
         verify(conversationService).addMessage(conversation, message);
         verify(messageService).getMessagesFromConversation(conversation);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
 
         assertEquals("Result is a conversation", result, getConversationDto);
@@ -199,18 +199,21 @@ public class ConversationControllerTest {
         long id = 1L;
         int page = 0;
         int size = 20;
+        Long callerId = 5L;
         List<Message> messages = Arrays.asList(message, message, message);
 
+        when(participantService.getParticipant(callerId)).thenReturn(participant);
         when(conversationService.getConversation(id)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.getConversation(token, id, page, size);
+        GetConversationDto result = conversationController.getConversation(token, id, page, size, callerId);
 
+        verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);
         verify(messageService).getMessagesFromConversation(conversation, page, size);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
-        verifyNoMoreInteractions(message, conversationService, messageService, objectFactory, getConversationDto);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant);
+        verifyNoMoreInteractions(message, participantService, conversationService, messageService, objectFactory, getConversationDto);
 
         assertEquals("Result is a conversation", result, getConversationDto);
     }
@@ -221,8 +224,9 @@ public class ConversationControllerTest {
         long id = 1L;
         int page = 0;
         int size = 21;
+        Long callerId = 5L;
 
-        conversationController.getConversation(token, id, page, size);
+        conversationController.getConversation(token, id, page, size, callerId);
 
         verifyNoMoreInteractions(message, conversationService, messageService, objectFactory, getConversationDto);
     }
@@ -350,7 +354,7 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversationService.addParticipant(conversation, author, receiver)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
 
@@ -363,7 +367,7 @@ public class ConversationControllerTest {
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).addParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
@@ -387,7 +391,7 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
 
@@ -400,7 +404,7 @@ public class ConversationControllerTest {
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);

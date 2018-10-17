@@ -21,7 +21,7 @@ public class GetConversationDto {
 
     }
 
-    public GetConversationDto(Conversation conversation, List<Message> messages) {
+    public GetConversationDto(Conversation conversation, List<Message> messages, Participant self) {
         Participant admin = conversation.getAdmin();
         Collections.reverse(messages);
 
@@ -29,8 +29,8 @@ public class GetConversationDto {
         this.type = conversation.getType().toString();
         this.admin = admin != null ? admin.getId() : null;
         this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
-        this.lastMessage = new MessageDtoBean(conversation.getLastMessage());
-        this.messages = messages.stream().map(MessageDtoBean::new).collect(toList());
+        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self);
+        this.messages = messages.stream().map(message -> new MessageDtoBean(message, self)).collect(toList());
     }
 
     public Long getId() {

@@ -83,7 +83,7 @@ public class ConversationController {
             messages = conversation.getMessages();
         }
 
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author);
     }
 
     @GetMapping(value="/conversations/{id}", produces = APPLICATION_JSON_VALUE)
@@ -91,16 +91,27 @@ public class ConversationController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+            @RequestParam(value = "size", required = false, defaultValue = "20") int size,
+            @RequestParam(value = "caller", required = false) Long callerId) {
         authHelper.authenticate(token);
 
         if (size > MAX_PAGE_SIZE) {
             throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
+        if (callerId == null) {
+            throw new BadRequestException("'caller' parameter is missing.");
+        }
+
+        Participant caller = participantService.getParticipant(callerId);
+
+        if (caller == null) {
+            throw new BadRequestException("The caller specified does not exist.");
+        }
+
         Conversation conversation = conversationService.getConversation(id);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller);
     }
 
     @GetMapping(value="/conversations", produces = APPLICATION_JSON_VALUE)
@@ -212,7 +223,7 @@ public class ConversationController {
         }
 
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
 
     @ExceptionHandler(Exception.class)

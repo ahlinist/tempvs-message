@@ -4,8 +4,6 @@ import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 
 import java.time.Instant;
-import java.util.*;
-import static java.util.stream.Collectors.toSet;
 
 public class MessageDtoBean {
 
@@ -14,14 +12,14 @@ public class MessageDtoBean {
     private Long author;
     private Long subject;
     private Instant createdDate;
-    private Set<Long> newFor = new HashSet<>();
+    private Boolean isUnread;
     private Boolean isSystem;
 
     public MessageDtoBean() {
 
     }
 
-    public MessageDtoBean(Message message) {
+    public MessageDtoBean(Message message, Participant self) {
         Participant subject = message.getSubject();
 
         this.id = message.getId();
@@ -29,7 +27,7 @@ public class MessageDtoBean {
         this.author = message.getAuthor().getId();
         this.subject = subject != null ? subject.getId() : null;
         this.createdDate = message.getCreatedDate();
-        this.newFor = message.getNewFor().stream().map(Participant::getId).collect(toSet());
+        this.isUnread = message.getNewFor().contains(self);
         this.isSystem = message.getSystem();
     }
 
@@ -73,12 +71,12 @@ public class MessageDtoBean {
         this.createdDate = createdDate;
     }
 
-    public Set<Long> getNewFor() {
-        return newFor;
+    public Boolean getUnread() {
+        return isUnread;
     }
 
-    public void setNewFor(Set<Long> newFor) {
-        this.newFor = newFor;
+    public void setUnread(Boolean unread) {
+        isUnread = unread;
     }
 
     public Boolean getSystem() {
