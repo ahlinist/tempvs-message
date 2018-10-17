@@ -9,8 +9,8 @@ public class MessageDtoBean {
 
     private Long id;
     private String text;
-    private Long author;
-    private Long subject;
+    private ParticipantDto author;
+    private ParticipantDto subject;
     private Instant createdDate;
     private Boolean isUnread;
     private Boolean isSystem;
@@ -24,8 +24,8 @@ public class MessageDtoBean {
 
         this.id = message.getId();
         this.text = message.getText();
-        this.author = message.getAuthor().getId();
-        this.subject = subject != null ? subject.getId() : null;
+        this.author = new ParticipantDto(message.getAuthor());
+        this.subject = subject != null ? new ParticipantDto(subject) : null;
         this.createdDate = message.getCreatedDate();
         this.isUnread = message.getNewFor().contains(self);
         this.isSystem = message.getSystem();
@@ -47,19 +47,19 @@ public class MessageDtoBean {
         this.text = text;
     }
 
-    public Long getAuthor() {
+    public ParticipantDto getAuthor() {
         return author;
     }
 
-    public void setAuthor(Long author) {
+    public void setAuthor(ParticipantDto author) {
         this.author = author;
     }
 
-    public Long getSubject() {
+    public ParticipantDto getSubject() {
         return subject;
     }
 
-    public void setSubject(Long subject) {
+    public void setSubject(ParticipantDto subject) {
         this.subject = subject;
     }
 

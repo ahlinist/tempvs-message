@@ -54,9 +54,10 @@ public class ConversationController {
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
         createConversationDto.validate();
-        Participant author = participantService.getParticipant(createConversationDto.getAuthor());
+        Participant author = participantService.getParticipant(createConversationDto.getAuthor().getId());
         Set<Participant> receivers = createConversationDto.getReceivers().stream()
-                .map(participantService::getParticipant).collect(toSet());
+                .map(participantDto -> participantService.getParticipant(participantDto.getId()))
+                .collect(toSet());
         String text = createConversationDto.getText();
         String name = createConversationDto.getName();
         boolean isSystem = false;
@@ -164,7 +165,7 @@ public class ConversationController {
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
         addMessageDto.validate();
-        Long authorId = addMessageDto.getAuthor();
+        Long authorId = addMessageDto.getAuthor().getId();
         String text = addMessageDto.getText();
         Boolean isSystem = addMessageDto.getSystem();
 
@@ -191,21 +192,20 @@ public class ConversationController {
             @RequestBody UpdateParticipantsDto updateParticipantsDto) {
         authHelper.authenticate(token);
         updateParticipantsDto.validate();
-        Long initiatorId = updateParticipantsDto.getInitiator();
-        Long subjectId = updateParticipantsDto.getSubject();
-        UpdateParticipantsDto.Action action = updateParticipantsDto.getAction();
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
+        Long initiatorId = updateParticipantsDto.getInitiator().getId();
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
             throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
         }
 
+        Long subjectId = updateParticipantsDto.getSubject().getId();
         Participant subject = participantService.getParticipant(subjectId);
 
         if (subject == null) {
@@ -213,6 +213,7 @@ public class ConversationController {
         }
 
         Conversation result;
+        UpdateParticipantsDto.Action action = updateParticipantsDto.getAction();
 
         if (action == UpdateParticipantsDto.Action.ADD) {
             result = conversationService.addParticipant(conversation, initiator, subject);

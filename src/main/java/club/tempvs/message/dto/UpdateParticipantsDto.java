@@ -7,27 +7,27 @@ import java.util.List;
 
 public class UpdateParticipantsDto implements Validateable {
 
-    private Long initiator;
-    private Long subject;
+    private ParticipantDto initiator;
+    private ParticipantDto subject;
     private Action action;
 
     public UpdateParticipantsDto() {
 
     }
 
-    public Long getInitiator() {
+    public ParticipantDto getInitiator() {
         return initiator;
     }
 
-    public void setInitiator(Long initiator) {
+    public void setInitiator(ParticipantDto initiator) {
         this.initiator = initiator;
     }
 
-    public Long getSubject() {
+    public ParticipantDto getSubject() {
         return subject;
     }
 
-    public void setSubject(Long subject) {
+    public void setSubject(ParticipantDto subject) {
         this.subject = subject;
     }
 

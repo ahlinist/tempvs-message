@@ -12,8 +12,8 @@ public class GetConversationDto {
 
     private Long id;
     private String type;
-    private Long admin;
-    private Set<Long> participants = new HashSet<>();
+    private ParticipantDto admin;
+    private Set<ParticipantDto> participants = new HashSet<>();
     private MessageDtoBean lastMessage;
     private List<MessageDtoBean> messages = new ArrayList<>();
 
@@ -27,8 +27,8 @@ public class GetConversationDto {
 
         this.id = conversation.getId();
         this.type = conversation.getType().toString();
-        this.admin = admin != null ? admin.getId() : null;
-        this.participants = conversation.getParticipants().stream().map(Participant::getId).collect(toSet());
+        this.admin = admin != null ? new ParticipantDto(admin) : null;
+        this.participants = conversation.getParticipants().stream().map(ParticipantDto::new).collect(toSet());
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self);
         this.messages = messages.stream().map(message -> new MessageDtoBean(message, self)).collect(toList());
     }
@@ -49,19 +49,19 @@ public class GetConversationDto {
         this.type = type;
     }
 
-    public Long getAdmin() {
+    public ParticipantDto getAdmin() {
         return admin;
     }
 
-    public void setAdmin(Long admin) {
+    public void setAdmin(ParticipantDto admin) {
         this.admin = admin;
     }
 
-    public Set<Long> getParticipants() {
+    public Set<ParticipantDto> getParticipants() {
         return participants;
     }
 
-    public void setParticipants(Set<Long> participants) {
+    public void setParticipants(Set<ParticipantDto> participants) {
         this.participants = participants;
     }
 

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class AddMessageDto implements Validateable {
 
-    private Long author;
+    private ParticipantDto author;
     private String text;
     private Boolean isSystem = Boolean.FALSE;
 
@@ -15,11 +15,11 @@ public class AddMessageDto implements Validateable {
 
     }
 
-    public Long getAuthor() {
+    public ParticipantDto getAuthor() {
         return author;
     }
 
-    public void setAuthor(Long author) {
+    public void setAuthor(ParticipantDto author) {
         this.author = author;
     }
 

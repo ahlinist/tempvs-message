@@ -62,6 +62,12 @@ public class ConversationControllerTest {
     private AddMessageDto addMessageDto;
     @Mock
     private UpdateParticipantsDto updateParticipantsDto;
+    @Mock
+    private ParticipantDto authorDto;
+    @Mock
+    private ParticipantDto receiverDto;
+    @Mock
+    private ParticipantDto participantDto;
 
     @Before
     public void setup() {
@@ -76,22 +82,24 @@ public class ConversationControllerTest {
 
     @Test
     public void testCreateConversation() {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        Long participantId = 3L;
         String token = "token";
         String text = "text";
         String name = "name";
-        Set<Long> receiverIds = new HashSet<>();
-        receiverIds.add(2L);
-        receiverIds.add(3L);
-        Set<Participant> receivers = new HashSet<>();
-        receivers.add(receiver);
-        receivers.add(participant);
+        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto, participantDto));
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, participant));
         List<Message> messages = Arrays.asList(message, message, message);
 
-        when(createConversationDto.getAuthor()).thenReturn(1L);
-        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
-        when(participantService.getParticipant(1L)).thenReturn(author);
-        when(participantService.getParticipant(2L)).thenReturn(receiver);
-        when(participantService.getParticipant(3L)).thenReturn(participant);
+        when(createConversationDto.getAuthor()).thenReturn(authorDto);
+        when(createConversationDto.getReceivers()).thenReturn(receiverDtos);
+        when(authorDto.getId()).thenReturn(authorId);
+        when(receiverDto.getId()).thenReturn(receiverId);
+        when(participantDto.getId()).thenReturn(participantId);
+        when(participantService.getParticipant(authorId)).thenReturn(author);
+        when(participantService.getParticipant(receiverId)).thenReturn(receiver);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(createConversationDto.getText()).thenReturn(text);
         when(createConversationDto.getName()).thenReturn(name);
         when(messageService.createMessage(author, receivers, text,false)).thenReturn(message);
@@ -103,17 +111,21 @@ public class ConversationControllerTest {
 
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
+        verify(authorDto).getId();
+        verify(receiverDto).getId();
+        verify(participantDto).getId();
         verify(createConversationDto).getReceivers();
-        verify(participantService).getParticipant(1L);
-        verify(participantService).getParticipant(2L);
-        verify(participantService).getParticipant(3L);
+        verify(participantService).getParticipant(authorId);
+        verify(participantService).getParticipant(receiverId);
+        verify(participantService).getParticipant(participantId);
         verify(createConversationDto).getText();
         verify(createConversationDto).getName();
         verify(messageService).createMessage(author, receivers, text, false);
         verify(conversationService).createConversation(author, receivers, name, message);
         verify(conversation).getMessages();
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
-        verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
+        verifyNoMoreInteractions(authorDto, message, receiverDto, participantDto,
+                createConversationDto, participantService, messageService, conversationService, objectFactory);
 
         assertEquals("Result is a getConversationDto", result, getConversationDto);
     }
@@ -125,17 +137,14 @@ public class ConversationControllerTest {
         String token = "token";
         String text = "text";
         String name = "name";
-        Set<Long> receiverIds = new HashSet<>();
-        receiverIds.add(2L);
-        Set<Participant> receivers = new HashSet<>();
-        receivers.add(receiver);
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
+        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
         List<Message> messages = Arrays.asList(message, message, message);
 
-        when(createConversationDto.getAuthor()).thenReturn(authorId);
-        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
+        when(createConversationDto.getAuthor()).thenReturn(authorDto);
+        when(createConversationDto.getReceivers()).thenReturn(receiverDtos);
+        when(authorDto.getId()).thenReturn(authorId);
+        when(receiverDto.getId()).thenReturn(receiverId);
         when(participantService.getParticipant(authorId)).thenReturn(author);
         when(participantService.getParticipant(receiverId)).thenReturn(receiver);
         when(createConversationDto.getText()).thenReturn(text);
@@ -151,6 +160,8 @@ public class ConversationControllerTest {
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
         verify(createConversationDto).getReceivers();
+        verify(authorDto).getId();
+        verify(receiverDto).getId();
         verify(participantService).getParticipant(authorId);
         verify(participantService).getParticipant(receiverId);
         verify(createConversationDto).getText();
@@ -160,7 +171,8 @@ public class ConversationControllerTest {
         verify(conversationService).addMessage(conversation, message);
         verify(messageService).getMessagesFromConversation(conversation);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
-        verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
+        verifyNoMoreInteractions(authorDto, message, receiverDto,
+                createConversationDto, participantService, messageService, conversationService, objectFactory);
 
         assertEquals("Result is a conversation", result, getConversationDto);
     }
@@ -171,11 +183,12 @@ public class ConversationControllerTest {
         String token = "token";
         String text = "text";
         String name = "name";
-        Set<Long> receiverIds = new HashSet<>();
+        Set<ParticipantDto> receiverDtos = new HashSet<>();
         Set<Participant> receivers = new HashSet<>();
 
-        when(createConversationDto.getAuthor()).thenReturn(authorId);
-        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
+        when(createConversationDto.getAuthor()).thenReturn(authorDto);
+        when(authorDto.getId()).thenReturn(authorId);
+        when(createConversationDto.getReceivers()).thenReturn(receiverDtos);
         when(participantService.getParticipant(authorId)).thenReturn(author);
         when(createConversationDto.getText()).thenReturn(text);
         when(createConversationDto.getName()).thenReturn(name);
@@ -185,12 +198,14 @@ public class ConversationControllerTest {
 
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
+        verify(authorDto).getId();
         verify(createConversationDto).getReceivers();
         verify(participantService).getParticipant(authorId);
         verify(createConversationDto).getText();
         verify(createConversationDto).getName();
         verify(messageService).createMessage(author, receivers, text, false);
-        verifyNoMoreInteractions(message, createConversationDto, participantService, messageService, conversationService, objectFactory);
+        verifyNoMoreInteractions(authorDto, message, receiverDto,
+                createConversationDto, participantService, messageService, conversationService, objectFactory);
     }
 
     @Test
@@ -282,7 +297,8 @@ public class ConversationControllerTest {
         String text = "new message text";
         Boolean isSystem = Boolean.FALSE;
 
-        when(addMessageDto.getAuthor()).thenReturn(authorId);
+        when(addMessageDto.getAuthor()).thenReturn(authorDto);
+        when(authorDto.getId()).thenReturn(authorId);
         when(addMessageDto.getText()).thenReturn(text);
         when(addMessageDto.getSystem()).thenReturn(isSystem);
         when(participantService.getParticipant(authorId)).thenReturn(author);
@@ -295,6 +311,7 @@ public class ConversationControllerTest {
 
         verify(addMessageDto).validate();
         verify(addMessageDto).getAuthor();
+        verify(authorDto).getId();
         verify(addMessageDto).getText();
         verify(addMessageDto).getSystem();
         verify(participantService).getParticipant(authorId);
@@ -302,7 +319,7 @@ public class ConversationControllerTest {
         verify(conversation).getParticipants();
         verify(messageService).createMessage(conversation, author, participants, text, isSystem);
         verify(conversationService).addMessage(conversation, message);
-        verifyNoMoreInteractions(
+        verifyNoMoreInteractions(authorDto,
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
 
         assertTrue("Status code 200 is returned", result.getStatusCodeValue() == 200);
@@ -318,7 +335,8 @@ public class ConversationControllerTest {
         String text = "new message text";
         Boolean isSystem = Boolean.FALSE;
 
-        when(addMessageDto.getAuthor()).thenReturn(authorId);
+        when(addMessageDto.getAuthor()).thenReturn(authorDto);
+        when(authorDto.getId()).thenReturn(authorId);
         when(addMessageDto.getText()).thenReturn(text);
         when(addMessageDto.getSystem()).thenReturn(isSystem);
         when(conversationService.getConversation(conversationId)).thenReturn(null);
@@ -327,10 +345,11 @@ public class ConversationControllerTest {
 
         verify(addMessageDto).validate();
         verify(addMessageDto).getAuthor();
+        verify(authorDto).getId();
         verify(addMessageDto).getText();
         verify(addMessageDto).getSystem();
         verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(
+        verifyNoMoreInteractions(authorDto,
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
 
         assertTrue("Status code 404 is returned", result.getStatusCodeValue() == 404);
@@ -347,8 +366,10 @@ public class ConversationControllerTest {
         List<Message> messages = Arrays.asList(message, message);
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(updateParticipantsDto.getInitiator()).thenReturn(initiatorId);
-        when(updateParticipantsDto.getSubject()).thenReturn(subjectId);
+        when(updateParticipantsDto.getInitiator()).thenReturn(authorDto);
+        when(authorDto.getId()).thenReturn(initiatorId);
+        when(updateParticipantsDto.getSubject()).thenReturn(receiverDto);
+        when(receiverDto.getId()).thenReturn(subjectId);
         when(updateParticipantsDto.getAction()).thenReturn(addAction);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
@@ -361,14 +382,17 @@ public class ConversationControllerTest {
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
         verify(updateParticipantsDto).getInitiator();
+        verify(authorDto).getId();
         verify(updateParticipantsDto).getSubject();
+        verify(receiverDto).getId();
         verify(updateParticipantsDto).getAction();
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).addParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
-        verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
+        verifyNoMoreInteractions(authorDto,
+                receiverDto, conversationService, updateParticipantsDto, participantService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -384,8 +408,10 @@ public class ConversationControllerTest {
         List<Message> messages = Arrays.asList(message, message);
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(updateParticipantsDto.getInitiator()).thenReturn(initiatorId);
-        when(updateParticipantsDto.getSubject()).thenReturn(subjectId);
+        when(updateParticipantsDto.getInitiator()).thenReturn(authorDto);
+        when(authorDto.getId()).thenReturn(initiatorId);
+        when(updateParticipantsDto.getSubject()).thenReturn(receiverDto);
+        when(receiverDto.getId()).thenReturn(subjectId);
         when(updateParticipantsDto.getAction()).thenReturn(removeAction);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
@@ -398,14 +424,17 @@ public class ConversationControllerTest {
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
         verify(updateParticipantsDto).getInitiator();
+        verify(authorDto).getId();
         verify(updateParticipantsDto).getSubject();
+        verify(receiverDto).getId();
         verify(updateParticipantsDto).getAction();
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
-        verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
+        verifyNoMoreInteractions(authorDto,
+                receiverDto, conversationService, updateParticipantsDto, participantService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -414,21 +443,13 @@ public class ConversationControllerTest {
     public void testUpdateParticipantsForEmptyConversation() {
         String token = "token";
         Long conversationId = 1L;
-        Long initiatorId = 2L;
-        Long subjectId = 3L;
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
-        when(updateParticipantsDto.getInitiator()).thenReturn(initiatorId);
-        when(updateParticipantsDto.getSubject()).thenReturn(subjectId);
-        when(updateParticipantsDto.getAction()).thenReturn(removeAction);
 
         conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
 
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verify(updateParticipantsDto).getInitiator();
-        verify(updateParticipantsDto).getSubject();
-        verify(updateParticipantsDto).getAction();
         verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
     }
 
