@@ -153,17 +153,7 @@ public class ConversationServiceImpl implements ConversationService {
                 .findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet);
     }
 
-    public long countConversations(Participant participant, boolean isNew) {
-        Set<Participant> participants = new HashSet<>();
-        participants.add(participant);
-        long result;
-
-        if (isNew) {
-            result = conversationRepository.countByMessagesNewForIn(participants);
-        } else {
-            result = conversationRepository.countByParticipantsIn(participants);
-        }
-
-        return result;
+    public long countUpdatedConversationsPerParticipant(Participant participant) {
+        return conversationRepository.countByNewMessagesPerParticipant(participant);
     }
 }

@@ -461,38 +461,16 @@ public class ConversationControllerTest {
         boolean isNew = false;
 
         when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(conversationService.countConversations(participant, isNew)).thenReturn(conversationsCount);
+        when(conversationService.countUpdatedConversationsPerParticipant(participant)).thenReturn(conversationsCount);
         when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        ResponseEntity result = conversationController.countConversations(token, participantId, isNew);
+        ResponseEntity result = conversationController.countConversations(token, participantId);
 
         verify(authHelper).authenticate(token);
         verify(participantService).getParticipant(participantId);
-        verify(conversationService).countConversations(participant, isNew);
+        verify(conversationService).countUpdatedConversationsPerParticipant(participant);
         verify(objectFactory).getInstance(HttpHeaders.class);
         verifyNoMoreInteractions(participantService, participant, authHelper, objectFactory);
-
-        assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
-    }
-
-    @Test
-    public void testCountConversationsForNew() {
-        String token = "token";
-        Long participantId = 1L;
-        long conversationsCount = 3L;
-        boolean isNew = true;
-
-        when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(conversationService.countConversations(participant, isNew)).thenReturn(conversationsCount);
-        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
-
-        ResponseEntity result = conversationController.countConversations(token, participantId, isNew);
-
-        verify(authHelper).authenticate(token);
-        verify(participantService).getParticipant(participantId);
-        verify(conversationService).countConversations(participant, isNew);
-        verify(objectFactory).getInstance(HttpHeaders.class);
-        verifyNoMoreInteractions(participantService, participant, authHelper);
 
         assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
     }
@@ -501,11 +479,10 @@ public class ConversationControllerTest {
     public void testCountNewConversationsForMissingParticipant() {
         String token = "token";
         Long participantId = 1L;
-        boolean isNew = false;
 
         when(participantService.getParticipant(participantId)).thenReturn(null);
 
-        conversationController.countConversations(token, participantId, isNew);
+        conversationController.countConversations(token, participantId);
 
         verify(authHelper).authenticate(token);
         verify(participantService).getParticipant(participantId);

@@ -563,13 +563,12 @@ public class ConversationControllerIntegrationTest {
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiver1Id, receiver2Id));
         String text = "text";
         String name = "name";
-        boolean isNew = true;
 
         entityHelper.createConversation(authorId, receiverIds, text, name);
         entityHelper.createConversation(authorId, receiverIds, text, name);
         entityHelper.createConversation(authorId, receiverIds, text, name);
 
-        mvc.perform(head("/api/conversations?participant=" + receiver1Id + "&new=" + isNew)
+        mvc.perform(head("/api/conversations?participant=" + receiver1Id)
                 .header("Authorization",TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(header().string(COUNT_HEADER, String.valueOf(3)));

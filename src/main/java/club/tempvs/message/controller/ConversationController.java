@@ -141,8 +141,7 @@ public class ConversationController {
     @RequestMapping(value="/conversations", method = HEAD)
     public ResponseEntity countConversations(
             @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestParam("participant") Long participantId,
-            @RequestParam("new") Boolean isNew) {
+            @RequestParam("participant") Long participantId) {
         authHelper.authenticate(token);
         Participant participant = participantService.getParticipant(participantId);
 
@@ -150,7 +149,7 @@ public class ConversationController {
             throw new BadRequestException("No participant with id " + participantId + " found.");
         }
 
-        long result = conversationService.countConversations(participant, isNew);
+        long result = conversationService.countUpdatedConversationsPerParticipant(participant);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
         headers.add(COUNT_HEADER, String.valueOf(result));
 

@@ -354,34 +354,15 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testCountConversations() throws Exception {
-        boolean isNew = false;
-        long conversationCount = 3L;
-        Set<Participant> participants = new HashSet<>();
-        participants.add(participant);
-
-        when(conversationRepository.countByParticipantsIn(participants)).thenReturn(conversationCount);
-
-        long result = conversationService.countConversations(participant, isNew);
-
-        verify(conversationRepository).countByParticipantsIn(participants);
-        verifyNoMoreInteractions(participant, conversationRepository);
-
-        assertEquals("3L is returned as a count of conversations", conversationCount, result);
-    }
-
-    @Test
-    public void testCountConversationsForNew() throws Exception {
+    public void testCountUpdatedConversationsPerParticipant() throws Exception {
         boolean isNew = true;
         long conversationCount = 3L;
-        Set<Participant> participants = new HashSet<>();
-        participants.add(participant);
 
-        when(conversationRepository.countByMessagesNewForIn(participants)).thenReturn(conversationCount);
+        when(conversationRepository.countByNewMessagesPerParticipant(participant)).thenReturn(conversationCount);
 
-        long result = conversationService.countConversations(participant, isNew);
+        long result = conversationService.countUpdatedConversationsPerParticipant(participant);
 
-        verify(conversationRepository).countByMessagesNewForIn(participants);
+        verify(conversationRepository).countByNewMessagesPerParticipant(participant);
         verifyNoMoreInteractions(participant, conversationRepository);
 
         assertEquals("3L is returned as a count of new conversations", conversationCount, result);
