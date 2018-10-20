@@ -296,6 +296,9 @@ public class ConversationControllerTest {
         participants.add(receiver);
         String text = "new message text";
         Boolean isSystem = Boolean.FALSE;
+        int page = 0;
+        int size = 20;
+        List<Message> messages = Arrays.asList(message, message, message);
 
         when(addMessageDto.getAuthor()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(authorId);
@@ -306,6 +309,8 @@ public class ConversationControllerTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(conversation, author, participants, text, isSystem)).thenReturn(message);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
+        when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
         ResponseEntity result = conversationController.addMessage(token, conversationId, addMessageDto);
 
@@ -319,10 +324,13 @@ public class ConversationControllerTest {
         verify(conversation).getParticipants();
         verify(messageService).createMessage(conversation, author, participants, text, isSystem);
         verify(conversationService).addMessage(conversation, message);
+        verify(messageService).getMessagesFromConversation(conversation, page, size);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto,
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
 
         assertTrue("Status code 200 is returned", result.getStatusCodeValue() == 200);
+        assertTrue("GetConversationDto object is returned as a body", result.getBody().equals(getConversationDto));
     }
 
     @Test

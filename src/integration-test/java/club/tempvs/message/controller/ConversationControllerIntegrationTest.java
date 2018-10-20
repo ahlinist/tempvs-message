@@ -364,10 +364,13 @@ public class ConversationControllerIntegrationTest {
         String text = "text";
         String name = "name";
         String newMessageText = "new message text";
-        Boolean isSystem = Boolean.FALSE;
+        boolean isSystem = false;
 
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
+        List<Message> messages = conversation.getMessages();
+        int initialMessagesSize = messages.size();
+        Long messageId = messages.get(0).getId();
         String addMessageJson = getAddMessageDtoJson(authorId, newMessageText, isSystem);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/messages")
@@ -375,7 +378,29 @@ public class ConversationControllerIntegrationTest {
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addMessageJson)
                 .header("Authorization",TOKEN))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("id", is(conversationId.intValue())))
+                    .andExpect(jsonPath("admin.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("participants", hasSize(4)))
+                    .andExpect(jsonPath("messages", hasSize(initialMessagesSize + 1)))
+                    .andExpect(jsonPath("messages[0].id", is(messageId.intValue())))
+                    .andExpect(jsonPath("messages[0].text", is(text)))
+                    .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].unread", is(true)))
+                    .andExpect(jsonPath("messages[0].system", is(isSystem)))
+                    .andExpect(jsonPath("messages[1].id", is(messageId.intValue() + 1)))
+                    .andExpect(jsonPath("messages[1].text", is(newMessageText)))
+                    .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[1].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[1].unread", is(true)))
+                    .andExpect(jsonPath("messages[1].system", is(isSystem)))
+                    .andExpect(jsonPath("lastMessage.id", is(messageId.intValue() + 1)))
+                    .andExpect(jsonPath("lastMessage.text", is(newMessageText)))
+                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.unread", is(true)))
+                    .andExpect(jsonPath("lastMessage.system", is(isSystem)))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
     @Test

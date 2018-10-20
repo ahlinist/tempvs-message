@@ -178,9 +178,12 @@ public class ConversationController {
         Participant author = participantService.getParticipant(authorId);
         Set<Participant> participants = conversation.getParticipants();
         Message message = messageService.createMessage(conversation, author, participants, text, isSystem);
-        conversationService.addMessage(conversation, message);
+        Conversation updatedConversation = conversationService.addMessage(conversation, message);
+        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        GetConversationDto getConversationDto = objectFactory.getInstance(
+                GetConversationDto.class, updatedConversation, messages, author);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(getConversationDto);
     }
 
     @PatchMapping(value="/conversations/{conversationId}/participants", consumes = APPLICATION_JSON_VALUE,
