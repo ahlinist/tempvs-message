@@ -78,9 +78,9 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {
-        Set<Participant> initialParticipants = conversation.getParticipants();
+        Set<Participant> participants = conversation.getParticipants();
 
-        if (initialParticipants.size() == 20) {
+        if (participants.size() == 20) {
             throw new IllegalArgumentException("Conversation may have only 20 participants max.");
         }
 
@@ -93,21 +93,19 @@ public class ConversationServiceImpl implements ConversationService {
 
         Message message;
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> participants = new HashSet<>(initialParticipants);
-        participants.add(added);
+        Set<Participant> receivers = new HashSet<>(participants);
+        receivers.add(added);
+        receivers.remove(adder);
+        conversation.addParticipant(added);
+        conversation.setType(Conversation.Type.CONFERENCE);
 
-        if (type == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
+        if (type == Conversation.Type.DIALOGUE && participants.size() == 2) {
             conversation = objectFactory.getInstance(Conversation.class);
             conversation.setAdmin(adder);
-            message = messageService.createMessage(
-                    conversation, adder, participants, CONFERENCE_CREATED, isSystem);
+            message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem);
         } else {
-            message = messageService.createMessage(
-                    conversation, adder, participants, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
+            message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
         }
-
-        conversation.setParticipants(participants);
-        conversation.setType(Conversation.Type.CONFERENCE);
 
         return addMessage(conversation, message);
     }
@@ -128,16 +126,17 @@ public class ConversationServiceImpl implements ConversationService {
 
         conversation.removeParticipant(removed);
         Boolean isSystem = Boolean.TRUE;
+        Set<Participant> receivers = new HashSet<>(participants);
+        receivers.remove(removed);
+        receivers.remove(remover);
 
         Message message;
 
         if (isSelfRemoval) {
-            message = messageService.createMessage(
-                    conversation, remover, participants, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem);
+            message = messageService.createMessage(remover, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem);
 
         } else {
-            message = messageService.createMessage(
-                    conversation, remover, participants, PARTICIPANT_REMOVED_MESSAGE, isSystem, removed);
+            message = messageService.createMessage(remover, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, removed);
         }
 
         return addMessage(conversation, message);

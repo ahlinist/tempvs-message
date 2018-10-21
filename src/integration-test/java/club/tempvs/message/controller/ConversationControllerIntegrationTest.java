@@ -382,14 +382,13 @@ public class ConversationControllerIntegrationTest {
         String text = "text";
         String name = "name";
         String newMessageText = "new message text";
-        boolean isSystem = false;
 
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         int initialMessagesSize = messages.size();
         Long messageId = messages.get(0).getId();
-        String addMessageJson = getAddMessageDtoJson(authorId, newMessageText, isSystem);
+        String addMessageJson = getAddMessageDtoJson(authorId, newMessageText);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
@@ -406,18 +405,18 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
                     .andExpect(jsonPath("messages[0].unread", is(true)))
-                    .andExpect(jsonPath("messages[0].system", is(isSystem)))
+                    .andExpect(jsonPath("messages[0].system", is(false)))
                     .andExpect(jsonPath("messages[1].id", is(messageId.intValue() + 1)))
                     .andExpect(jsonPath("messages[1].text", is(newMessageText)))
                     .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[1].subject", isEmptyOrNullString()))
-                    .andExpect(jsonPath("messages[1].unread", is(true)))
-                    .andExpect(jsonPath("messages[1].system", is(isSystem)))
+                    .andExpect(jsonPath("messages[1].unread", is(false)))
+                    .andExpect(jsonPath("messages[1].system", is(false)))
                     .andExpect(jsonPath("lastMessage.id", is(messageId.intValue() + 1)))
                     .andExpect(jsonPath("lastMessage.text", is(newMessageText)))
                     .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(true)))
-                    .andExpect(jsonPath("lastMessage.system", is(isSystem)))
+                    .andExpect(jsonPath("lastMessage.unread", is(false)))
+                    .andExpect(jsonPath("lastMessage.system", is(false)))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
@@ -425,10 +424,9 @@ public class ConversationControllerIntegrationTest {
     public void testAddMessageForMissingConversationInDB() throws Exception {
         Long authorId = 1L;
         String newMessageText = "new message text";
-        Boolean isSystem = Boolean.FALSE;
         Long missingConversationId = 2L;
 
-        String addMessageJson = getAddMessageDtoJson(authorId, newMessageText, isSystem);
+        String addMessageJson = getAddMessageDtoJson(authorId, newMessageText);
 
         mvc.perform(post("/api/conversations/" + missingConversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
@@ -485,11 +483,11 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
                     .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[1].subject.id", is(addedParticipantId.intValue())))
-                    .andExpect(jsonPath("messages[1].unread", is(true)))
+                    .andExpect(jsonPath("messages[1].unread", is(false)))
                     .andExpect(jsonPath("messages[1].system", is(true)))
                     .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
                     .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(true)))
+                    .andExpect(jsonPath("lastMessage.unread", is(false)))
                     .andExpect(jsonPath("lastMessage.system", is(true)))
                     .andExpect(jsonPath("lastMessage.subject.id", is(addedParticipantId.intValue())))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
@@ -566,11 +564,11 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
                     .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[1].subject.id", is(removedParticipantId.intValue())))
-                    .andExpect(jsonPath("messages[1].unread", is(true)))
+                    .andExpect(jsonPath("messages[1].unread", is(false)))
                     .andExpect(jsonPath("messages[1].system", is(true)))
                     .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
                     .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(true)))
+                    .andExpect(jsonPath("lastMessage.unread", is(false)))
                     .andExpect(jsonPath("lastMessage.system", is(true)))
                     .andExpect(jsonPath("lastMessage.subject.id", is(removedParticipantId.intValue())))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
@@ -628,11 +626,10 @@ public class ConversationControllerIntegrationTest {
         return mapper.writeValueAsString(createConversationDto);
     }
 
-    private String getAddMessageDtoJson(Long authorId, String text, boolean isSystem) throws Exception {
+    private String getAddMessageDtoJson(Long authorId, String text) throws Exception {
         AddMessageDto addMessageDto = new AddMessageDto();
         addMessageDto.setAuthor(new ParticipantDto(authorId, "name"));
         addMessageDto.setText(text);
-        addMessageDto.setSystem(isSystem);
         return mapper.writeValueAsString(addMessageDto);
     }
 }

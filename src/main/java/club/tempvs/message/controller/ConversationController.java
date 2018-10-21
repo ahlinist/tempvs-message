@@ -60,8 +60,7 @@ public class ConversationController {
                 .collect(toSet());
         String text = createConversationDto.getText();
         String name = createConversationDto.getName();
-        boolean isSystem = false;
-        Message message = messageService.createMessage(author, receivers, text, isSystem);
+        Message message = messageService.createMessage(author, receivers, text);
         Set<Participant> participants = new HashSet<>();
         participants.add(author);
         participants.addAll(receivers);
@@ -171,7 +170,6 @@ public class ConversationController {
         addMessageDto.validate();
         Long authorId = addMessageDto.getAuthor().getId();
         String text = addMessageDto.getText();
-        Boolean isSystem = addMessageDto.getSystem();
 
         Conversation conversation = conversationService.getConversation(conversationId);
 
@@ -181,8 +179,9 @@ public class ConversationController {
         }
 
         Participant author = participantService.getParticipant(authorId);
-        Set<Participant> participants = conversation.getParticipants();
-        Message message = messageService.createMessage(conversation, author, participants, text, isSystem);
+        Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
+        receivers.remove(author);
+        Message message = messageService.createMessage(author, receivers, text);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto getConversationDto = objectFactory.getInstance(

@@ -183,14 +183,15 @@ public class ConversationServiceTest {
         Set<Participant> initialParticipants = new HashSet<>();
         initialParticipants.add(author);
         initialParticipants.add(receiver);
-        Set<Participant> participants = new HashSet<>(initialParticipants);
-        participants.add(oneMoreReceiver);
+        Set<Participant> receivers = new HashSet<>(initialParticipants);
+        receivers.add(oneMoreReceiver);
+        receivers.remove(author);
 
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getAdmin()).thenReturn(author);
-        when(messageService.createMessage(conversation, author, participants, text, isSystem)).thenReturn(message);
+        when(messageService.createMessage(author, receivers, text, isSystem)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.addParticipant(conversation, author, oneMoreReceiver);
@@ -200,8 +201,8 @@ public class ConversationServiceTest {
         verify(objectFactory).getInstance(Conversation.class);
         verify(conversation).getAdmin();
         verify(conversation).setAdmin(author);
-        verify(conversation).setParticipants(participants);
-        verify(messageService).createMessage(conversation, author, participants, text, isSystem);
+        verify(conversation).addParticipant(oneMoreReceiver);
+        verify(messageService).createMessage(author, receivers, text, isSystem);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(conversation).setType(Conversation.Type.CONFERENCE);
@@ -219,13 +220,14 @@ public class ConversationServiceTest {
         initialParticipants.add(author);
         initialParticipants.add(receiver);
         initialParticipants.add(participant);
-        Set<Participant> participants = new HashSet<>(initialParticipants);
-        participants.add(oneMoreReceiver);
+        Set<Participant> receivers = new HashSet<>(initialParticipants);
+        receivers.add(oneMoreReceiver);
+        receivers.remove(author);
 
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
         when(conversation.getAdmin()).thenReturn(author);
-        when(messageService.createMessage(conversation, author, participants, text, isSystem, oneMoreReceiver)).thenReturn(message);
+        when(messageService.createMessage(author, receivers, text, isSystem, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.addParticipant(conversation, author, oneMoreReceiver);
@@ -233,10 +235,10 @@ public class ConversationServiceTest {
         verify(conversation).getParticipants();
         verify(conversation).getType();
         verify(conversation).getAdmin();
-        verify(messageService).createMessage(conversation, author, participants, text, isSystem, oneMoreReceiver);
+        verify(messageService).createMessage(author, receivers, text, isSystem, oneMoreReceiver);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
-        verify(conversation).setParticipants(participants);
+        verify(conversation).addParticipant(oneMoreReceiver);
         verify(conversation).setType(Conversation.Type.CONFERENCE);
         verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(author, conversation, objectFactory, messageService, conversationRepository);
@@ -248,15 +250,12 @@ public class ConversationServiceTest {
     public void testRemoveParticipant() {
         String text = "conversation.remove.participant";
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
-        participants.add(oneMoreReceiver);
-        participants.add(participant);
+        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(oneMoreReceiver, participant));
 
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
-        when(messageService.createMessage(conversation, author, participants, text, isSystem, receiver)).thenReturn(message);
+        when(messageService.createMessage(author, receivers, text, isSystem, receiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, receiver);
@@ -264,7 +263,7 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(receiver);
-        verify(messageService).createMessage(conversation, author, participants, text, isSystem, receiver);
+        verify(messageService).createMessage(author, receivers, text, isSystem, receiver);
         verify(conversation).addMessage(message);
         verify(message).setConversation(conversation);
         verify(conversation).setLastMessage(message);
@@ -278,15 +277,12 @@ public class ConversationServiceTest {
     public void testRemoveParticipantForSelfremoval() {
         String text = "conversation.selfremove.participant";
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
-        participants.add(oneMoreReceiver);
-        participants.add(participant);
+        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, oneMoreReceiver, participant));
 
         when(conversation.getAdmin()).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(participants);
-        when(messageService.createMessage(conversation, author, participants, text, isSystem)).thenReturn(message);
+        when(messageService.createMessage(author, receivers, text, isSystem)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, author);
@@ -294,7 +290,7 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(author);
-        verify(messageService).createMessage(conversation, author, participants, text, isSystem);
+        verify(messageService).createMessage(author, receivers, text, isSystem);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);

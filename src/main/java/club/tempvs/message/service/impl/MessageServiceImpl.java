@@ -32,10 +32,9 @@ public class MessageServiceImpl implements MessageService {
         this.messageRepository = messageRepository;
     }
 
-    public Message createMessage(Conversation conversation, Participant author, Set<Participant> receivers,
-                                 String text, Boolean isSystem, Participant subject) {
+    public Message createMessage(Participant author,
+                                 Set<Participant> receivers, String text, Boolean isSystem, Participant subject) {
         Message message = objectFactory.getInstance(Message.class);
-        message.setConversation(conversation);
         message.setAuthor(author);
         message.setNewFor(receivers);
         message.setText(text);
@@ -44,13 +43,12 @@ public class MessageServiceImpl implements MessageService {
         return message;
     }
 
-    public Message createMessage(
-            Conversation conversation, Participant author, Set<Participant> receivers, String text, Boolean isSystem) {
-        return createMessage(conversation, author, receivers, text, isSystem, null);
+    public Message createMessage(Participant author, Set<Participant> receivers, String text) {
+        return createMessage(author, receivers, text, Boolean.FALSE, null);
     }
 
     public Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem) {
-        return createMessage(null, author, receivers, text, isSystem, null);
+        return createMessage(author, receivers, text, isSystem, null);
     }
 
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {

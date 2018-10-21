@@ -9,7 +9,6 @@ public class AddMessageDto implements Validateable {
 
     private ParticipantDto author;
     private String text;
-    private Boolean isSystem = Boolean.FALSE;
 
     public AddMessageDto() {
 
@@ -29,14 +28,6 @@ public class AddMessageDto implements Validateable {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    public Boolean getSystem() {
-        return isSystem;
-    }
-
-    public void setSystem(Boolean system) {
-        isSystem = system;
     }
 
     public void validate() {

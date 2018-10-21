@@ -55,10 +55,9 @@ public class MessageServiceTest {
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
 
-        Message result = messageService.createMessage(conversation, author, receivers, text, false, subject);
+        Message result = messageService.createMessage(author, receivers, text, false, subject);
 
         verify(objectFactory).getInstance(Message.class);
-        verify(message).setConversation(conversation);
         verify(message).setAuthor(author);
         verify(message).setNewFor(receivers);
         verify(message).setText(text);
