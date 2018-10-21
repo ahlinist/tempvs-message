@@ -279,6 +279,24 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
+    public void testGetConversationForWrongCaller() throws Exception {
+        Long authorId = 1L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
+        Long wrongCallerId = 5L;
+        String text = "text";
+        String name = "name";
+
+        entityHelper.createParticipant(wrongCallerId, "name");
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20&caller=" + wrongCallerId)
+                .header("Authorization", TOKEN))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Participant " + wrongCallerId + " has no access to conversation " + conversationId));
+    }
+
+    @Test
     public void testGetConversationsByParticipant() throws Exception {
         Long authorId = 10L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L));

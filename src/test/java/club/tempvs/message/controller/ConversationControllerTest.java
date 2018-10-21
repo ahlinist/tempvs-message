@@ -1,6 +1,7 @@
 package club.tempvs.message.controller;
 
 import club.tempvs.message.api.BadRequestException;
+import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.api.NotFoundException;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -216,9 +217,11 @@ public class ConversationControllerTest {
         int size = 20;
         Long callerId = 5L;
         List<Message> messages = Arrays.asList(message, message, message);
+        Set<Participant> participants = new HashSet<>(Arrays.asList(participant, receiver));
 
         when(participantService.getParticipant(callerId)).thenReturn(participant);
         when(conversationService.getConversation(id)).thenReturn(conversation);
+        when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant)).thenReturn(getConversationDto);
 
@@ -226,9 +229,11 @@ public class ConversationControllerTest {
 
         verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);
+        verify(conversation).getParticipants();
         verify(messageService).getMessagesFromConversation(conversation, page, size);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant);
-        verifyNoMoreInteractions(message, participantService, conversationService, messageService, objectFactory, getConversationDto);
+        verifyNoMoreInteractions(message, conversation,
+                participantService, conversationService, messageService, objectFactory, getConversationDto);
 
         assertEquals("Result is a conversation", result, getConversationDto);
     }
@@ -243,7 +248,29 @@ public class ConversationControllerTest {
 
         conversationController.getConversation(token, id, page, size, callerId);
 
-        verifyNoMoreInteractions(message, conversationService, messageService, objectFactory, getConversationDto);
+        verifyNoMoreInteractions(message, conversation, conversationService, messageService, objectFactory, getConversationDto);
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testGetConversationWithWrongCaller() {
+        String token = "token";
+        long id = 1L;
+        int page = 0;
+        int size = 20;
+        Long callerId = 5L;
+        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
+
+        when(participantService.getParticipant(callerId)).thenReturn(participant);
+        when(conversationService.getConversation(id)).thenReturn(conversation);
+        when(conversation.getParticipants()).thenReturn(participants);
+
+        conversationController.getConversation(token, id, page, size, callerId);
+
+        verify(participantService).getParticipant(callerId);
+        verify(conversationService).getConversation(id);
+        verify(conversation).getParticipants();
+        verifyNoMoreInteractions(message, conversation,
+                participantService, conversationService, messageService, objectFactory, getConversationDto);
     }
 
     @Test

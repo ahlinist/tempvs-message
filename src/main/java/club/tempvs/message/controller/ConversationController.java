@@ -111,6 +111,11 @@ public class ConversationController {
         }
 
         Conversation conversation = conversationService.getConversation(id);
+
+        if (!conversation.getParticipants().contains(caller)) {
+            throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + id);
+        }
+
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller);
     }
@@ -250,6 +255,12 @@ public class ConversationController {
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public String returnUnauthorized(UnauthorizedException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String returnForbidden(ForbiddenException ex) {
         return ex.getMessage();
     }
 }
