@@ -214,7 +214,7 @@ public class ConversationControllerTest {
         String token = "token";
         long id = 1L;
         int page = 0;
-        int size = 20;
+        int size = 40;
         Long callerId = 5L;
         List<Message> messages = Arrays.asList(message, message, message);
         Set<Participant> participants = new HashSet<>(Arrays.asList(participant, receiver));
@@ -256,7 +256,7 @@ public class ConversationControllerTest {
         String token = "token";
         long id = 1L;
         int page = 0;
-        int size = 20;
+        int size = 40;
         Long callerId = 5L;
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
 
@@ -278,7 +278,7 @@ public class ConversationControllerTest {
         String token = "token";
         Long participantId = 1L;
         int page = 0;
-        int size = 20;
+        int size = 40;
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
         List<ConversationDtoBean> conversationDtoBeans = new ArrayList<>();
@@ -323,7 +323,7 @@ public class ConversationControllerTest {
         participants.add(receiver);
         String text = "new message text";
         int page = 0;
-        int size = 20;
+        int size = 40;
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(addMessageDto.getAuthor()).thenReturn(authorDto);
@@ -391,7 +391,7 @@ public class ConversationControllerTest {
         Long initiatorId = 2L;
         Long subjectId = 3L;
         int page = 0;
-        int max = 20;
+        int max = 40;
         List<Message> messages = Arrays.asList(message, message);
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
@@ -433,7 +433,7 @@ public class ConversationControllerTest {
         Long initiatorId = 2L;
         Long subjectId = 3L;
         int page = 0;
-        int max = 20;
+        int max = 40;
         List<Message> messages = Arrays.asList(message, message);
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);

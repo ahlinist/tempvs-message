@@ -21,7 +21,7 @@ import java.util.Set;
 public class MessageServiceImpl implements MessageService {
 
     private static final int DEFAULT_PAGE_NUMBER = 0;
-    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_PAGE_SIZE = 40;
 
     private final ObjectFactory objectFactory;
     private final MessageRepository messageRepository;

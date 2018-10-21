@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.*;
 public class ConversationController {
 
     private static final int DEFAULT_PAGE_NUMBER = 0;
-    private static final int MAX_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
 
     private final ObjectFactory objectFactory;
@@ -91,7 +91,7 @@ public class ConversationController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "20") int size,
+            @RequestParam(value = "size", required = false, defaultValue = "40") int size,
             @RequestParam(value = "caller", required = false) Long callerId) {
         authHelper.authenticate(token);
 
@@ -124,7 +124,7 @@ public class ConversationController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+            @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
         authHelper.authenticate(token);
 
         if (size > MAX_PAGE_SIZE) {
@@ -132,6 +132,11 @@ public class ConversationController {
         }
 
         Participant participant = participantService.getParticipant(participantId);
+
+        if (participant == null) {
+            throw new BadRequestException("No participant with id " + participantId + " exist!");
+        }
+
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
         GetConversationsDto result = objectFactory.getInstance(GetConversationsDto.class, conversations, participant);
 

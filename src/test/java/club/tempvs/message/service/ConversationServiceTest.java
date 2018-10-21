@@ -159,7 +159,7 @@ public class ConversationServiceTest {
     @Test
     public void testGetConversationsByParticipant() {
         int page = 0;
-        int size = 20;
+        int size = 40;
         Set<Participant> participants = new HashSet<>();
         participants.add(participant);
         List<Conversation> conversations = new ArrayList<>();

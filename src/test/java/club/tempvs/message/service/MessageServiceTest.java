@@ -72,7 +72,7 @@ public class MessageServiceTest {
     @Test
     public void testGetMessagesFromConversation() {
         int page = 0;
-        int size = 20;
+        int size = 40;
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = Arrays.asList(message, message, message);
 
@@ -89,7 +89,7 @@ public class MessageServiceTest {
     @Test
     public void testGetMessagesFromConversationWithDefaultParams() {
         int page = 0;
-        int size = 20;
+        int size = 40;
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = Arrays.asList(message, message, message);
 
