@@ -195,7 +195,7 @@ public class ConversationController {
         return ResponseEntity.ok().body(getConversationDto);
     }
 
-    @PatchMapping(value="/conversations/{conversationId}/participants", consumes = APPLICATION_JSON_VALUE,
+    @PostMapping(value="/conversations/{conversationId}/participants", consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE)
     public GetConversationDto updateParticipants(
             @RequestHeader(value = "Authorization", required = false) String token,

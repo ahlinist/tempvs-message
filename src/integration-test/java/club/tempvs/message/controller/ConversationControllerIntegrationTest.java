@@ -476,7 +476,7 @@ public class ConversationControllerIntegrationTest {
 
         String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
 
-        mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
+        mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
@@ -525,7 +525,7 @@ public class ConversationControllerIntegrationTest {
 
         String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
 
-        mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
+        mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
@@ -557,7 +557,7 @@ public class ConversationControllerIntegrationTest {
 
         String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
 
-        mvc.perform(patch("/api/conversations/" + conversationId + "/participants")
+        mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
@@ -598,7 +598,7 @@ public class ConversationControllerIntegrationTest {
 
         String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
 
-        mvc.perform(patch("/api/conversations/" + nonExistentConversationId + "/participants")
+        mvc.perform(post("/api/conversations/" + nonExistentConversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
