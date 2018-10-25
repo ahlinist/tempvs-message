@@ -87,7 +87,7 @@ public class ConversationServiceImpl implements ConversationService {
         Participant admin = conversation.getAdmin();
         Conversation.Type type = conversation.getType();
 
-        if (type == Conversation.Type.CONFERENCE &&(admin == null || !admin.equals(adder))) {
+        if (type == Conversation.Type.CONFERENCE && (admin == null || !admin.equals(adder))) {
             throw new IllegalArgumentException("Participants can be added only by admin.");
         }
 
@@ -96,18 +96,15 @@ public class ConversationServiceImpl implements ConversationService {
         Set<Participant> receivers = new HashSet<>(participants);
         receivers.add(added);
         receivers.remove(adder);
-        conversation.addParticipant(added);
-        conversation.setType(Conversation.Type.CONFERENCE);
 
         if (type == Conversation.Type.DIALOGUE && participants.size() == 2) {
-            conversation = objectFactory.getInstance(Conversation.class);
-            conversation.setAdmin(adder);
             message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem);
+            return createConversation(adder, receivers, null, message);
         } else {
+            conversation.addParticipant(added);
             message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
+            return addMessage(conversation, message);
         }
-
-        return addMessage(conversation, message);
     }
 
     public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {

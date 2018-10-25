@@ -449,7 +449,52 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testUpdateParticipantsForAdd() throws Exception {
+    public void testUpdateParticipantsWhenAddingToDialogue() throws Exception {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
+        String text = "an initial text";
+        Long addedParticipantId = 3L;
+        Set<Long> participantIds = new HashSet<>(receiverIds);
+        participantIds.add(authorId);
+        participantIds.add(addedParticipantId);
+
+        entityHelper.createParticipant(authorId, "");
+        entityHelper.createParticipant(receiverId, "");
+        entityHelper.createParticipant(addedParticipantId, "");
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, null);
+        Long initialConversationId = conversation.getId();
+        String conferenceCreatedMessage = "conversation.conference.created";
+
+        UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
+        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
+        updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        updateParticipantsDto.setSubject(new ParticipantDto(addedParticipantId, "name"));
+
+        String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
+
+        mvc.perform(post("/api/conversations/" + initialConversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("id", not(initialConversationId.intValue())))
+                    .andExpect(jsonPath("participants", hasSize(3)))
+                    .andExpect(jsonPath("messages", hasSize(1)))
+                    .andExpect(jsonPath("messages[0].text", is(conferenceCreatedMessage)))
+                    .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].unread", is(true)))
+                    .andExpect(jsonPath("messages[0].system", is(true)))
+                    .andExpect(jsonPath("lastMessage.text", is(conferenceCreatedMessage)))
+                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.unread", is(true)))
+                    .andExpect(jsonPath("lastMessage.system", is(true)))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
+    }
+
+    @Test
+    public void testUpdateParticipantsWhenAddingToConference() throws Exception {
         Long authorId = 1L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
@@ -481,27 +526,27 @@ public class ConversationControllerIntegrationTest {
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
                 .header("Authorization",TOKEN))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("id", is(conversationId.intValue())))
-                    .andExpect(jsonPath("admin.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("participants", hasSize(participantIds.size())))
-                    .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
-                    .andExpect(jsonPath("messages[0].text", is(text)))
-                    .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
-                    .andExpect(jsonPath("messages[0].unread", is(true)))
-                    .andExpect(jsonPath("messages[0].system", is(false)))
-                    .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
-                    .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("messages[1].subject.id", is(addedParticipantId.intValue())))
-                    .andExpect(jsonPath("messages[1].unread", is(false)))
-                    .andExpect(jsonPath("messages[1].system", is(true)))
-                    .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
-                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(false)))
-                    .andExpect(jsonPath("lastMessage.system", is(true)))
-                    .andExpect(jsonPath("lastMessage.subject.id", is(addedParticipantId.intValue())))
-                    .andExpect(jsonPath("type", is(CONFERENCE)));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id", is(conversationId.intValue())))
+                .andExpect(jsonPath("admin.id", is(authorId.intValue())))
+                .andExpect(jsonPath("participants", hasSize(participantIds.size())))
+                .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
+                .andExpect(jsonPath("messages[0].text", is(text)))
+                .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
+                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                .andExpect(jsonPath("messages[0].unread", is(true)))
+                .andExpect(jsonPath("messages[0].system", is(false)))
+                .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
+                .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
+                .andExpect(jsonPath("messages[1].subject.id", is(addedParticipantId.intValue())))
+                .andExpect(jsonPath("messages[1].unread", is(false)))
+                .andExpect(jsonPath("messages[1].system", is(true)))
+                .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
+                .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
+                .andExpect(jsonPath("lastMessage.unread", is(false)))
+                .andExpect(jsonPath("lastMessage.system", is(true)))
+                .andExpect(jsonPath("lastMessage.subject.id", is(addedParticipantId.intValue())))
+                .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
     @Test

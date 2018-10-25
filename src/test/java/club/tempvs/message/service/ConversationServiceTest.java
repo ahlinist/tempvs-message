@@ -29,6 +29,8 @@ public class ConversationServiceTest {
     @Mock
     private Conversation conversation;
     @Mock
+    private Conversation newConversation;
+    @Mock
     private Participant author;
     @Mock
     private Participant receiver;
@@ -180,36 +182,42 @@ public class ConversationServiceTest {
     public void testAddParticipantForConversationOf2() {
         String text = "conversation.conference.created";
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> initialParticipants = new HashSet<>();
-        initialParticipants.add(author);
-        initialParticipants.add(receiver);
+        Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
         Set<Participant> receivers = new HashSet<>(initialParticipants);
         receivers.add(oneMoreReceiver);
         receivers.remove(author);
+        Set<Participant> finalParticipants = new HashSet<>(initialParticipants);
+        finalParticipants.add(oneMoreReceiver);
 
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
-        when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
+        when(objectFactory.getInstance(Conversation.class)).thenReturn(newConversation);
         when(conversation.getAdmin()).thenReturn(author);
         when(messageService.createMessage(author, receivers, text, isSystem)).thenReturn(message);
-        when(conversationRepository.save(conversation)).thenReturn(conversation);
+        when(newConversation.getParticipants()).thenReturn(finalParticipants);
+        when(conversationRepository.save(newConversation)).thenReturn(newConversation);
 
         Conversation result = conversationService.addParticipant(conversation, author, oneMoreReceiver);
 
         verify(conversation).getParticipants();
         verify(conversation).getType();
-        verify(objectFactory).getInstance(Conversation.class);
         verify(conversation).getAdmin();
-        verify(conversation).setAdmin(author);
-        verify(conversation).addParticipant(oneMoreReceiver);
         verify(messageService).createMessage(author, receivers, text, isSystem);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(conversation).setType(Conversation.Type.CONFERENCE);
-        verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(author, conversation, objectFactory, messageService, conversationRepository);
+        verify(objectFactory).getInstance(Conversation.class);
+        verify(newConversation).setParticipants(receivers);
+        verify(newConversation).addParticipant(author);
+        verify(newConversation).setName(null);
+        verify(newConversation).addMessage(message);
+        verify(newConversation).setLastMessage(message);
+        verify(message).setConversation(newConversation);
+        verify(newConversation).getParticipants();
+        verify(newConversation).setAdmin(author);
+        verify(newConversation).setType(Conversation.Type.CONFERENCE);
+        verify(conversationRepository).save(newConversation);
+        verifyNoMoreInteractions(author, conversation,
+                newConversation, objectFactory, messageService, conversationRepository);
 
-        assertEquals("Conversation is returned as a result", conversation, result);
+        assertEquals("New conversation is returned as a result", newConversation, result);
     }
 
     @Test
@@ -239,7 +247,6 @@ public class ConversationServiceTest {
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(conversation).addParticipant(oneMoreReceiver);
-        verify(conversation).setType(Conversation.Type.CONFERENCE);
         verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(author, conversation, objectFactory, messageService, conversationRepository);
 

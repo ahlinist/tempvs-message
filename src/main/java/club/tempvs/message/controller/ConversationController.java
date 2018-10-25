@@ -234,7 +234,7 @@ public class ConversationController {
             throw new RuntimeException("Action '" + action + "' is not supported.");
         }
 
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
 
