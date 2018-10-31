@@ -67,8 +67,4 @@ public class MessageServiceImpl implements MessageService {
             return message;
         }).collect(toList());
     }
-
-    public List<Message> getMessagesFromConversation(Conversation conversation, Locale locale) {
-        return getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
-    }
 }

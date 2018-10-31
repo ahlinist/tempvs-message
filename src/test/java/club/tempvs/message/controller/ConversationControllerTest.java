@@ -29,6 +29,8 @@ import java.util.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationControllerTest {
 
+    private static final int DEFAULT_PAGE_NUMBER = 0;
+    private static final int MAX_PAGE_SIZE = 40;
     private static UpdateParticipantsDto.Action addAction = UpdateParticipantsDto.Action.ADD;
     private static UpdateParticipantsDto.Action removeAction = UpdateParticipantsDto.Action.REMOVE;
 
@@ -111,7 +113,7 @@ public class ConversationControllerTest {
         when(createConversationDto.getName()).thenReturn(name);
         when(messageService.createMessage(author, receivers, text)).thenReturn(message);
         when(conversationService.createConversation(author, receivers, name, message)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation, locale)).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.createConversation(token, lang, createConversationDto);
@@ -130,7 +132,7 @@ public class ConversationControllerTest {
         verify(createConversationDto).getName();
         verify(messageService).createMessage(author, receivers, text);
         verify(conversationService).createConversation(author, receivers, name, message);
-        verify(messageService).getMessagesFromConversation(conversation, locale);
+        verify(messageService).getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto, message, receiverDto, participantDto,
                 createConversationDto, participantService, messageService, conversationService, objectFactory);
@@ -163,7 +165,7 @@ public class ConversationControllerTest {
         when(messageService.createMessage(author, receivers, text)).thenReturn(message);
         when(conversationService.findDialogue(author, receiver)).thenReturn(conversation);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation, locale)).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.createConversation(token, lang, createConversationDto);
@@ -181,7 +183,7 @@ public class ConversationControllerTest {
         verify(messageService).createMessage(author, receivers, text);
         verify(conversationService).findDialogue(author, receiver);
         verify(conversationService).addMessage(conversation, message);
-        verify(messageService).getMessagesFromConversation(conversation, locale);
+        verify(messageService).getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto, message, receiverDto,
                 createConversationDto, participantService, messageService, conversationService, objectFactory);

@@ -98,31 +98,4 @@ public class MessageServiceTest {
 
         assertEquals("A list of messages is returned", messages, result);
     }
-
-    @Test
-    public void testGetMessagesFromConversationWithDefaultParams() {
-        int page = 0;
-        int size = 40;
-        String text = "text";
-        String translatedText = "translated text";
-        Locale locale = Locale.ENGLISH;
-        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
-        List<Message> messages = Arrays.asList(message, message, message);
-
-        when(messageRepository.findByConversation(conversation, pageable)).thenReturn(messages);
-        when(message.getText()).thenReturn(text);
-        when(message.getSystem()).thenReturn(true);
-        when(messageSource.getMessage(text, null, locale)).thenReturn(translatedText);
-
-        List<Message> result = messageService.getMessagesFromConversation(conversation, locale);
-
-        verify(messageRepository).findByConversation(conversation, pageable);
-        verify(message, times(3)).getText();
-        verify(message, times(3)).getSystem();
-        verify(messageSource, times(3)).getMessage(text, null, locale);
-        verify(message, times(3)).setText(translatedText);
-        verifyNoMoreInteractions(message, messageSource, messageRepository);
-
-        assertEquals("A list of messages is returned", messages, result);
-    }
 }

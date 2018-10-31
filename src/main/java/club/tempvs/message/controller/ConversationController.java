@@ -79,13 +79,13 @@ public class ConversationController {
 
             if (conversation != null) {
                 conversation = conversationService.addMessage(conversation, message);
-                messages = messageService.getMessagesFromConversation(conversation, locale);
+                messages = messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
             }
         }
 
         if (conversation == null) {
             conversation = conversationService.createConversation(author, receivers, name, message);
-            messages = messageService.getMessagesFromConversation(conversation, locale);
+            messages = messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         }
 
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author);
