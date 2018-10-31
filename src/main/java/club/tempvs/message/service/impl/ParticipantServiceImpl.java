@@ -6,7 +6,6 @@ import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ParticipantServiceImpl implements ParticipantService {
