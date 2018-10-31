@@ -22,7 +22,6 @@ import java.util.Set;
 import static java.util.stream.Collectors.*;
 
 @Service
-@Transactional
 public class ConversationServiceImpl implements ConversationService {
 
     private static final String PARTICIPANT_ADDED_MESSAGE = "conversation.add.participant";
@@ -77,7 +76,6 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.save(conversation);
     }
 
-    @Transactional(readOnly = true)
     public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
         Set<Participant> participants = new HashSet<>();
         participants.add(participant);

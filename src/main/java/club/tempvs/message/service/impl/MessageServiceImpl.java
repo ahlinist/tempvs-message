@@ -20,7 +20,6 @@ import java.util.Set;
 import static java.util.stream.Collectors.*;
 
 @Service
-@Transactional
 public class MessageServiceImpl implements MessageService {
 
     private final ObjectFactory objectFactory;
@@ -53,7 +52,6 @@ public class MessageServiceImpl implements MessageService {
         return createMessage(author, receivers, text, isSystem, null);
     }
 
-    @Transactional(readOnly = true)
     public List<Message> getMessagesFromConversation(Conversation conversation, Locale locale, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = messageRepository.findByConversation(conversation, pageable);
