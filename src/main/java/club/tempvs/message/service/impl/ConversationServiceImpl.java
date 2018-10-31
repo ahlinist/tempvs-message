@@ -8,6 +8,7 @@ import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import static java.util.stream.Collectors.*;
 
 @Service
 @Transactional
@@ -30,13 +33,17 @@ public class ConversationServiceImpl implements ConversationService {
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
     private final MessageService messageService;
+    private final MessageSource messageSource;
 
     @Autowired
-    public ConversationServiceImpl(
-            ObjectFactory objectFactory, MessageService messageService, ConversationRepository conversationRepository) {
+    public ConversationServiceImpl(ObjectFactory objectFactory,
+                                   MessageService messageService,
+                                   ConversationRepository conversationRepository,
+                                   MessageSource messageSource) {
         this.objectFactory = objectFactory;
         this.messageService = messageService;
         this.conversationRepository = conversationRepository;
+        this.messageSource = messageSource;
     }
 
     public Conversation createConversation(
@@ -70,11 +77,22 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.save(conversation);
     }
 
-    public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
+    public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
         Set<Participant> participants = new HashSet<>();
         participants.add(participant);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
-        return conversationRepository.findByParticipantsIn(participants, pageable);
+        List<Conversation> conversations = conversationRepository.findByParticipantsIn(participants, pageable);
+        return conversations.stream()
+                .map(conversation -> {
+                    Message lastMessage = conversation.getLastMessage();
+
+                    if (lastMessage.getSystem()) {
+                        lastMessage.setText(messageSource.getMessage(lastMessage.getText(), null, locale));
+                        conversation.setLastMessage(lastMessage);
+                    }
+
+                    return conversation;
+                }).collect(toList());
     }
 
     public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {

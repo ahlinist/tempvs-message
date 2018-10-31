@@ -295,6 +295,7 @@ public class ConversationControllerTest {
     public void testGetConversationsByParticipant() {
         String token = "token";
         String lang = "en";
+        Locale locale = Locale.ENGLISH;
         Long participantId = 1L;
         int page = 0;
         int size = 40;
@@ -303,20 +304,22 @@ public class ConversationControllerTest {
         List<ConversationDtoBean> conversationDtoBeans = new ArrayList<>();
         conversationDtoBeans.add(new ConversationDtoBean());
 
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
+        when(conversationService.getConversationsByParticipant(participant, locale, page, size)).thenReturn(conversations);
         when(objectFactory.getInstance(GetConversationsDto.class, conversations, participant)).thenReturn(getConversationsDto);
         when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
         when(getConversationsDto.getConversations()).thenReturn(conversationDtoBeans);
 
         ResponseEntity result = conversationController.getConversationsByParticipant(token, lang, participantId, page, size);
 
+        verify(localeHelper).getLocale(lang);
         verify(participantService).getParticipant(participantId);
-        verify(conversationService).getConversationsByParticipant(participant, page, size);
+        verify(conversationService).getConversationsByParticipant(participant, locale, page, size);
         verify(objectFactory).getInstance(GetConversationsDto.class, conversations, participant);
         verify(objectFactory).getInstance(HttpHeaders.class);
         verify(getConversationsDto).getConversations();
-        verifyNoMoreInteractions(participantService, conversationService, objectFactory, getConversationsDto);
+        verifyNoMoreInteractions(localeHelper, participantService, conversationService, objectFactory, getConversationsDto);
 
         assertEquals("GetCoversationsDto is returned as a result", getConversationsDto, result.getBody());
     }

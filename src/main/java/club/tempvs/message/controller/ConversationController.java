@@ -146,7 +146,7 @@ public class ConversationController {
             throw new BadRequestException("No participant with id " + participantId + " exist!");
         }
 
-        List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
+        List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, locale, page, size);
         GetConversationsDto result = objectFactory.getInstance(GetConversationsDto.class, conversations, participant);
 
         int conversationsCount = result.getConversations().size();

@@ -62,10 +62,9 @@ public class MessageServiceImpl implements MessageService {
         return messages.stream().map(message -> {
             if (message.getSystem()) {
                 message.setText(messageSource.getMessage(message.getText(), null, locale));
-                return message;
-            } else {
-                return message;
             }
+
+            return message;
         }).collect(toList());
     }
 

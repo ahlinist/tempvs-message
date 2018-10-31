@@ -13,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -44,10 +45,12 @@ public class ConversationServiceTest {
     private MessageService messageService;
     @Mock
     private ConversationRepository conversationRepository;
+    @Mock
+    private MessageSource messageSource;
 
     @Before
     public void setup() {
-        this.conversationService = new ConversationServiceImpl(objectFactory, messageService, conversationRepository);
+        this.conversationService = new ConversationServiceImpl(objectFactory, messageService, conversationRepository, messageSource);
     }
 
     @Test
@@ -162,6 +165,9 @@ public class ConversationServiceTest {
     public void testGetConversationsByParticipant() {
         int page = 0;
         int size = 40;
+        String text = "text";
+        String translatedText = "translated text";
+        Locale locale = Locale.ENGLISH;
         Set<Participant> participants = new HashSet<>();
         participants.add(participant);
         List<Conversation> conversations = new ArrayList<>();
@@ -169,11 +175,21 @@ public class ConversationServiceTest {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
 
         when(conversationRepository.findByParticipantsIn(participants, pageable)).thenReturn(conversations);
+        when(conversation.getLastMessage()).thenReturn(message);
+        when(message.getSystem()).thenReturn(true);
+        when(message.getText()).thenReturn(text);
+        when(messageSource.getMessage(text, null, locale)).thenReturn(translatedText);
 
-        List<Conversation> result = conversationService.getConversationsByParticipant(participant, page, size);
+        List<Conversation> result = conversationService.getConversationsByParticipant(participant, locale, page, size);
 
+        verify(conversation).getLastMessage();
+        verify(message).getSystem();
+        verify(message).getText();
+        verify(messageSource).getMessage(message.getText(), null, locale);
+        verify(message).setText(translatedText);
+        verify(conversation).setLastMessage(message);
         verify(conversationRepository).findByParticipantsIn(participants, pageable);
-        verifyNoMoreInteractions(conversationRepository);
+        verifyNoMoreInteractions(participant, conversation, messageSource, conversationRepository);
 
         assertEquals("A list of one conversation is returned", result, conversations);
     }
