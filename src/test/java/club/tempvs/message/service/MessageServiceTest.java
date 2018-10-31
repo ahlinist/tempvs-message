@@ -13,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -40,10 +41,12 @@ public class MessageServiceTest {
     private ObjectFactory objectFactory;
     @Mock
     private MessageRepository messageRepository;
+    @Mock
+    private MessageSource messageSource;
 
     @Before
     public void setup() {
-        this.messageService = new MessageServiceImpl(objectFactory, messageRepository);
+        this.messageService = new MessageServiceImpl(objectFactory, messageRepository, messageSource);
     }
 
     @Test
@@ -73,15 +76,25 @@ public class MessageServiceTest {
     public void testGetMessagesFromConversation() {
         int page = 0;
         int size = 40;
+        String text = "text";
+        String translatedText = "translated text";
+        Locale locale = Locale.ENGLISH;
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(messageRepository.findByConversation(conversation, pageable)).thenReturn(messages);
+        when(message.getText()).thenReturn(text);
+        when(message.getSystem()).thenReturn(true);
+        when(messageSource.getMessage(text, null, locale)).thenReturn(translatedText);
 
-        List<Message> result = messageService.getMessagesFromConversation(conversation, page, size);
+        List<Message> result = messageService.getMessagesFromConversation(conversation, locale, page, size);
 
         verify(messageRepository).findByConversation(conversation, pageable);
-        verifyNoMoreInteractions(message, messageRepository);
+        verify(message, times(3)).getText();
+        verify(message, times(3)).getSystem();
+        verify(messageSource, times(3)).getMessage(text, null, locale);
+        verify(message, times(3)).setText(translatedText);
+        verifyNoMoreInteractions(message, messageSource, messageRepository);
 
         assertEquals("A list of messages is returned", messages, result);
     }
@@ -90,15 +103,25 @@ public class MessageServiceTest {
     public void testGetMessagesFromConversationWithDefaultParams() {
         int page = 0;
         int size = 40;
+        String text = "text";
+        String translatedText = "translated text";
+        Locale locale = Locale.ENGLISH;
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(messageRepository.findByConversation(conversation, pageable)).thenReturn(messages);
+        when(message.getText()).thenReturn(text);
+        when(message.getSystem()).thenReturn(true);
+        when(messageSource.getMessage(text, null, locale)).thenReturn(translatedText);
 
-        List<Message> result = messageService.getMessagesFromConversation(conversation);
+        List<Message> result = messageService.getMessagesFromConversation(conversation, locale);
 
         verify(messageRepository).findByConversation(conversation, pageable);
-        verifyNoMoreInteractions(message, messageRepository);
+        verify(message, times(3)).getText();
+        verify(message, times(3)).getSystem();
+        verify(messageSource, times(3)).getMessage(text, null, locale);
+        verify(message, times(3)).setText(translatedText);
+        verifyNoMoreInteractions(message, messageSource, messageRepository);
 
         assertEquals("A list of messages is returned", messages, result);
     }

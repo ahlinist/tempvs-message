@@ -7,6 +7,7 @@ import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import static java.util.stream.Collectors.*;
 
 @Service
 @Transactional
@@ -25,11 +28,13 @@ public class MessageServiceImpl implements MessageService {
 
     private final ObjectFactory objectFactory;
     private final MessageRepository messageRepository;
+    private final MessageSource messageSource;
 
     @Autowired
-    public MessageServiceImpl(ObjectFactory objectFactory, MessageRepository messageRepository) {
+    public MessageServiceImpl(ObjectFactory objectFactory, MessageRepository messageRepository, MessageSource messageSource) {
         this.objectFactory = objectFactory;
         this.messageRepository = messageRepository;
+        this.messageSource = messageSource;
     }
 
     public Message createMessage(Participant author,
@@ -51,12 +56,20 @@ public class MessageServiceImpl implements MessageService {
         return createMessage(author, receivers, text, isSystem, null);
     }
 
-    public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
+    public List<Message> getMessagesFromConversation(Conversation conversation, Locale locale, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
-        return messageRepository.findByConversation(conversation, pageable);
+        List<Message> messages = messageRepository.findByConversation(conversation, pageable);
+        return messages.stream().map(message -> {
+            if (message.getSystem()) {
+                message.setText(messageSource.getMessage(message.getText(), null, locale));
+                return message;
+            } else {
+                return message;
+            }
+        }).collect(toList());
     }
 
-    public List<Message> getMessagesFromConversation(Conversation conversation) {
-        return getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
+    public List<Message> getMessagesFromConversation(Conversation conversation, Locale locale) {
+        return getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE);
     }
 }

@@ -29,18 +29,21 @@ public class ConversationController {
     private final ParticipantService participantService;
     private final MessageService messageService;
     private final AuthHelper authHelper;
+    private final LocaleHelper localeHelper;
 
     @Autowired
     public ConversationController(ObjectFactory objectFactory,
                                   ConversationService conversationService,
                                   ParticipantService participantService,
                                   MessageService messageService,
-                                  AuthHelper authHelper) {
+                                  AuthHelper authHelper,
+                                  LocaleHelper localeHelper) {
         this.objectFactory = objectFactory;
         this.conversationService = conversationService;
         this.participantService = participantService;
         this.messageService = messageService;
         this.authHelper = authHelper;
+        this.localeHelper = localeHelper;
     }
 
     @GetMapping("/ping")
@@ -51,9 +54,11 @@ public class ConversationController {
     @PostMapping(value="/conversations", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto createConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
         createConversationDto.validate();
+        Locale locale = localeHelper.getLocale(lang);
         Participant author = participantService.getParticipant(createConversationDto.getAuthor().getId());
         Set<Participant> receivers = createConversationDto.getReceivers().stream()
                 .map(participantDto -> participantService.getParticipant(participantDto.getId()))
@@ -74,13 +79,13 @@ public class ConversationController {
 
             if (conversation != null) {
                 conversation = conversationService.addMessage(conversation, message);
-                messages = messageService.getMessagesFromConversation(conversation);
+                messages = messageService.getMessagesFromConversation(conversation, locale);
             }
         }
 
         if (conversation == null) {
             conversation = conversationService.createConversation(author, receivers, name, message);
-            messages = conversation.getMessages();
+            messages = messageService.getMessagesFromConversation(conversation, locale);
         }
 
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author);
@@ -89,11 +94,13 @@ public class ConversationController {
     @GetMapping(value="/conversations/{id}", produces = APPLICATION_JSON_VALUE)
     public GetConversationDto getConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size,
             @RequestParam(value = "caller", required = false) Long callerId) {
         authHelper.authenticate(token);
+        Locale locale = localeHelper.getLocale(lang);
 
         if (size > MAX_PAGE_SIZE) {
             throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
@@ -115,17 +122,19 @@ public class ConversationController {
             throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + id);
         }
 
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, locale, page, size);
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller);
     }
 
     @GetMapping(value="/conversations", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
         authHelper.authenticate(token);
+        Locale locale = localeHelper.getLocale(lang);
 
         if (size > MAX_PAGE_SIZE) {
             throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
@@ -169,10 +178,12 @@ public class ConversationController {
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity addMessage(
             @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
         addMessageDto.validate();
+        Locale locale = localeHelper.getLocale(lang);
         Long authorId = addMessageDto.getAuthor().getId();
         String text = addMessageDto.getText();
 
@@ -188,7 +199,7 @@ public class ConversationController {
         receivers.remove(author);
         Message message = messageService.createMessage(author, receivers, text);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
-        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto getConversationDto = objectFactory.getInstance(
                 GetConversationDto.class, updatedConversation, messages, author);
 
@@ -199,10 +210,12 @@ public class ConversationController {
             produces = APPLICATION_JSON_VALUE)
     public GetConversationDto updateParticipants(
             @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateParticipantsDto updateParticipantsDto) {
         authHelper.authenticate(token);
         updateParticipantsDto.validate();
+        Locale locale = localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
@@ -234,7 +247,7 @@ public class ConversationController {
             throw new RuntimeException("Action '" + action + "' is not supported.");
         }
 
-        List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
 

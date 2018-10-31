@@ -464,7 +464,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "");
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, null);
         Long initialConversationId = conversation.getId();
-        String conferenceCreatedMessage = "conversation.conference.created";
+        String conferenceCreatedMessage = "created a conference";
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
         updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
@@ -512,7 +512,7 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
         int messagesInitialSize = conversation.getMessages().size();
-        String participantAddedMessage = "conversation.add.participant";
+        String participantAddedMessage = "added";
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
         updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
@@ -593,7 +593,7 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
         int messagesInitialSize = conversation.getMessages().size();
-        String participantAddedMessage = "conversation.remove.participant";
+        String participantRemovedMessage = "removed";
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
         updateParticipantsDto.setAction(UpdateParticipantsDto.Action.REMOVE);
@@ -617,12 +617,12 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
                     .andExpect(jsonPath("messages[0].unread", is(true)))
                     .andExpect(jsonPath("messages[0].system", is(false)))
-                    .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("messages[1].text", is(participantRemovedMessage)))
                     .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[1].subject.id", is(removedParticipantId.intValue())))
                     .andExpect(jsonPath("messages[1].unread", is(false)))
                     .andExpect(jsonPath("messages[1].system", is(true)))
-                    .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("lastMessage.text", is(participantRemovedMessage)))
                     .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("lastMessage.unread", is(false)))
                     .andExpect(jsonPath("lastMessage.system", is(true)))

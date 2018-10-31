@@ -11,6 +11,7 @@ import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.AuthHelper;
+import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,11 +70,13 @@ public class ConversationControllerTest {
     private ParticipantDto receiverDto;
     @Mock
     private ParticipantDto participantDto;
+    @Mock
+    private LocaleHelper localeHelper;
 
     @Before
     public void setup() {
         conversationController = new ConversationController(objectFactory, conversationService, participantService,
-                messageService, authHelper);
+                messageService, authHelper, localeHelper);
     }
 
     @Test
@@ -87,12 +90,15 @@ public class ConversationControllerTest {
         Long receiverId = 2L;
         Long participantId = 3L;
         String token = "token";
+        String lang = "en";
+        Locale locale = Locale.ENGLISH;
         String text = "text";
         String name = "name";
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto, participantDto));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, participant));
         List<Message> messages = Arrays.asList(message, message, message);
 
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(createConversationDto.getAuthor()).thenReturn(authorDto);
         when(createConversationDto.getReceivers()).thenReturn(receiverDtos);
         when(authorDto.getId()).thenReturn(authorId);
@@ -105,11 +111,12 @@ public class ConversationControllerTest {
         when(createConversationDto.getName()).thenReturn(name);
         when(messageService.createMessage(author, receivers, text)).thenReturn(message);
         when(conversationService.createConversation(author, receivers, name, message)).thenReturn(conversation);
-        when(conversation.getMessages()).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.createConversation(token, createConversationDto);
+        GetConversationDto result = conversationController.createConversation(token, lang, createConversationDto);
 
+        verify(localeHelper).getLocale(lang);
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
         verify(authorDto).getId();
@@ -123,7 +130,7 @@ public class ConversationControllerTest {
         verify(createConversationDto).getName();
         verify(messageService).createMessage(author, receivers, text);
         verify(conversationService).createConversation(author, receivers, name, message);
-        verify(conversation).getMessages();
+        verify(messageService).getMessagesFromConversation(conversation, locale);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto, message, receiverDto, participantDto,
                 createConversationDto, participantService, messageService, conversationService, objectFactory);
@@ -136,12 +143,15 @@ public class ConversationControllerTest {
         Long authorId = 1L;
         Long receiverId = 2L;
         String token = "token";
+        String lang = "en";
+        Locale locale = Locale.ENGLISH;
         String text = "text";
         String name = "name";
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
         List<Message> messages = Arrays.asList(message, message, message);
 
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(createConversationDto.getAuthor()).thenReturn(authorDto);
         when(createConversationDto.getReceivers()).thenReturn(receiverDtos);
         when(authorDto.getId()).thenReturn(authorId);
@@ -153,11 +163,12 @@ public class ConversationControllerTest {
         when(messageService.createMessage(author, receivers, text)).thenReturn(message);
         when(conversationService.findDialogue(author, receiver)).thenReturn(conversation);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation)).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.createConversation(token, createConversationDto);
+        GetConversationDto result = conversationController.createConversation(token, lang, createConversationDto);
 
+        verify(localeHelper).getLocale(lang);
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
         verify(createConversationDto).getReceivers();
@@ -170,7 +181,7 @@ public class ConversationControllerTest {
         verify(messageService).createMessage(author, receivers, text);
         verify(conversationService).findDialogue(author, receiver);
         verify(conversationService).addMessage(conversation, message);
-        verify(messageService).getMessagesFromConversation(conversation);
+        verify(messageService).getMessagesFromConversation(conversation, locale);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto, message, receiverDto,
                 createConversationDto, participantService, messageService, conversationService, objectFactory);
@@ -182,6 +193,7 @@ public class ConversationControllerTest {
     public void testCreateConversationWith1Participant() {
         Long authorId = 1L;
         String token = "token";
+        String lang = "en";
         String text = "text";
         String name = "name";
         Set<ParticipantDto> receiverDtos = new HashSet<>();
@@ -195,7 +207,7 @@ public class ConversationControllerTest {
         when(createConversationDto.getName()).thenReturn(name);
         when(messageService.createMessage(author, receivers, text)).thenReturn(message);
 
-        conversationController.createConversation(token, createConversationDto);
+        conversationController.createConversation(token, lang, createConversationDto);
 
         verify(createConversationDto).validate();
         verify(createConversationDto).getAuthor();
@@ -212,6 +224,8 @@ public class ConversationControllerTest {
     @Test
     public void testGetConversation() {
         String token = "token";
+        String lang = "en";
+        Locale locale = Locale.ENGLISH;
         long id = 1L;
         int page = 0;
         int size = 40;
@@ -219,18 +233,20 @@ public class ConversationControllerTest {
         List<Message> messages = Arrays.asList(message, message, message);
         Set<Participant> participants = new HashSet<>(Arrays.asList(participant, receiver));
 
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(participantService.getParticipant(callerId)).thenReturn(participant);
         when(conversationService.getConversation(id)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
-        when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale, page, size)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.getConversation(token, id, page, size, callerId);
+        GetConversationDto result = conversationController.getConversation(token, lang, id, page, size, callerId);
 
+        verify(localeHelper).getLocale(lang);
         verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);
         verify(conversation).getParticipants();
-        verify(messageService).getMessagesFromConversation(conversation, page, size);
+        verify(messageService).getMessagesFromConversation(conversation, locale, page, size);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant);
         verifyNoMoreInteractions(message, conversation,
                 participantService, conversationService, messageService, objectFactory, getConversationDto);
@@ -241,12 +257,13 @@ public class ConversationControllerTest {
     @Test(expected = BadRequestException.class)
     public void testGetConversationForLargeAmountOfDataPerRequest() {
         String token = "token";
+        String lang = "en";
         long id = 1L;
         int page = 0;
         int size = 21;
         Long callerId = 5L;
 
-        conversationController.getConversation(token, id, page, size, callerId);
+        conversationController.getConversation(token, lang, id, page, size, callerId);
 
         verifyNoMoreInteractions(message, conversation, conversationService, messageService, objectFactory, getConversationDto);
     }
@@ -254,6 +271,7 @@ public class ConversationControllerTest {
     @Test(expected = ForbiddenException.class)
     public void testGetConversationWithWrongCaller() {
         String token = "token";
+        String lang = "en";
         long id = 1L;
         int page = 0;
         int size = 40;
@@ -264,7 +282,7 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(id)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
 
-        conversationController.getConversation(token, id, page, size, callerId);
+        conversationController.getConversation(token, lang, id, page, size, callerId);
 
         verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);
@@ -276,6 +294,7 @@ public class ConversationControllerTest {
     @Test
     public void testGetConversationsByParticipant() {
         String token = "token";
+        String lang = "en";
         Long participantId = 1L;
         int page = 0;
         int size = 40;
@@ -290,7 +309,7 @@ public class ConversationControllerTest {
         when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
         when(getConversationsDto.getConversations()).thenReturn(conversationDtoBeans);
 
-        ResponseEntity result = conversationController.getConversationsByParticipant(token, participantId, page, size);
+        ResponseEntity result = conversationController.getConversationsByParticipant(token, lang, participantId, page, size);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversationsByParticipant(participant, page, size);
@@ -305,11 +324,12 @@ public class ConversationControllerTest {
     @Test(expected = BadRequestException.class)
     public void testGetConversationsByParticipantForLargeAmountOfDataBeingRetrieved() {
         String token = "token";
+        String lang = "en";
         Long participantId = 1L;
         int page = 0;
         int size = 200;
 
-        conversationController.getConversationsByParticipant(token, participantId, page, size);
+        conversationController.getConversationsByParticipant(token, lang, participantId, page, size);
 
         verifyNoMoreInteractions(participantService, conversationService, objectFactory);
     }
@@ -317,6 +337,8 @@ public class ConversationControllerTest {
     @Test
     public void testAddMessage() {
         String token = "token";
+        String lang = "en";
+        Locale locale = Locale.ENGLISH;
         Long authorId = 1L;
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
@@ -326,6 +348,7 @@ public class ConversationControllerTest {
         int size = 40;
         List<Message> messages = Arrays.asList(message, message, message);
 
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(addMessageDto.getAuthor()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(authorId);
         when(addMessageDto.getText()).thenReturn(text);
@@ -334,11 +357,12 @@ public class ConversationControllerTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, participants, text)).thenReturn(message);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale, page, size)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        ResponseEntity result = conversationController.addMessage(token, conversationId, addMessageDto);
+        ResponseEntity result = conversationController.addMessage(token, lang, conversationId, addMessageDto);
 
+        verify(localeHelper).getLocale(lang);
         verify(addMessageDto).validate();
         verify(addMessageDto).getAuthor();
         verify(authorDto).getId();
@@ -348,7 +372,7 @@ public class ConversationControllerTest {
         verify(conversation).getParticipants();
         verify(messageService).createMessage(author, participants, text);
         verify(conversationService).addMessage(conversation, message);
-        verify(messageService).getMessagesFromConversation(conversation, page, size);
+        verify(messageService).getMessagesFromConversation(conversation, locale, page, size);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto,
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
@@ -360,6 +384,7 @@ public class ConversationControllerTest {
     @Test
     public void testAddMessageForMissingConversation() {
         String token = "token";
+        String lang = "en";
         Long authorId = 1L;
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
@@ -371,7 +396,7 @@ public class ConversationControllerTest {
         when(addMessageDto.getText()).thenReturn(text);
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        ResponseEntity result = conversationController.addMessage(token, conversationId, addMessageDto);
+        ResponseEntity result = conversationController.addMessage(token, lang, conversationId, addMessageDto);
 
         verify(addMessageDto).validate();
         verify(addMessageDto).getAuthor();
@@ -387,6 +412,8 @@ public class ConversationControllerTest {
     @Test
     public void testUpdateParticipantsForAdd() {
         String token = "token";
+        String lang = "en";
+        Locale locale = Locale.ENGLISH;
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
@@ -394,6 +421,7 @@ public class ConversationControllerTest {
         int max = 40;
         List<Message> messages = Arrays.asList(message, message);
 
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(updateParticipantsDto.getInitiator()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(initiatorId);
@@ -403,11 +431,12 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversationService.addParticipant(conversation, author, receiver)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
+        GetConversationDto result = conversationController.updateParticipants(token, lang, conversationId, updateParticipantsDto);
 
+        verify(localeHelper).getLocale(lang);
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
         verify(updateParticipantsDto).getInitiator();
@@ -418,7 +447,7 @@ public class ConversationControllerTest {
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).addParticipant(conversation, author, receiver);
-        verify(messageService).getMessagesFromConversation(conversation, page, max);
+        verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto,
                 receiverDto, conversationService, updateParticipantsDto, participantService, objectFactory);
@@ -429,6 +458,8 @@ public class ConversationControllerTest {
     @Test
     public void testUpdateParticipantsForRemove() {
         String token = "token";
+        String lang = "en";
+        Locale locale = Locale.ENGLISH;
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
@@ -436,6 +467,7 @@ public class ConversationControllerTest {
         int max = 40;
         List<Message> messages = Arrays.asList(message, message);
 
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(updateParticipantsDto.getInitiator()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(initiatorId);
@@ -445,11 +477,12 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
+        when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
+        GetConversationDto result = conversationController.updateParticipants(token, lang, conversationId, updateParticipantsDto);
 
+        verify(localeHelper).getLocale(lang);
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
         verify(updateParticipantsDto).getInitiator();
@@ -460,7 +493,7 @@ public class ConversationControllerTest {
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).removeParticipant(conversation, author, receiver);
-        verify(messageService).getMessagesFromConversation(conversation, page, max);
+        verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto,
                 receiverDto, conversationService, updateParticipantsDto, participantService, objectFactory);
@@ -471,11 +504,12 @@ public class ConversationControllerTest {
     @Test(expected = NotFoundException.class)
     public void testUpdateParticipantsForEmptyConversation() {
         String token = "token";
+        String lang = "en";
         Long conversationId = 1L;
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.updateParticipants(token, conversationId, updateParticipantsDto);
+        conversationController.updateParticipants(token, lang, conversationId, updateParticipantsDto);
 
         verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
@@ -487,7 +521,6 @@ public class ConversationControllerTest {
         String token = "token";
         Long participantId = 1L;
         long conversationsCount = 3L;
-        boolean isNew = false;
 
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationService.countUpdatedConversationsPerParticipant(participant)).thenReturn(conversationsCount);
