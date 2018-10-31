@@ -77,6 +77,7 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.save(conversation);
     }
 
+    @Transactional(readOnly = true)
     public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
         Set<Participant> participants = new HashSet<>();
         participants.add(participant);

@@ -23,9 +23,6 @@ import static java.util.stream.Collectors.*;
 @Transactional
 public class MessageServiceImpl implements MessageService {
 
-    private static final int DEFAULT_PAGE_NUMBER = 0;
-    private static final int DEFAULT_PAGE_SIZE = 40;
-
     private final ObjectFactory objectFactory;
     private final MessageRepository messageRepository;
     private final MessageSource messageSource;
@@ -56,6 +53,7 @@ public class MessageServiceImpl implements MessageService {
         return createMessage(author, receivers, text, isSystem, null);
     }
 
+    @Transactional(readOnly = true)
     public List<Message> getMessagesFromConversation(Conversation conversation, Locale locale, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = messageRepository.findByConversation(conversation, pageable);
