@@ -56,7 +56,8 @@ public class MessageServiceImpl implements MessageService {
         List<Message> messages = messageRepository.findByConversation(conversation, pageable);
         return messages.stream().map(message -> {
             if (message.getSystem()) {
-                message.setText(messageSource.getMessage(message.getText(), null, locale));
+                String code = message.getText();
+                message.setText(messageSource.getMessage(code, null, code, locale));
             }
 
             return message;

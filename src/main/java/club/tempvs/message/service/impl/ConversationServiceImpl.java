@@ -27,6 +27,7 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String PARTICIPANT_REMOVED_MESSAGE = "conversation.remove.participant";
     private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
     private static final String CONFERENCE_CREATED = "conversation.conference.created";
+    private static final String CONVERSATION_RENAMED = "conversation.update.name";
 
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
@@ -167,5 +168,14 @@ public class ConversationServiceImpl implements ConversationService {
 
     public long countUpdatedConversationsPerParticipant(Participant participant) {
         return conversationRepository.countByNewMessagesPerParticipant(participant);
+    }
+
+    public Conversation updateName(Conversation conversation, Participant initiator, String name) {
+        Boolean isSystem = Boolean.TRUE;
+        Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
+        receivers.remove(initiator);
+        Message message = messageService.createMessage(initiator, receivers, CONVERSATION_RENAMED, isSystem);
+        conversation.setName(name);
+        return addMessage(conversation, message);
     }
 }

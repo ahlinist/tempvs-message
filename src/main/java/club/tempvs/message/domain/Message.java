@@ -16,11 +16,10 @@ public class Message {
     @Id
     @GeneratedValue
     private Long id;
-
-    Boolean isSystem = false;
+    private Boolean isSystem = false;
 
     @NotNull
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Conversation conversation;
 
     @NotNull

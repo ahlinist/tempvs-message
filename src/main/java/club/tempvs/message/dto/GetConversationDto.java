@@ -12,6 +12,7 @@ public class GetConversationDto {
 
     private Long id;
     private String type;
+    private String name;
     private ParticipantDto admin;
     private Set<ParticipantDto> participants = new HashSet<>();
     private MessageDtoBean lastMessage;
@@ -27,6 +28,7 @@ public class GetConversationDto {
 
         this.id = conversation.getId();
         this.type = conversation.getType().toString();
+        this.name = conversation.getName();
         this.admin = admin != null ? new ParticipantDto(admin) : null;
         this.participants = conversation.getParticipants().stream().map(ParticipantDto::new).collect(toSet());
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self);
@@ -47,6 +49,14 @@ public class GetConversationDto {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public ParticipantDto getAdmin() {

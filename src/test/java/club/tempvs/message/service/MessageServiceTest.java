@@ -85,14 +85,14 @@ public class MessageServiceTest {
         when(messageRepository.findByConversation(conversation, pageable)).thenReturn(messages);
         when(message.getText()).thenReturn(text);
         when(message.getSystem()).thenReturn(true);
-        when(messageSource.getMessage(text, null, locale)).thenReturn(translatedText);
+        when(messageSource.getMessage(text, null, text, locale)).thenReturn(translatedText);
 
         List<Message> result = messageService.getMessagesFromConversation(conversation, locale, page, size);
 
         verify(messageRepository).findByConversation(conversation, pageable);
         verify(message, times(3)).getText();
         verify(message, times(3)).getSystem();
-        verify(messageSource, times(3)).getMessage(text, null, locale);
+        verify(messageSource, times(3)).getMessage(text, null, text, locale);
         verify(message, times(3)).setText(translatedText);
         verifyNoMoreInteractions(message, messageSource, messageRepository);
 

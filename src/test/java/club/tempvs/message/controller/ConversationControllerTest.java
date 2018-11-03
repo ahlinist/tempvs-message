@@ -35,6 +35,9 @@ public class ConversationControllerTest {
     private static UpdateParticipantsDto.Action removeAction = UpdateParticipantsDto.Action.REMOVE;
 
     private ConversationController conversationController;
+    private String token = "token";
+    private String lang = "en";
+    private Locale locale = Locale.ENGLISH;
 
     @Mock
     private ConversationService conversationService;
@@ -74,6 +77,8 @@ public class ConversationControllerTest {
     private ParticipantDto participantDto;
     @Mock
     private LocaleHelper localeHelper;
+    @Mock
+    private UpdateConversationNameDto updateConversationNameDto;
 
     @Before
     public void setup() {
@@ -91,9 +96,6 @@ public class ConversationControllerTest {
         Long authorId = 1L;
         Long receiverId = 2L;
         Long participantId = 3L;
-        String token = "token";
-        String lang = "en";
-        Locale locale = Locale.ENGLISH;
         String text = "text";
         String name = "name";
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto, participantDto));
@@ -144,9 +146,6 @@ public class ConversationControllerTest {
     public void testCreateConversationForExistentDialogue() {
         Long authorId = 1L;
         Long receiverId = 2L;
-        String token = "token";
-        String lang = "en";
-        Locale locale = Locale.ENGLISH;
         String text = "text";
         String name = "name";
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
@@ -194,8 +193,6 @@ public class ConversationControllerTest {
     @Test(expected = BadRequestException.class)
     public void testCreateConversationWith1Participant() {
         Long authorId = 1L;
-        String token = "token";
-        String lang = "en";
         String text = "text";
         String name = "name";
         Set<ParticipantDto> receiverDtos = new HashSet<>();
@@ -225,9 +222,6 @@ public class ConversationControllerTest {
 
     @Test
     public void testGetConversation() {
-        String token = "token";
-        String lang = "en";
-        Locale locale = Locale.ENGLISH;
         long id = 1L;
         int page = 0;
         int size = 40;
@@ -258,8 +252,6 @@ public class ConversationControllerTest {
 
     @Test(expected = BadRequestException.class)
     public void testGetConversationForLargeAmountOfDataPerRequest() {
-        String token = "token";
-        String lang = "en";
         long id = 1L;
         int page = 0;
         int size = 21;
@@ -272,8 +264,6 @@ public class ConversationControllerTest {
 
     @Test(expected = ForbiddenException.class)
     public void testGetConversationWithWrongCaller() {
-        String token = "token";
-        String lang = "en";
         long id = 1L;
         int page = 0;
         int size = 40;
@@ -295,9 +285,6 @@ public class ConversationControllerTest {
 
     @Test
     public void testGetConversationsByParticipant() {
-        String token = "token";
-        String lang = "en";
-        Locale locale = Locale.ENGLISH;
         Long participantId = 1L;
         int page = 0;
         int size = 40;
@@ -328,8 +315,6 @@ public class ConversationControllerTest {
 
     @Test(expected = BadRequestException.class)
     public void testGetConversationsByParticipantForLargeAmountOfDataBeingRetrieved() {
-        String token = "token";
-        String lang = "en";
         Long participantId = 1L;
         int page = 0;
         int size = 200;
@@ -341,9 +326,6 @@ public class ConversationControllerTest {
 
     @Test
     public void testAddMessage() {
-        String token = "token";
-        String lang = "en";
-        Locale locale = Locale.ENGLISH;
         Long authorId = 1L;
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
@@ -388,8 +370,6 @@ public class ConversationControllerTest {
 
     @Test
     public void testAddMessageForMissingConversation() {
-        String token = "token";
-        String lang = "en";
         Long authorId = 1L;
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
@@ -416,9 +396,6 @@ public class ConversationControllerTest {
 
     @Test
     public void testUpdateParticipantsForAdd() {
-        String token = "token";
-        String lang = "en";
-        Locale locale = Locale.ENGLISH;
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
@@ -462,9 +439,6 @@ public class ConversationControllerTest {
 
     @Test
     public void testUpdateParticipantsForRemove() {
-        String token = "token";
-        String lang = "en";
-        Locale locale = Locale.ENGLISH;
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
@@ -508,8 +482,6 @@ public class ConversationControllerTest {
 
     @Test(expected = NotFoundException.class)
     public void testUpdateParticipantsForEmptyConversation() {
-        String token = "token";
-        String lang = "en";
         Long conversationId = 1L;
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
@@ -523,7 +495,6 @@ public class ConversationControllerTest {
 
     @Test
     public void testCountConversations() {
-        String token = "token";
         Long participantId = 1L;
         long conversationsCount = 3L;
 
@@ -544,7 +515,6 @@ public class ConversationControllerTest {
 
     @Test(expected = BadRequestException.class)
     public void testCountNewConversationsForMissingParticipant() {
-        String token = "token";
         Long participantId = 1L;
 
         when(participantService.getParticipant(participantId)).thenReturn(null);
@@ -554,5 +524,41 @@ public class ConversationControllerTest {
         verify(authHelper).authenticate(token);
         verify(participantService).getParticipant(participantId);
         verifyNoMoreInteractions(participantService, participant, authHelper);
+    }
+
+    @Test
+    public void testUpdateConversationName() {
+        Long conversationId = 1L;
+        Long participantId = 3L;
+        String conversationName = "name";
+        List<Message> messages = Arrays.asList(message);
+
+        when(localeHelper.getLocale(lang)).thenReturn(locale);
+        when(updateConversationNameDto.getName()).thenReturn(conversationName);
+        when(updateConversationNameDto.getInitiator()).thenReturn(participantDto);
+        when(participantDto.getId()).thenReturn(participantId);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(conversationService.updateName(conversation, participant, conversationName)).thenReturn(conversation);
+        when(messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant)).thenReturn(getConversationDto);
+
+        GetConversationDto result = conversationController.updateConversationName(token, lang, conversationId, updateConversationNameDto);
+
+        verify(authHelper).authenticate(token);
+        verify(updateConversationNameDto).validate();
+        verify(localeHelper).getLocale(lang);
+        verify(updateConversationNameDto).getName();
+        verify(updateConversationNameDto).getInitiator();
+        verify(participantDto).getId();
+        verify(participantService).getParticipant(participantId);
+        verify(conversationService).getConversation(conversationId);
+        verify(conversationService).updateName(conversation, participant, conversationName);
+        verify(messageService).getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant);
+        verifyNoMoreInteractions(authHelper, localeHelper, updateConversationNameDto, participantService,
+                conversationService, messageService, objectFactory);
+
+        assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
 }

@@ -23,6 +23,8 @@ import java.util.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationServiceTest {
 
+    private static final String CONVERSATION_RENAMED = "conversation.update.name";
+
     private ConversationService conversationService;
 
     @Mock
@@ -373,8 +375,7 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testCountUpdatedConversationsPerParticipant() throws Exception {
-        boolean isNew = true;
+    public void testCountUpdatedConversationsPerParticipant() {
         long conversationCount = 3L;
 
         when(conversationRepository.countByNewMessagesPerParticipant(participant)).thenReturn(conversationCount);
@@ -385,5 +386,29 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(participant, conversationRepository);
 
         assertEquals("3L is returned as a count of new conversations", conversationCount, result);
+    }
+
+    @Test
+    public void testUpdateName() {
+        String name = "name";
+        Boolean isSystem = Boolean.TRUE;
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
+
+        when(conversation.getParticipants()).thenReturn(receivers);
+        when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem)).thenReturn(message);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.updateName(conversation, participant, name);
+
+        verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem);
+        verify(conversation).getParticipants();
+        verify(conversation).setName(name);
+        verify(conversation).addMessage(message);
+        verify(conversation).setLastMessage(message);
+        verify(message).setConversation(conversation);
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(participant, message, conversation, messageService, conversationRepository);
+
+        assertEquals("Updated conversation is returned as a result", conversation, result);
     }
 }
