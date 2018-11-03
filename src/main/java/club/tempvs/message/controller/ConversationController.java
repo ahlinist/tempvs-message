@@ -54,7 +54,7 @@ public class ConversationController {
     @PostMapping(value="/conversations", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public GetConversationDto createConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
         createConversationDto.validate();
@@ -94,7 +94,7 @@ public class ConversationController {
     @GetMapping(value="/conversations/{id}", produces = APPLICATION_JSON_VALUE)
     public GetConversationDto getConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size,
@@ -129,7 +129,7 @@ public class ConversationController {
     @GetMapping(value="/conversations", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
@@ -178,7 +178,7 @@ public class ConversationController {
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity addMessage(
             @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
@@ -210,7 +210,7 @@ public class ConversationController {
             produces = APPLICATION_JSON_VALUE)
     public GetConversationDto updateParticipants(
             @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false, defaultValue = "en") String lang,
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateParticipantsDto updateParticipantsDto) {
         authHelper.authenticate(token);
@@ -253,7 +253,7 @@ public class ConversationController {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String processValidationError(Exception ex) {
+    public String processException(Exception ex) {
         return ex.getMessage();
     }
 
