@@ -678,7 +678,7 @@ public class ConversationControllerIntegrationTest {
         String text = "text";
         String name = "name";
         String newName = "new name";
-        String conversationRenamedMessage = "renamed a conversation to <b>" + newName + "</b>";
+        String conversationRenamedMessage = "renamed a conversation to \"" + newName + "\"";
 
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
