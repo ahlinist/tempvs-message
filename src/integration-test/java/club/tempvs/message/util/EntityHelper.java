@@ -32,7 +32,7 @@ public class EntityHelper {
         String participantName = "name";
         Participant author = participantService.createParticipant(authorId, participantName);
         Set<Participant> receivers = receiverIds.stream().map(id -> participantService.createParticipant(id, participantName)).collect(toSet());
-        Message message = messageService.createMessage(author, receivers, text, false);
+        Message message = messageService.createMessage(author, receivers, text, false, null);
         return conversationService.createConversation(author, receivers, name, message);
     }
 

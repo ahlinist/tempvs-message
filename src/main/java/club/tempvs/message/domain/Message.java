@@ -16,11 +16,11 @@ public class Message {
     @Id
     @GeneratedValue
     private Long id;
-
-    Boolean isSystem = false;
+    private Boolean isSystem = false;
+    private String systemArgs;
 
     @NotNull
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Conversation conversation;
 
     @NotNull
@@ -57,6 +57,14 @@ public class Message {
 
     public void setSystem(Boolean system) {
         isSystem = system;
+    }
+
+    public String getSystemArgs() {
+        return systemArgs;
+    }
+
+    public void setSystemArgs(String systemArgs) {
+        this.systemArgs = systemArgs;
     }
 
     public Conversation getConversation() {

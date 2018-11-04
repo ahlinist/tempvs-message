@@ -251,6 +251,25 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
 
+    @PutMapping(value="/conversations/{conversationId}/name", consumes = APPLICATION_JSON_VALUE,
+            produces = APPLICATION_JSON_VALUE)
+    public GetConversationDto updateConversationName(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @PathVariable("conversationId") Long conversationId,
+            @RequestBody UpdateConversationNameDto updateConversationNameDto) {
+        authHelper.authenticate(token);
+        updateConversationNameDto.validate();
+        Locale locale = localeHelper.getLocale(lang);
+        ParticipantDto participantDto = updateConversationNameDto.getInitiator();
+        Participant initiator = participantService.getParticipant(participantDto.getId());
+        Conversation conversation = conversationService.getConversation(conversationId);
+        Conversation result = conversationService.updateName(conversation, initiator, updateConversationNameDto.getName());
+
+        List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String processException(Exception ex) {

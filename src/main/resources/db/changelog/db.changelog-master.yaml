@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/base-set.yaml
   - include:
       file: db/changelog/changes/participant-add-name.yaml
+  - include:
+      file: db/changelog/changes/message-add-system-args.yaml

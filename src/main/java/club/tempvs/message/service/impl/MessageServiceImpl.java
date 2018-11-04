@@ -33,22 +33,23 @@ public class MessageServiceImpl implements MessageService {
     }
 
     public Message createMessage(Participant author,
-                                 Set<Participant> receivers, String text, Boolean isSystem, Participant subject) {
+                                 Set<Participant> receivers, String text, Boolean isSystem, String systemArgs, Participant subject) {
         Message message = objectFactory.getInstance(Message.class);
         message.setAuthor(author);
         message.setNewFor(receivers);
         message.setText(text);
         message.setSystem(isSystem);
+        message.setSystemArgs(systemArgs);
         message.setSubject(subject);
         return message;
     }
 
     public Message createMessage(Participant author, Set<Participant> receivers, String text) {
-        return createMessage(author, receivers, text, Boolean.FALSE, null);
+        return createMessage(author, receivers, text, Boolean.FALSE, null, null);
     }
 
-    public Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem) {
-        return createMessage(author, receivers, text, isSystem, null);
+    public Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem, String systemArgs) {
+        return createMessage(author, receivers, text, isSystem, systemArgs, null);
     }
 
     public List<Message> getMessagesFromConversation(Conversation conversation, Locale locale, int page, int size) {
@@ -56,7 +57,15 @@ public class MessageServiceImpl implements MessageService {
         List<Message> messages = messageRepository.findByConversation(conversation, pageable);
         return messages.stream().map(message -> {
             if (message.getSystem()) {
-                message.setText(messageSource.getMessage(message.getText(), null, locale));
+                String code = message.getText();
+                String[] args = new String[0];
+                String argsString = message.getSystemArgs();
+
+                if (argsString != null) {
+                    args = argsString.split(",");
+                }
+
+                message.setText(messageSource.getMessage(code, args, code, locale));
             }
 
             return message;

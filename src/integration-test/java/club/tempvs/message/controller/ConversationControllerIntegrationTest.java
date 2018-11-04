@@ -2,10 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
-import club.tempvs.message.dto.AddMessageDto;
-import club.tempvs.message.dto.CreateConversationDto;
-import club.tempvs.message.dto.ParticipantDto;
-import club.tempvs.message.dto.UpdateParticipantsDto;
+import club.tempvs.message.dto.*;
 import club.tempvs.message.util.EntityHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -669,6 +666,53 @@ public class ConversationControllerIntegrationTest {
                 .header("Authorization",TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(header().string(COUNT_HEADER, String.valueOf(3)));
+    }
+
+    @Test
+    public void testUpdateConversationName() throws Exception {
+        Long authorId = 1L;
+        String authorName = "author name";
+        Long receiver1Id = 2L;
+        Long receiver2Id = 3L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiver1Id, receiver2Id));
+        String text = "text";
+        String name = "name";
+        String newName = "new name";
+        String conversationRenamedMessage = "renamed a conversation to \"" + newName + "\"";
+
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Long conversationId = conversation.getId();
+
+        UpdateConversationNameDto updateConversationNameDto = new UpdateConversationNameDto();
+        updateConversationNameDto.setName(newName);
+        updateConversationNameDto.setInitiator(new ParticipantDto(authorId, authorName));
+        String updateConversationNameJson = mapper.writeValueAsString(updateConversationNameDto);
+
+        mvc.perform(put("/api/conversations/" + conversationId + "/name")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(updateConversationNameJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("id", is(conversationId.intValue())))
+                    .andExpect(jsonPath("admin.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("name", is(newName)))
+                    .andExpect(jsonPath("participants", hasSize(3)))
+                    .andExpect(jsonPath("messages", hasSize(2)))
+                    .andExpect(jsonPath("messages[0].text", is(text)))
+                    .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].unread", is(true)))
+                    .andExpect(jsonPath("messages[0].system", is(false)))
+                    .andExpect(jsonPath("messages[1].text", is(conversationRenamedMessage)))
+                    .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[1].unread", is(false)))
+                    .andExpect(jsonPath("messages[1].system", is(true)))
+                    .andExpect(jsonPath("lastMessage.text", is(conversationRenamedMessage)))
+                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.unread", is(false)))
+                    .andExpect(jsonPath("lastMessage.system", is(true)))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
     private String getCreateConversationDtoJson(

@@ -27,6 +27,7 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String PARTICIPANT_REMOVED_MESSAGE = "conversation.remove.participant";
     private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
     private static final String CONFERENCE_CREATED = "conversation.conference.created";
+    private static final String CONVERSATION_RENAMED = "conversation.update.name";
 
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
@@ -114,11 +115,11 @@ public class ConversationServiceImpl implements ConversationService {
         receivers.remove(adder);
 
         if (type == Conversation.Type.DIALOGUE && participants.size() == 2) {
-            message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem);
+            message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null);
             return createConversation(adder, receivers, null, message);
         } else {
             conversation.addParticipant(added);
-            message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, added);
+            message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, added);
             return addMessage(conversation, message);
         }
     }
@@ -146,10 +147,10 @@ public class ConversationServiceImpl implements ConversationService {
         Message message;
 
         if (isSelfRemoval) {
-            message = messageService.createMessage(remover, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem);
+            message = messageService.createMessage(remover, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem, null);
 
         } else {
-            message = messageService.createMessage(remover, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, removed);
+            message = messageService.createMessage(remover, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, null, removed);
         }
 
         return addMessage(conversation, message);
@@ -167,5 +168,14 @@ public class ConversationServiceImpl implements ConversationService {
 
     public long countUpdatedConversationsPerParticipant(Participant participant) {
         return conversationRepository.countByNewMessagesPerParticipant(participant);
+    }
+
+    public Conversation updateName(Conversation conversation, Participant initiator, String name) {
+        Boolean isSystem = Boolean.TRUE;
+        Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
+        receivers.remove(initiator);
+        Message message = messageService.createMessage(initiator, receivers, CONVERSATION_RENAMED, isSystem, name);
+        conversation.setName(name);
+        return addMessage(conversation, message);
     }
 }
