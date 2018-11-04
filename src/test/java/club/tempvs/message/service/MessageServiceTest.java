@@ -58,16 +58,16 @@ public class MessageServiceTest {
 
         when(objectFactory.getInstance(Message.class)).thenReturn(message);
 
-        Message result = messageService.createMessage(author, receivers, text, false, subject);
+        Message result = messageService.createMessage(author, receivers, text, false, null, subject);
 
         verify(objectFactory).getInstance(Message.class);
         verify(message).setAuthor(author);
         verify(message).setNewFor(receivers);
         verify(message).setText(text);
         verify(message).setSystem(false);
+        verify(message).setSystemArgs(null);
         verify(message).setSubject(subject);
-        verifyNoMoreInteractions(objectFactory);
-        verifyNoMoreInteractions(message);
+        verifyNoMoreInteractions(message, receiver1, receiver2, objectFactory);
 
         assertEquals("An instance of Message is returned as a result", result, message);
     }
@@ -81,18 +81,20 @@ public class MessageServiceTest {
         Locale locale = Locale.ENGLISH;
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = Arrays.asList(message, message, message);
+        String[] args = new String[0];
 
         when(messageRepository.findByConversation(conversation, pageable)).thenReturn(messages);
         when(message.getText()).thenReturn(text);
         when(message.getSystem()).thenReturn(true);
-        when(messageSource.getMessage(text, null, text, locale)).thenReturn(translatedText);
+        when(messageSource.getMessage(text, args, text, locale)).thenReturn(translatedText);
 
         List<Message> result = messageService.getMessagesFromConversation(conversation, locale, page, size);
 
         verify(messageRepository).findByConversation(conversation, pageable);
         verify(message, times(3)).getText();
         verify(message, times(3)).getSystem();
-        verify(messageSource, times(3)).getMessage(text, null, text, locale);
+        verify(message, times(3)).getSystemArgs();
+        verify(messageSource, times(3)).getMessage(text, args, text, locale);
         verify(message, times(3)).setText(translatedText);
         verifyNoMoreInteractions(message, messageSource, messageRepository);
 

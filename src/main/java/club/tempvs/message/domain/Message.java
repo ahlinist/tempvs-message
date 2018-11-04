@@ -17,6 +17,7 @@ public class Message {
     @GeneratedValue
     private Long id;
     private Boolean isSystem = false;
+    private String systemArgs;
 
     @NotNull
     @ManyToOne
@@ -56,6 +57,14 @@ public class Message {
 
     public void setSystem(Boolean system) {
         isSystem = system;
+    }
+
+    public String getSystemArgs() {
+        return systemArgs;
+    }
+
+    public void setSystemArgs(String systemArgs) {
+        this.systemArgs = systemArgs;
     }
 
     public Conversation getConversation() {

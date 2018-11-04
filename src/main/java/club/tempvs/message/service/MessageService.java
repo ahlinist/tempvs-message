@@ -10,7 +10,7 @@ import java.util.Set;
 
 public interface MessageService {
     Message createMessage(Participant author, Set<Participant> receivers, String text);
-    Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem);
-    Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem, Participant subject);
+    Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem, String systemArgs);
+    Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem, String systemArgs, Participant subject);
     List<Message> getMessagesFromConversation(Conversation conversation, Locale locale, int page, int size);
 }
