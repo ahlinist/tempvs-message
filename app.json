@@ -1,0 +1,35 @@
+{
+  "name": "tempvs-message",
+  "scripts": {
+  },
+  "env": {
+    "CLOUDAMQP_URL": {
+      "required": true
+    },
+    "JDBC_DATABASE_PASSWORD": {
+      "required": true
+    },
+    "JDBC_DATABASE_URL": {
+      "required": true
+    },
+    "JDBC_DATABASE_USERNAME": {
+      "required": true
+    },
+    "TOKEN": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/gradle"
+    }
+  ]
+}
