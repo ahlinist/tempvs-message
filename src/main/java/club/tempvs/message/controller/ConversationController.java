@@ -251,7 +251,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
 
-    @PutMapping(value="/conversations/{conversationId}/name", consumes = APPLICATION_JSON_VALUE,
+    @PostMapping(value="/conversations/{conversationId}/name", consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE)
     public GetConversationDto updateConversationName(
             @RequestHeader(value = "Authorization", required = false) String token,
