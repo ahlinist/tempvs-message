@@ -95,9 +95,13 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {
-        Set<Participant> participants = conversation.getParticipants();
+        Set<Participant> initialParticipants = conversation.getParticipants();
 
-        if (participants.size() == 20) {
+        if (initialParticipants.contains(added)) {
+            throw new IllegalArgumentException("The participant being added is already present in the conversation.");
+        }
+
+        if (initialParticipants.size() == 20) {
             throw new IllegalArgumentException("Conversation may have only 20 participants max.");
         }
 
@@ -110,11 +114,11 @@ public class ConversationServiceImpl implements ConversationService {
 
         Message message;
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> receivers = new HashSet<>(participants);
+        Set<Participant> receivers = new HashSet<>(initialParticipants);
         receivers.add(added);
         receivers.remove(adder);
 
-        if (type == Conversation.Type.DIALOGUE && participants.size() == 2) {
+        if (type == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
             message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null);
             return createConversation(adder, receivers, null, message);
         } else {

@@ -491,6 +491,34 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
+    public void testUpdateParticipantsWhenAddingAlreadyExistentToDialogue() throws Exception {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
+        String text = "an initial text";
+
+        entityHelper.createParticipant(authorId, "");
+        entityHelper.createParticipant(receiverId, "");
+        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, null);
+        Long initialConversationId = conversation.getId();
+
+        UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
+        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
+        updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        updateParticipantsDto.setSubject(new ParticipantDto(receiverId, "name"));
+
+        String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
+
+        mvc.perform(post("/api/conversations/" + initialConversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().string("The participant being added is already present in the conversation."));
+    }
+
+    @Test
     public void testUpdateParticipantsWhenAddingToConference() throws Exception {
         Long authorId = 1L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));

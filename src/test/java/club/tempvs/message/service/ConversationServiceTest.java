@@ -238,6 +238,19 @@ public class ConversationServiceTest {
         assertEquals("New conversation is returned as a result", newConversation, result);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testAddAlreadyPresentParticipantToConversationOf2() {
+        Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
+
+        when(conversation.getParticipants()).thenReturn(initialParticipants);
+
+        conversationService.addParticipant(conversation, author, receiver);
+
+        verify(conversation).getParticipants();
+        verifyNoMoreInteractions(author, conversation,
+                newConversation, objectFactory, messageService, conversationRepository);
+    }
+
     @Test
     public void testAddParticipantForConversationOf4() {
         String text = "conversation.add.participant";
