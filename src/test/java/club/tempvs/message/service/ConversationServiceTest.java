@@ -175,19 +175,22 @@ public class ConversationServiceTest {
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
+        String systemArgs = "systemArgs";
 
         when(conversationRepository.findByParticipantsIn(participants, pageable)).thenReturn(conversations);
         when(conversation.getLastMessage()).thenReturn(message);
         when(message.getSystem()).thenReturn(true);
         when(message.getText()).thenReturn(text);
-        when(messageSource.getMessage(text, null, locale)).thenReturn(translatedText);
+        when(message.getSystemArgs()).thenReturn(systemArgs);
+        when(messageSource.getMessage(text, new String[]{systemArgs}, text, locale)).thenReturn(translatedText);
 
         List<Conversation> result = conversationService.getConversationsByParticipant(participant, locale, page, size);
 
         verify(conversation).getLastMessage();
         verify(message).getSystem();
         verify(message).getText();
-        verify(messageSource).getMessage(message.getText(), null, locale);
+        verify(message).getSystemArgs();
+        verify(messageSource).getMessage(text, new String[]{systemArgs}, text, locale);
         verify(message).setText(translatedText);
         verify(conversation).setLastMessage(message);
         verify(conversationRepository).findByParticipantsIn(participants, pageable);

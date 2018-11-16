@@ -86,7 +86,16 @@ public class ConversationServiceImpl implements ConversationService {
                     Message lastMessage = conversation.getLastMessage();
 
                     if (lastMessage.getSystem()) {
-                        lastMessage.setText(messageSource.getMessage(lastMessage.getText(), null, locale));
+                        String text = lastMessage.getText();
+                        String[] args = new String[0];
+                        String argsString = lastMessage.getSystemArgs();
+
+                        if (argsString != null) {
+                            args = argsString.split(",");
+                        }
+
+                        lastMessage.setText(
+                                messageSource.getMessage(text, args, text, locale));
                         conversation.setLastMessage(lastMessage);
                     }
 
