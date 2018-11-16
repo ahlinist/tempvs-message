@@ -5,11 +5,13 @@ import club.tempvs.message.domain.*;
 import club.tempvs.message.dto.*;
 import club.tempvs.message.service.*;
 import club.tempvs.message.util.*;
+import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.*;
 import java.util.*;
 
 import static org.springframework.http.MediaType.*;
@@ -19,6 +21,8 @@ import static java.util.stream.Collectors.*;
 @RestController
 @RequestMapping("/api")
 public class ConversationController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConversationController.class);
 
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 40;
@@ -272,31 +276,40 @@ public class ConversationController {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String processException(Exception ex) {
-        return ex.getMessage();
+    public String returnInternalError(Exception e) {
+        return processException(e);
     }
 
     @ExceptionHandler({BadRequestException.class, IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String returnBadRequest(Exception ex) {
-        return ex.getMessage();
+    public String returnBadRequest(Exception e) {
+        return processException(e);
     }
 
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String returnNotFound(NotFoundException ex) {
-        return ex.getMessage();
+    public String returnNotFound(NotFoundException e) {
+        return processException(e);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public String returnUnauthorized(UnauthorizedException ex) {
-        return ex.getMessage();
+    public String returnUnauthorized(UnauthorizedException e) {
+        return processException(e);
     }
 
     @ExceptionHandler(ForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public String returnForbidden(ForbiddenException ex) {
-        return ex.getMessage();
+    public String returnForbidden(ForbiddenException e) {
+        return processException(e);
+    }
+
+    private String processException(Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTraceString = sw.toString();
+        LOGGER.error(stackTraceString);
+        return e.getMessage();
     }
 }
