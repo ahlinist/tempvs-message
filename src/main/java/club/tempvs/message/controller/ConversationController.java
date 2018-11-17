@@ -213,9 +213,9 @@ public class ConversationController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable("conversationId") Long conversationId,
-            @RequestBody UpdateParticipantsDto updateParticipantsDto) {
+            @RequestBody AddParticipantDto addParticipantDto) {
         authHelper.authenticate(token);
-        updateParticipantsDto.validate();
+        addParticipantDto.validate();
         Locale locale = localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
@@ -223,14 +223,14 @@ public class ConversationController {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
-        Long initiatorId = updateParticipantsDto.getInitiator().getId();
+        Long initiatorId = addParticipantDto.getInitiator().getId();
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
             throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
         }
 
-        Long subjectId = updateParticipantsDto.getSubject().getId();
+        Long subjectId = addParticipantDto.getSubject().getId();
         Participant subject = participantService.getParticipant(subjectId);
 
         if (subject == null) {
@@ -242,14 +242,14 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
 
-    @DeleteMapping(value="/conversations/{conversationId}/participants")
+    @DeleteMapping(value="/conversations/{conversationId}/participants/{subjectId}")
     public GetConversationDto removeParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable("conversationId") Long conversationId,
-            @RequestBody UpdateParticipantsDto updateParticipantsDto) {
+            @PathVariable("subjectId") Long subjectId,
+            @RequestParam("initiator") Long initiatorId) {
         authHelper.authenticate(token);
-        updateParticipantsDto.validate();
         Locale locale = localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
@@ -257,14 +257,12 @@ public class ConversationController {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
-        Long initiatorId = updateParticipantsDto.getInitiator().getId();
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
             throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
         }
 
-        Long subjectId = updateParticipantsDto.getSubject().getId();
         Participant subject = participantService.getParticipant(subjectId);
 
         if (subject == null) {

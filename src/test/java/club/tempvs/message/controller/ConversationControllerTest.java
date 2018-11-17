@@ -66,7 +66,7 @@ public class ConversationControllerTest {
     @Mock
     private AddMessageDto addMessageDto;
     @Mock
-    private UpdateParticipantsDto updateParticipantsDto;
+    private AddParticipantDto addParticipantDto;
     @Mock
     private ParticipantDto authorDto;
     @Mock
@@ -403,9 +403,9 @@ public class ConversationControllerTest {
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(updateParticipantsDto.getInitiator()).thenReturn(authorDto);
+        when(addParticipantDto.getInitiator()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(initiatorId);
-        when(updateParticipantsDto.getSubject()).thenReturn(receiverDto);
+        when(addParticipantDto.getSubject()).thenReturn(receiverDto);
         when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
@@ -413,14 +413,14 @@ public class ConversationControllerTest {
         when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.addParticipant(token, lang, conversationId, updateParticipantsDto);
+        GetConversationDto result = conversationController.addParticipant(token, lang, conversationId, addParticipantDto);
 
         verify(localeHelper).getLocale(lang);
-        verify(updateParticipantsDto).validate();
+        verify(addParticipantDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verify(updateParticipantsDto).getInitiator();
+        verify(addParticipantDto).getInitiator();
         verify(authorDto).getId();
-        verify(updateParticipantsDto).getSubject();
+        verify(addParticipantDto).getSubject();
         verify(receiverDto).getId();
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
@@ -428,7 +428,7 @@ public class ConversationControllerTest {
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto,
-                receiverDto, conversationService, updateParticipantsDto, participantService, objectFactory);
+                receiverDto, conversationService, addParticipantDto, participantService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -444,32 +444,22 @@ public class ConversationControllerTest {
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(updateParticipantsDto.getInitiator()).thenReturn(authorDto);
-        when(authorDto.getId()).thenReturn(initiatorId);
-        when(updateParticipantsDto.getSubject()).thenReturn(receiverDto);
-        when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.removeParticipant(token, lang, conversationId, updateParticipantsDto);
+        GetConversationDto result = conversationController.removeParticipant(token, lang, conversationId, subjectId, initiatorId);
 
         verify(localeHelper).getLocale(lang);
-        verify(updateParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verify(updateParticipantsDto).getInitiator();
-        verify(authorDto).getId();
-        verify(updateParticipantsDto).getSubject();
-        verify(receiverDto).getId();
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
-        verifyNoMoreInteractions(authorDto,
-                receiverDto, conversationService, updateParticipantsDto, participantService, objectFactory);
+        verifyNoMoreInteractions(authorDto, receiverDto, conversationService, participantService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -480,24 +470,26 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.addParticipant(token, lang, conversationId, updateParticipantsDto);
+        conversationController.addParticipant(token, lang, conversationId, addParticipantDto);
 
-        verify(updateParticipantsDto).validate();
+        verify(addParticipantDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
+        verifyNoMoreInteractions(conversationService, addParticipantDto, participantService, objectFactory);
     }
 
     @Test(expected = NotFoundException.class)
     public void testRemoveParticipantForNonExistentConversation() {
         Long conversationId = 1L;
+        Long subjectId = 2L;
+        Long initiatorId = 1L;
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.removeParticipant(token, lang, conversationId, updateParticipantsDto);
+        conversationController.removeParticipant(token, lang, conversationId, subjectId, initiatorId);
 
-        verify(updateParticipantsDto).validate();
+        verify(addParticipantDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(conversationService, updateParticipantsDto, participantService, objectFactory);
+        verifyNoMoreInteractions(conversationService, addParticipantDto, participantService, objectFactory);
     }
 
     @Test

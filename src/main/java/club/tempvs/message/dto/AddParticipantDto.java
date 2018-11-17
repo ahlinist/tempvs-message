@@ -5,12 +5,12 @@ import club.tempvs.message.api.BadRequestException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpdateParticipantsDto implements Validateable {
+public class AddParticipantDto implements Validateable {
 
     private ParticipantDto initiator;
     private ParticipantDto subject;
 
-    public UpdateParticipantsDto() {
+    public AddParticipantDto() {
 
     }
 
