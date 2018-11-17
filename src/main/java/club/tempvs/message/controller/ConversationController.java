@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.*;
 import java.util.*;
 
-import static org.springframework.http.MediaType.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 import static java.util.stream.Collectors.*;
 
@@ -55,7 +54,7 @@ public class ConversationController {
         return "pong!";
     }
 
-    @PostMapping(value="/conversations", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value="/conversations")
     public GetConversationDto createConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -95,7 +94,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author);
     }
 
-    @GetMapping(value="/conversations/{id}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value="/conversations/{id}")
     public GetConversationDto getConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -130,7 +129,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller);
     }
 
-    @GetMapping(value="/conversations", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value="/conversations")
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -178,8 +177,7 @@ public class ConversationController {
         return ResponseEntity.ok().headers(headers).build();
     }
 
-    @PostMapping(value="/conversations/{conversationId}/messages", consumes = APPLICATION_JSON_VALUE,
-            produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value="/conversations/{conversationId}/messages")
     public ResponseEntity addMessage(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -210,9 +208,8 @@ public class ConversationController {
         return ResponseEntity.ok().body(getConversationDto);
     }
 
-    @PostMapping(value="/conversations/{conversationId}/participants", consumes = APPLICATION_JSON_VALUE,
-            produces = APPLICATION_JSON_VALUE)
-    public GetConversationDto updateParticipants(
+    @PostMapping(value="/conversations/{conversationId}/participants")
+    public GetConversationDto addParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable("conversationId") Long conversationId,
@@ -240,23 +237,46 @@ public class ConversationController {
             throw new BadRequestException("Participant with id " + subjectId + " does not exist");
         }
 
-        Conversation result;
-        UpdateParticipantsDto.Action action = updateParticipantsDto.getAction();
-
-        if (action == UpdateParticipantsDto.Action.ADD) {
-            result = conversationService.addParticipant(conversation, initiator, subject);
-        } else if (action == UpdateParticipantsDto.Action.REMOVE) {
-            result = conversationService.removeParticipant(conversation, initiator, subject);
-        } else {
-            throw new RuntimeException("Action '" + action + "' is not supported.");
-        }
-
+        Conversation result = conversationService.addParticipant(conversation, initiator, subject);
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
 
-    @PostMapping(value="/conversations/{conversationId}/name", consumes = APPLICATION_JSON_VALUE,
-            produces = APPLICATION_JSON_VALUE)
+    @DeleteMapping(value="/conversations/{conversationId}/participants")
+    public GetConversationDto removeParticipant(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @PathVariable("conversationId") Long conversationId,
+            @RequestBody UpdateParticipantsDto updateParticipantsDto) {
+        authHelper.authenticate(token);
+        updateParticipantsDto.validate();
+        Locale locale = localeHelper.getLocale(lang);
+        Conversation conversation = conversationService.getConversation(conversationId);
+
+        if (conversation == null) {
+            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
+        }
+
+        Long initiatorId = updateParticipantsDto.getInitiator().getId();
+        Participant initiator = participantService.getParticipant(initiatorId);
+
+        if (initiator == null) {
+            throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
+        }
+
+        Long subjectId = updateParticipantsDto.getSubject().getId();
+        Participant subject = participantService.getParticipant(subjectId);
+
+        if (subject == null) {
+            throw new BadRequestException("Participant with id " + subjectId + " does not exist");
+        }
+
+        Conversation result = conversationService.removeParticipant(conversation, initiator, subject);
+        List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
+    }
+
+    @PostMapping(value="/conversations/{conversationId}/name")
     public GetConversationDto updateConversationName(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,

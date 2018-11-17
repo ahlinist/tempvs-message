@@ -446,7 +446,7 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testUpdateParticipantsWhenAddingToDialogue() throws Exception {
+    public void testAddParticipantToDialogue() throws Exception {
         Long authorId = 1L;
         Long receiverId = 2L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
@@ -464,7 +464,6 @@ public class ConversationControllerIntegrationTest {
         String conferenceCreatedMessage = "created a conference";
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
-        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
         updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
         updateParticipantsDto.setSubject(new ParticipantDto(addedParticipantId, "name"));
 
@@ -491,7 +490,7 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testUpdateParticipantsWhenAddingAlreadyExistentToDialogue() throws Exception {
+    public void testAddParticipantAlreadyPresentInDialogue() throws Exception {
         Long authorId = 1L;
         Long receiverId = 2L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
@@ -503,7 +502,6 @@ public class ConversationControllerIntegrationTest {
         Long initialConversationId = conversation.getId();
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
-        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
         updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
         updateParticipantsDto.setSubject(new ParticipantDto(receiverId, "name"));
 
@@ -519,7 +517,7 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testUpdateParticipantsWhenAddingToConference() throws Exception {
+    public void testAddParticipantToConference() throws Exception {
         Long authorId = 1L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
@@ -540,7 +538,6 @@ public class ConversationControllerIntegrationTest {
         String participantAddedMessage = "added";
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
-        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
         updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
         updateParticipantsDto.setSubject(new ParticipantDto(addedParticipantId, "name"));
 
@@ -575,7 +572,7 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testUpdateParticipantsForAddAndNotExistentSubject() throws Exception {
+    public void testAddParticipantWithNotExistentSubject() throws Exception {
         Long authorId = 1L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
@@ -589,7 +586,6 @@ public class ConversationControllerIntegrationTest {
         Long conversationId = conversation.getId();
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
-        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.ADD);
         updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
         updateParticipantsDto.setSubject(new ParticipantDto(addedParticipantId, "name"));
 
@@ -605,7 +601,7 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testUpdateParticipantsForRemove() throws Exception {
+    public void testRemoveParticipant() throws Exception {
         Long authorId = 1L;
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
@@ -621,13 +617,12 @@ public class ConversationControllerIntegrationTest {
         String participantRemovedMessage = "removed";
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
-        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.REMOVE);
         updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
         updateParticipantsDto.setSubject(new ParticipantDto(removedParticipantId, "name"));
 
         String addParticipantJson = mapper.writeValueAsString(updateParticipantsDto);
 
-        mvc.perform(post("/api/conversations/" + conversationId + "/participants")
+        mvc.perform(delete("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
@@ -656,13 +651,12 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testUpdateParticipantsForNonExistentConversation() throws Exception {
+    public void testRemoveParticipantFromNonExistentConversation() throws Exception {
         Long authorId = 1L;
         Long removedParticipantId = 4L;
         Long nonExistentConversationId = 444L;
 
         UpdateParticipantsDto updateParticipantsDto = new UpdateParticipantsDto();
-        updateParticipantsDto.setAction(UpdateParticipantsDto.Action.REMOVE);
         updateParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
         updateParticipantsDto.setSubject(new ParticipantDto(removedParticipantId, "name"));
 
