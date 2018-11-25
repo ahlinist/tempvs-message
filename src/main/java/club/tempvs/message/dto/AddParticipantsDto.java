@@ -5,12 +5,12 @@ import club.tempvs.message.api.BadRequestException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddParticipantDto implements Validateable {
+public class AddParticipantsDto implements Validateable {
 
     private ParticipantDto initiator;
-    private ParticipantDto subject;
+    private List<ParticipantDto> subjects;
 
-    public AddParticipantDto() {
+    public AddParticipantsDto() {
 
     }
 
@@ -22,12 +22,12 @@ public class AddParticipantDto implements Validateable {
         this.initiator = initiator;
     }
 
-    public ParticipantDto getSubject() {
-        return subject;
+    public List<ParticipantDto> getSubjects() {
+        return subjects;
     }
 
-    public void setSubject(ParticipantDto subject) {
-        this.subject = subject;
+    public void setSubjects(List<ParticipantDto> subjects) {
+        this.subjects = subjects;
     }
 
     public void validate() {
@@ -37,8 +37,8 @@ public class AddParticipantDto implements Validateable {
             errors.add("Initiator id is missing.");
         }
 
-        if (this.subject == null) {
-            errors.add("Subject id is missing.");
+        if (this.subjects == null || this.subjects.isEmpty()) {
+            errors.add("Subjects are missing.");
         }
 
         if (!errors.isEmpty()) {

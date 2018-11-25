@@ -66,7 +66,7 @@ public class ConversationControllerTest {
     @Mock
     private AddMessageDto addMessageDto;
     @Mock
-    private AddParticipantDto addParticipantDto;
+    private AddParticipantsDto addParticipantsDto;
     @Mock
     private ParticipantDto authorDto;
     @Mock
@@ -400,35 +400,37 @@ public class ConversationControllerTest {
         int page = 0;
         int max = 40;
         List<Message> messages = Arrays.asList(message, message);
+        List<ParticipantDto> receiverDtos = Arrays.asList(receiverDto);
+        List<Participant> receivers = Arrays.asList(receiver);
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(addParticipantDto.getInitiator()).thenReturn(authorDto);
+        when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(initiatorId);
-        when(addParticipantDto.getSubject()).thenReturn(receiverDto);
+        when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
         when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
-        when(conversationService.addParticipant(conversation, author, receiver)).thenReturn(conversation);
+        when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.addParticipant(token, lang, conversationId, addParticipantDto);
+        GetConversationDto result = conversationController.addParticipants(token, lang, conversationId, addParticipantsDto);
 
         verify(localeHelper).getLocale(lang);
-        verify(addParticipantDto).validate();
+        verify(addParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verify(addParticipantDto).getInitiator();
+        verify(addParticipantsDto).getInitiator();
         verify(authorDto).getId();
-        verify(addParticipantDto).getSubject();
+        verify(addParticipantsDto).getSubjects();
         verify(receiverDto).getId();
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
-        verify(conversationService).addParticipant(conversation, author, receiver);
+        verify(conversationService).addParticipants(conversation, author, receivers);
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author);
         verifyNoMoreInteractions(authorDto,
-                receiverDto, conversationService, addParticipantDto, participantService, objectFactory);
+                receiverDto, conversationService, addParticipantsDto, participantService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -470,11 +472,11 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.addParticipant(token, lang, conversationId, addParticipantDto);
+        conversationController.addParticipants(token, lang, conversationId, addParticipantsDto);
 
-        verify(addParticipantDto).validate();
+        verify(addParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(conversationService, addParticipantDto, participantService, objectFactory);
+        verifyNoMoreInteractions(conversationService, addParticipantsDto, participantService, objectFactory);
     }
 
     @Test(expected = NotFoundException.class)
@@ -487,9 +489,9 @@ public class ConversationControllerTest {
 
         conversationController.removeParticipant(token, lang, conversationId, subjectId, initiatorId);
 
-        verify(addParticipantDto).validate();
+        verify(addParticipantsDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(conversationService, addParticipantDto, participantService, objectFactory);
+        verifyNoMoreInteractions(conversationService, addParticipantsDto, participantService, objectFactory);
     }
 
     @Test

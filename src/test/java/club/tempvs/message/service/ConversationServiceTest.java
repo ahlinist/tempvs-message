@@ -203,6 +203,7 @@ public class ConversationServiceTest {
     public void testAddParticipantForConversationOf2() {
         String text = "conversation.conference.created";
         Boolean isSystem = Boolean.TRUE;
+        List<Participant> participantsToAdd = Arrays.asList(oneMoreReceiver);
         Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
         Set<Participant> receivers = new HashSet<>(initialParticipants);
         receivers.add(oneMoreReceiver);
@@ -218,7 +219,7 @@ public class ConversationServiceTest {
         when(newConversation.getParticipants()).thenReturn(finalParticipants);
         when(conversationRepository.save(newConversation)).thenReturn(newConversation);
 
-        Conversation result = conversationService.addParticipant(conversation, author, oneMoreReceiver);
+        Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
         verify(conversation).getParticipants();
         verify(conversation).getType();
@@ -243,11 +244,12 @@ public class ConversationServiceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddAlreadyPresentParticipantToConversationOf2() {
+        List<Participant> participantsToAdd = Arrays.asList(receiver);
         Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
 
         when(conversation.getParticipants()).thenReturn(initialParticipants);
 
-        conversationService.addParticipant(conversation, author, receiver);
+        conversationService.addParticipants(conversation, author, participantsToAdd);
 
         verify(conversation).getParticipants();
         verifyNoMoreInteractions(author, conversation,
@@ -258,6 +260,7 @@ public class ConversationServiceTest {
     public void testAddParticipantForConversationOf4() {
         String text = "conversation.add.participant";
         Boolean isSystem = Boolean.TRUE;
+        List<Participant> participantsToAdd = Arrays.asList(oneMoreReceiver);
         Set<Participant> initialParticipants = new HashSet<>();
         initialParticipants.add(author);
         initialParticipants.add(receiver);
@@ -272,7 +275,7 @@ public class ConversationServiceTest {
         when(messageService.createMessage(author, receivers, text, isSystem, null, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.addParticipant(conversation, author, oneMoreReceiver);
+        Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
         verify(conversation).getParticipants();
         verify(conversation).getType();
