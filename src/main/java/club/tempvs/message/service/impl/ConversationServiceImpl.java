@@ -14,10 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
+
 import static java.util.stream.Collectors.*;
 
 @Service
@@ -76,6 +74,17 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.save(conversation);
     }
 
+    private Conversation addMessages(Conversation conversation, List<Message> messages) {
+        conversation.setLastMessage(messages.get(messages.size() - 1));
+
+        messages.stream().forEach(message -> {
+            conversation.addMessage(message);
+            message.setConversation(conversation);
+        });
+
+        return conversationRepository.save(conversation);
+    }
+
     public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
         Set<Participant> participants = new HashSet<>();
         participants.add(participant);
@@ -103,12 +112,14 @@ public class ConversationServiceImpl implements ConversationService {
                 }).collect(toList());
     }
 
-    public Conversation addParticipant(Conversation conversation, Participant adder, Participant added) {
+    public Conversation addParticipants(Conversation conversation, Participant adder, List<Participant> added) {
         Set<Participant> initialParticipants = conversation.getParticipants();
 
-        if (initialParticipants.contains(added)) {
-            throw new IllegalArgumentException("The participant being added is already present in the conversation.");
-        }
+        initialParticipants.stream().forEach(participant -> {
+            if (added.contains(participant)) {
+                throw new IllegalArgumentException("The participant being added is already present in the conversation.");
+            }
+        });
 
         if (initialParticipants.size() == 20) {
             throw new IllegalArgumentException("Conversation may have only 20 participants max.");
@@ -124,16 +135,23 @@ public class ConversationServiceImpl implements ConversationService {
         Message message;
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new HashSet<>(initialParticipants);
-        receivers.add(added);
         receivers.remove(adder);
 
         if (type == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
+            receivers.addAll(added);
             message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null);
             return createConversation(adder, receivers, null, message);
         } else {
-            conversation.addParticipant(added);
-            message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, added);
-            return addMessage(conversation, message);
+            List<Message> messages = new ArrayList<>();
+
+            for (Participant participant : added) {
+                receivers.add(participant);
+                conversation.addParticipant(participant);
+                message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, participant);
+                messages.add(message);
+            }
+
+            return addMessages(conversation, messages);
         }
     }
 

@@ -463,11 +463,11 @@ public class ConversationControllerIntegrationTest {
         Long initialConversationId = conversation.getId();
         String conferenceCreatedMessage = "created a conference";
 
-        AddParticipantDto addParticipantDto = new AddParticipantDto();
-        addParticipantDto.setInitiator(new ParticipantDto(authorId, "name"));
-        addParticipantDto.setSubject(new ParticipantDto(addedParticipantId, "name"));
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(addedParticipantId, "name")));
 
-        String addParticipantJson = mapper.writeValueAsString(addParticipantDto);
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
         mvc.perform(post("/api/conversations/" + initialConversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
@@ -501,11 +501,11 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, null);
         Long initialConversationId = conversation.getId();
 
-        AddParticipantDto addParticipantDto = new AddParticipantDto();
-        addParticipantDto.setInitiator(new ParticipantDto(authorId, "name"));
-        addParticipantDto.setSubject(new ParticipantDto(receiverId, "name"));
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(receiverId, "name")));
 
-        String addParticipantJson = mapper.writeValueAsString(addParticipantDto);
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
         mvc.perform(post("/api/conversations/" + initialConversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
@@ -537,11 +537,11 @@ public class ConversationControllerIntegrationTest {
         int messagesInitialSize = conversation.getMessages().size();
         String participantAddedMessage = "added";
 
-        AddParticipantDto addParticipantDto = new AddParticipantDto();
-        addParticipantDto.setInitiator(new ParticipantDto(authorId, "name"));
-        addParticipantDto.setSubject(new ParticipantDto(addedParticipantId, "name"));
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(addedParticipantId, "name")));
 
-        String addParticipantJson = mapper.writeValueAsString(addParticipantDto);
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
@@ -585,11 +585,11 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
         Long conversationId = conversation.getId();
 
-        AddParticipantDto addParticipantDto = new AddParticipantDto();
-        addParticipantDto.setInitiator(new ParticipantDto(authorId, "name"));
-        addParticipantDto.setSubject(new ParticipantDto(addedParticipantId, "name"));
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(addedParticipantId, "name")));
 
-        String addParticipantJson = mapper.writeValueAsString(addParticipantDto);
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
@@ -597,7 +597,7 @@ public class ConversationControllerIntegrationTest {
                 .content(addParticipantJson)
                 .header("Authorization",TOKEN))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(equalTo("Participant with id 5 does not exist")));
+                .andExpect(content().string(equalTo("Non-existent participants are being added to a conversation.")));
     }
 
     @Test
@@ -616,11 +616,11 @@ public class ConversationControllerIntegrationTest {
         int messagesInitialSize = conversation.getMessages().size();
         String participantRemovedMessage = "removed";
 
-        AddParticipantDto addParticipantDto = new AddParticipantDto();
-        addParticipantDto.setInitiator(new ParticipantDto(authorId, "name"));
-        addParticipantDto.setSubject(new ParticipantDto(removedParticipantId, "name"));
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(removedParticipantId, "name")));
 
-        String addParticipantJson = mapper.writeValueAsString(addParticipantDto);
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
         String url = "/api/conversations/" + conversationId + "/participants/" + removedParticipantId + "?initiator=" + authorId;
 
@@ -658,11 +658,11 @@ public class ConversationControllerIntegrationTest {
         Long removedParticipantId = 4L;
         Long nonExistentConversationId = 444L;
 
-        AddParticipantDto addParticipantDto = new AddParticipantDto();
-        addParticipantDto.setInitiator(new ParticipantDto(authorId, "name"));
-        addParticipantDto.setSubject(new ParticipantDto(removedParticipantId, "name"));
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name"));
+        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(removedParticipantId, "name")));
 
-        String addParticipantJson = mapper.writeValueAsString(addParticipantDto);
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
         mvc.perform(post("/api/conversations/" + nonExistentConversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)

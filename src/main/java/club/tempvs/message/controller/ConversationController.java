@@ -209,13 +209,13 @@ public class ConversationController {
     }
 
     @PostMapping(value="/conversations/{conversationId}/participants")
-    public GetConversationDto addParticipant(
+    public GetConversationDto addParticipants(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable("conversationId") Long conversationId,
-            @RequestBody AddParticipantDto addParticipantDto) {
+            @RequestBody AddParticipantsDto addParticipantsDto) {
         authHelper.authenticate(token);
-        addParticipantDto.validate();
+        addParticipantsDto.validate();
         Locale locale = localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
@@ -223,21 +223,22 @@ public class ConversationController {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
-        Long initiatorId = addParticipantDto.getInitiator().getId();
+        Long initiatorId = addParticipantsDto.getInitiator().getId();
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
             throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
         }
 
-        Long subjectId = addParticipantDto.getSubject().getId();
-        Participant subject = participantService.getParticipant(subjectId);
+        List<Participant> subjects = addParticipantsDto.getSubjects().stream()
+                .map(ParticipantDto::getId)
+                .map(participantService::getParticipant).collect(toList());
 
-        if (subject == null) {
-            throw new BadRequestException("Participant with id " + subjectId + " does not exist");
+        if (subjects.contains(null)) {
+            throw new BadRequestException("Non-existent participants are being added to a conversation.");
         }
 
-        Conversation result = conversationService.addParticipant(conversation, initiator, subject);
+        Conversation result = conversationService.addParticipants(conversation, initiator, subjects);
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
     }
