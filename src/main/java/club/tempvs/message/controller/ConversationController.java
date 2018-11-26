@@ -58,6 +58,7 @@ public class ConversationController {
     public GetConversationDto createConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
         createConversationDto.validate();
@@ -91,13 +92,14 @@ public class ConversationController {
             messages = messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         }
 
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
     }
 
     @GetMapping(value="/conversations/{id}")
     public GetConversationDto getConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("id") Long id,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size,
@@ -126,13 +128,14 @@ public class ConversationController {
         }
 
         List<Message> messages = messageService.getMessagesFromConversation(conversation, locale, page, size);
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone, locale);
     }
 
     @GetMapping(value="/conversations")
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
@@ -150,7 +153,7 @@ public class ConversationController {
         }
 
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, locale, page, size);
-        GetConversationsDto result = objectFactory.getInstance(GetConversationsDto.class, conversations, participant);
+        GetConversationsDto result = objectFactory.getInstance(GetConversationsDto.class, conversations, participant, timeZone, locale);
 
         int conversationsCount = result.getConversations().size();
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
@@ -181,6 +184,7 @@ public class ConversationController {
     public ResponseEntity addMessage(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
@@ -203,7 +207,7 @@ public class ConversationController {
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto getConversationDto = objectFactory.getInstance(
-                GetConversationDto.class, updatedConversation, messages, author);
+                GetConversationDto.class, updatedConversation, messages, author, timeZone, locale);
 
         return ResponseEntity.ok().body(getConversationDto);
     }
@@ -212,6 +216,7 @@ public class ConversationController {
     public GetConversationDto addParticipants(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
         authHelper.authenticate(token);
@@ -240,13 +245,14 @@ public class ConversationController {
 
         Conversation result = conversationService.addParticipants(conversation, initiator, subjects);
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
     @DeleteMapping(value="/conversations/{conversationId}/participants/{subjectId}")
     public GetConversationDto removeParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId,
             @RequestParam("initiator") Long initiatorId) {
@@ -272,13 +278,14 @@ public class ConversationController {
 
         Conversation result = conversationService.removeParticipant(conversation, initiator, subject);
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
     @PostMapping(value="/conversations/{conversationId}/name")
     public GetConversationDto updateConversationName(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
         authHelper.authenticate(token);
@@ -290,7 +297,7 @@ public class ConversationController {
         Conversation result = conversationService.updateName(conversation, initiator, updateConversationNameDto.getName());
 
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
     @ExceptionHandler(Exception.class)

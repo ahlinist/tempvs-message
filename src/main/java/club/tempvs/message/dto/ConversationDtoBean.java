@@ -19,13 +19,13 @@ public class ConversationDtoBean {
 
     }
 
-    public ConversationDtoBean(Conversation conversation, Participant self) {
+    public ConversationDtoBean(Conversation conversation, Participant self, String zoneId, Locale locale) {
         Stream<Participant> participantStream = conversation.getParticipants().stream();
 
         this.id = conversation.getId();
         this.name = conversation.getName();
         this.type = conversation.getType().toString();
-        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self);
+        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self, zoneId, locale);
         this.conversant = participantStream.filter(participant -> !participant.equals(self))
                 .map(Participant::getName).collect(Collectors.joining(", "));
     }

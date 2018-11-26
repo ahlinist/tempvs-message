@@ -22,7 +22,7 @@ public class GetConversationDto {
 
     }
 
-    public GetConversationDto(Conversation conversation, List<Message> messages, Participant self) {
+    public GetConversationDto(Conversation conversation, List<Message> messages, Participant self, String zoneId, Locale locale) {
         Participant admin = conversation.getAdmin();
         Collections.reverse(messages);
 
@@ -31,8 +31,8 @@ public class GetConversationDto {
         this.name = conversation.getName();
         this.admin = admin != null ? new ParticipantDto(admin) : null;
         this.participants = conversation.getParticipants().stream().map(ParticipantDto::new).collect(toSet());
-        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self);
-        this.messages = messages.stream().map(message -> new MessageDtoBean(message, self)).collect(toList());
+        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self, zoneId, locale);
+        this.messages = messages.stream().map(message -> new MessageDtoBean(message, self, zoneId, locale)).collect(toList());
     }
 
     public Long getId() {
