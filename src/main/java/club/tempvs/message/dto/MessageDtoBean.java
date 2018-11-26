@@ -4,6 +4,11 @@ import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
 
 public class MessageDtoBean {
 
@@ -11,7 +16,7 @@ public class MessageDtoBean {
     private String text;
     private ParticipantDto author;
     private ParticipantDto subject;
-    private Instant createdDate;
+    private String createdDate;
     private Boolean isUnread;
     private Boolean isSystem;
 
@@ -19,14 +24,14 @@ public class MessageDtoBean {
 
     }
 
-    public MessageDtoBean(Message message, Participant self) {
+    public MessageDtoBean(Message message, Participant self, String zoneId, Locale locale) {
         Participant subject = message.getSubject();
 
         this.id = message.getId();
         this.text = message.getText();
         this.author = new ParticipantDto(message.getAuthor());
         this.subject = subject != null ? new ParticipantDto(subject) : null;
-        this.createdDate = message.getCreatedDate();
+        this.createdDate = parseDate(message.getCreatedDate(), zoneId, locale);
         this.isUnread = message.getNewFor().contains(self);
         this.isSystem = message.getSystem();
     }
@@ -63,11 +68,11 @@ public class MessageDtoBean {
         this.subject = subject;
     }
 
-    public Instant getCreatedDate() {
+    public String getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(String createdDate) {
         this.createdDate = createdDate;
     }
 
@@ -85,5 +90,11 @@ public class MessageDtoBean {
 
     public void setSystem(Boolean system) {
         isSystem = system;
+    }
+
+    private String parseDate(Instant instant, String zoneId, Locale locale) {
+        ZonedDateTime zonedDateTime = instant.atZone(ZoneId.of(zoneId));
+        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale);
+        return zonedDateTime.format(formatter);
     }
 }
