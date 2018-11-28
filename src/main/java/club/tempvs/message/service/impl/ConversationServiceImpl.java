@@ -46,7 +46,6 @@ public class ConversationServiceImpl implements ConversationService {
     public Conversation createConversation(
             Participant author, Set<Participant> receivers, String name, Message message) {
         Conversation conversation = objectFactory.getInstance(Conversation.class);
-        //conversation.setParticipants(receivers);
         receivers.stream().forEach(conversation::addParticipant);
         conversation.addParticipant(author);
         conversation.setName(name);
