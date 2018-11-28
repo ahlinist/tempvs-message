@@ -46,7 +46,8 @@ public class ConversationServiceImpl implements ConversationService {
     public Conversation createConversation(
             Participant author, Set<Participant> receivers, String name, Message message) {
         Conversation conversation = objectFactory.getInstance(Conversation.class);
-        conversation.setParticipants(receivers);
+        //conversation.setParticipants(receivers);
+        receivers.stream().forEach(conversation::addParticipant);
         conversation.addParticipant(author);
         conversation.setName(name);
         conversation.addMessage(message);
@@ -86,7 +87,7 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
-        Set<Participant> participants = new HashSet<>();
+        Set<Participant> participants = new LinkedHashSet<>();
         participants.add(participant);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         List<Conversation> conversations = conversationRepository.findByParticipantsIn(participants, pageable);
@@ -134,7 +135,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         Message message;
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> receivers = new HashSet<>(initialParticipants);
+        Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
         receivers.remove(adder);
 
         if (type == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
@@ -171,7 +172,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         conversation.removeParticipant(removed);
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> receivers = new HashSet<>(participants);
+        Set<Participant> receivers = new LinkedHashSet<>(participants);
         receivers.remove(removed);
         receivers.remove(remover);
 
@@ -188,9 +189,9 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation findDialogue(Participant author, Participant receiver) {
-        Set<Participant> authorSet = new HashSet<>();
+        Set<Participant> authorSet = new LinkedHashSet<>();
         authorSet.add(author);
-        Set<Participant> receiverSet = new HashSet<>();
+        Set<Participant> receiverSet = new LinkedHashSet<>();
         receiverSet.add(receiver);
 
         return conversationRepository
@@ -203,7 +204,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     public Conversation updateName(Conversation conversation, Participant initiator, String name) {
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
+        Set<Participant> receivers = new LinkedHashSet<>(conversation.getParticipants());
         receivers.remove(initiator);
         Message message = messageService.createMessage(initiator, receivers, CONVERSATION_RENAMED, isSystem, name);
         conversation.setName(name);

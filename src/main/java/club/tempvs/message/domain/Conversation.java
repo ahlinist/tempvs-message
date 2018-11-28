@@ -35,7 +35,7 @@ public class Conversation {
 
     @Size(min = 2, max = 20)
     @ManyToMany(fetch = FetchType.EAGER)
-    private Set<Participant> participants = new HashSet<>();
+    private Set<Participant> participants = new LinkedHashSet<>();
 
     @CreatedDate
     private Instant createdDate;

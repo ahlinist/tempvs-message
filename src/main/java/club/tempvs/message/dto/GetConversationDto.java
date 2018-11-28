@@ -14,7 +14,7 @@ public class GetConversationDto {
     private String type;
     private String name;
     private ParticipantDto admin;
-    private Set<ParticipantDto> participants = new HashSet<>();
+    private Set<ParticipantDto> participants = new LinkedHashSet<>();
     private MessageDtoBean lastMessage;
     private List<MessageDtoBean> messages = new ArrayList<>();
 

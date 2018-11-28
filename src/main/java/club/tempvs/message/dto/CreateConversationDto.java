@@ -2,15 +2,12 @@ package club.tempvs.message.dto;
 
 import club.tempvs.message.api.BadRequestException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class CreateConversationDto implements Validateable {
 
     private ParticipantDto author;
-    private Set<ParticipantDto> receivers = new HashSet<>();
+    private Set<ParticipantDto> receivers = new LinkedHashSet<>();
     private String text;
     private String name;
 
