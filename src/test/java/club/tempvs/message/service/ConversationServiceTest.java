@@ -71,7 +71,7 @@ public class ConversationServiceTest {
 
         Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
 
-        verify(conversation).setParticipants(receivers);
+        verify(conversation).addParticipant(receiver);
         verify(conversation).addParticipant(author);
         verify(conversation).getParticipants();
         verify(conversation).setName(conversationName);
@@ -103,8 +103,9 @@ public class ConversationServiceTest {
 
         Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
 
-        verify(conversation).setParticipants(receivers);
         verify(conversation).addParticipant(author);
+        verify(conversation).addParticipant(receiver);
+        verify(conversation).addParticipant(oneMoreReceiver);
         verify(conversation).getParticipants();
         verify(conversation).setAdmin(author);
         verify(conversation).setName(conversationName);
@@ -226,7 +227,8 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(messageService).createMessage(author, receivers, text, isSystem, null);
         verify(objectFactory).getInstance(Conversation.class);
-        verify(newConversation).setParticipants(receivers);
+        verify(newConversation).addParticipant(receiver);
+        verify(newConversation).addParticipant(oneMoreReceiver);
         verify(newConversation).addParticipant(author);
         verify(newConversation).setName(null);
         verify(newConversation).addMessage(message);

@@ -54,7 +54,7 @@ public class ConversationController {
         return "pong!";
     }
 
-    @PostMapping(value="/conversations")
+    @PostMapping("/conversations")
     public GetConversationDto createConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -95,12 +95,12 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
     }
 
-    @GetMapping(value="/conversations/{id}")
+    @GetMapping("/conversations/{conversationId}")
     public GetConversationDto getConversation(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
-            @PathVariable("id") Long id,
+            @PathVariable("conversationId") Long conversationId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size,
             @RequestParam(value = "caller", required = false) Long callerId) {
@@ -121,17 +121,17 @@ public class ConversationController {
             throw new BadRequestException("The caller specified does not exist.");
         }
 
-        Conversation conversation = conversationService.getConversation(id);
+        Conversation conversation = conversationService.getConversation(conversationId);
 
         if (!conversation.getParticipants().contains(caller)) {
-            throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + id);
+            throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + conversationId);
         }
 
         List<Message> messages = messageService.getMessagesFromConversation(conversation, locale, page, size);
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone, locale);
     }
 
-    @GetMapping(value="/conversations")
+    @GetMapping("/conversations")
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -180,7 +180,7 @@ public class ConversationController {
         return ResponseEntity.ok().headers(headers).build();
     }
 
-    @PostMapping(value="/conversations/{conversationId}/messages")
+    @PostMapping("/conversations/{conversationId}/messages")
     public ResponseEntity addMessage(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -212,7 +212,7 @@ public class ConversationController {
         return ResponseEntity.ok().body(getConversationDto);
     }
 
-    @PostMapping(value="/conversations/{conversationId}/participants")
+    @PostMapping("/conversations/{conversationId}/participants")
     public GetConversationDto addParticipants(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -248,7 +248,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
-    @DeleteMapping(value="/conversations/{conversationId}/participants/{subjectId}")
+    @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
     public GetConversationDto removeParticipant(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -281,7 +281,7 @@ public class ConversationController {
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
-    @PostMapping(value="/conversations/{conversationId}/name")
+    @PostMapping("/conversations/{conversationId}/name")
     public GetConversationDto updateConversationName(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -298,6 +298,37 @@ public class ConversationController {
 
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
+    }
+
+    @PostMapping("/conversations/{conversationId}/read")
+    public ResponseEntity readMessages(
+            @PathVariable("conversationId") Long conversationId,
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestBody ReadMessagesDto readMessagesDto) {
+        authHelper.authenticate(token);
+        readMessagesDto.validate();
+        Conversation conversation = conversationService.getConversation(conversationId);
+
+        if (conversation == null) {
+            throw new BadRequestException("No conversation with id " + conversationId + " found.");
+        }
+
+        ParticipantDto participantDto = readMessagesDto.getParticipant();
+        Long participantId = participantDto.getId();
+        Participant participant = participantService.getParticipant(participantId);
+
+        if (participant == null) {
+            throw new BadRequestException("No participant with id " + participantId + " found.");
+        }
+
+        List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessageIds());
+
+        if (messages.stream().anyMatch(Objects::isNull)) {
+            throw new BadRequestException("Some of the messages specified were not found.");
+        }
+
+        messageService.markAsRead(conversation, participant, messages);
+        return ResponseEntity.ok().build();
     }
 
     @ExceptionHandler(Exception.class)

@@ -77,6 +77,8 @@ public class ConversationControllerTest {
     private LocaleHelper localeHelper;
     @Mock
     private UpdateConversationNameDto updateConversationNameDto;
+    @Mock
+    private ReadMessagesDto readMessagesDto;
 
     @Before
     public void setup() {
@@ -576,5 +578,75 @@ public class ConversationControllerTest {
                 conversationService, messageService, objectFactory);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
+    }
+
+    @Test
+    public void testReadMessages() {
+        Long conversationId = 1L;
+        Long participantId = 4L;
+        List<Long> messageIds = Arrays.asList(2L, 3L);
+        List<Message> messages = Arrays.asList(message, message);
+
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(readMessagesDto.getParticipant()).thenReturn(participantDto);
+        when(participantDto.getId()).thenReturn(participantId);
+        when(readMessagesDto.getMessageIds()).thenReturn(messageIds);
+        when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(messageService.markAsRead(conversation, participant, messages)).thenReturn(messages);
+
+        ResponseEntity result = conversationController.readMessages(conversationId, token, readMessagesDto);
+
+        verify(authHelper).authenticate(token);
+        verify(readMessagesDto).validate();
+        verify(conversationService).getConversation(conversationId);
+        verify(readMessagesDto).getParticipant();
+        verify(participantDto).getId();
+        verify(readMessagesDto).getMessageIds();
+        verify(messageService).findMessagesByIds(messageIds);
+        verify(participantService).getParticipant(participantId);
+        verify(messageService).markAsRead(conversation, participant, messages);
+        verifyNoMoreInteractions(conversationService, authHelper, readMessagesDto);
+
+        assertEquals("Response is ok", result, ResponseEntity.ok().build());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testReadMessagesForMissingConversation() {
+        Long conversationId = 1L;
+
+        when(conversationService.getConversation(conversationId)).thenReturn(null);
+
+        conversationController.readMessages(conversationId, token, readMessagesDto);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testReadMessagesForMissingParticipant() {
+        Long conversationId = 1L;
+        Long participantId = 4L;
+
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(readMessagesDto.getParticipant()).thenReturn(participantDto);
+        when(participantDto.getId()).thenReturn(participantId);
+        when(participantService.getParticipant(participantId)).thenReturn(null);
+
+        conversationController.readMessages(conversationId, token, readMessagesDto);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testReadMessagesForMissingMessages() {
+        Long conversationId = 1L;
+        Long participantId = 4L;
+        List<Long> messageIds = Arrays.asList(2L, 3L);
+        List<Message> messages = Arrays.asList(message, null);
+
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(readMessagesDto.getParticipant()).thenReturn(participantDto);
+        when(participantDto.getId()).thenReturn(participantId);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(readMessagesDto.getMessageIds()).thenReturn(messageIds);
+        when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
+
+        conversationController.readMessages(conversationId, token, readMessagesDto);
     }
 }

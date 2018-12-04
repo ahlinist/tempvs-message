@@ -13,9 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
+
 import static java.util.stream.Collectors.*;
 
 @Service
@@ -70,5 +69,26 @@ public class MessageServiceImpl implements MessageService {
 
             return message;
         }).collect(toList());
+    }
+
+    public List<Message> markAsRead(Conversation conversation, Participant participant, List<Message> messages) {
+        if (messages.isEmpty()) {
+            throw new IllegalArgumentException("Empty messages list.");
+        }
+
+        if (!messages.stream().map(Message::getConversation).allMatch(conversation::equals)) {
+            throw new IllegalArgumentException("Messages belong to different conversations.");
+        }
+
+        if (!conversation.getParticipants().contains(participant)) {
+            throw new IllegalArgumentException("The conversation should contain the given participant.");
+        }
+
+        messages.stream().forEach(message -> message.getNewFor().remove(participant));
+        return messageRepository.saveAll(messages);
+    }
+
+    public List<Message> findMessagesByIds(List<Long> ids) {
+        return messageRepository.findAllById(ids);
     }
 }
