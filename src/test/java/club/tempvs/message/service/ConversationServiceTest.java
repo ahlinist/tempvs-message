@@ -171,14 +171,12 @@ public class ConversationServiceTest {
         String text = "text";
         String translatedText = "translated text";
         Locale locale = Locale.ENGLISH;
-        Set<Participant> participants = new HashSet<>();
-        participants.add(participant);
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         String systemArgs = "systemArgs";
 
-        when(conversationRepository.findByParticipantsIn(participants, pageable)).thenReturn(conversations);
+        when(conversationRepository.findByParticipantsIn(participant, pageable)).thenReturn(conversations);
         when(conversation.getLastMessage()).thenReturn(message);
         when(message.getSystem()).thenReturn(true);
         when(message.getText()).thenReturn(text);
@@ -194,7 +192,7 @@ public class ConversationServiceTest {
         verify(messageSource).getMessage(text, new String[]{systemArgs}, text, locale);
         verify(message).setText(translatedText);
         verify(conversation).setLastMessage(message);
-        verify(conversationRepository).findByParticipantsIn(participants, pageable);
+        verify(conversationRepository).findByParticipantsIn(participant, pageable);
         verifyNoMoreInteractions(participant, conversation, messageSource, conversationRepository);
 
         assertEquals("A list of one conversation is returned", result, conversations);

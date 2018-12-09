@@ -86,10 +86,8 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
-        Set<Participant> participants = new LinkedHashSet<>();
-        participants.add(participant);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
-        List<Conversation> conversations = conversationRepository.findByParticipantsIn(participants, pageable);
+        List<Conversation> conversations = conversationRepository.findByParticipantsIn(participant, pageable);
         return conversations.stream()
                 .map(conversation -> {
                     Message lastMessage = conversation.getLastMessage();

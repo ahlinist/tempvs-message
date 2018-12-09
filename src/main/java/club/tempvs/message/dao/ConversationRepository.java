@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
-    List<Conversation> findByParticipantsIn(Set<Participant> participants, Pageable pageable);
+    @Query("SELECT c from Conversation c JOIN c.participants p WHERE :participant IN p")
+    List<Conversation> findByParticipantsIn(Participant participant, Pageable pageable);
     Conversation findOneByTypeAndParticipantsContainsAndParticipantsContains(
             Conversation.Type type, Set<Participant> authorSet, Set<Participant> receiverSet);
     @Query("select count(distinct m.conversation) from Message m join m.newFor n where n = :participant")
