@@ -90,7 +90,7 @@ public class ConversationServiceImpl implements ConversationService {
         List<Conversation> conversations = conversationRepository.findByParticipantsIn(participant, pageable);
         List<Long> conversationIds = conversations.stream().map(Conversation::getId).collect(toList());
         List<Object[]> unreadMessagesPerConversation = conversationRepository.countUnreadMessages(conversationIds, participant);
-        Map<Long, Long> unreadMessagesCountMap = unreadMessagesPerConversation .stream()
+        Map<Long, Long> unreadMessagesCountMap = unreadMessagesPerConversation.stream()
                 .collect(toMap(entry -> (Long) entry[0], entry -> (Long) entry[1]));
 
         return conversations.stream()

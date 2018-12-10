@@ -13,11 +13,11 @@ import java.util.Set;
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
     @Query("SELECT c from Conversation c JOIN c.participants p WHERE :participant IN p")
     List<Conversation> findByParticipantsIn(Participant participant, Pageable pageable);
-    @Query("SELECT c.id, count(m) from Conversation c " +
+    @Query("SELECT c.id, count(n) from Conversation c " +
             "JOIN c.messages m " +
             "JOIN m.newFor n " +
             "WHERE :participant IN n and c.id IN :conversationIds " +
-            "GROUP BY m")
+            "GROUP BY c.id")
     List<Object[]> countUnreadMessages(List<Long> conversationIds, Participant participant);
     Conversation findOneByTypeAndParticipantsContainsAndParticipantsContains(
             Conversation.Type type, Set<Participant> authorSet, Set<Participant> receiverSet);
