@@ -175,8 +175,14 @@ public class ConversationServiceTest {
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         String systemArgs = "systemArgs";
+        Long conversationId = 1L;
+        List<Long> conversationIds = Arrays.asList(conversationId);
+        List<Object[]> unreadMessagesPerConversation = new ArrayList<>();
+        unreadMessagesPerConversation.add(new Object[]{1L, 3L});
 
         when(conversationRepository.findByParticipantsIn(participant, pageable)).thenReturn(conversations);
+        when(conversation.getId()).thenReturn(conversationId);
+        when(conversationRepository.countUnreadMessages(conversationIds, participant)).thenReturn(unreadMessagesPerConversation);
         when(conversation.getLastMessage()).thenReturn(message);
         when(message.getSystem()).thenReturn(true);
         when(message.getText()).thenReturn(text);
@@ -185,6 +191,10 @@ public class ConversationServiceTest {
 
         List<Conversation> result = conversationService.getConversationsByParticipant(participant, locale, page, size);
 
+        verify(conversationRepository).findByParticipantsIn(participant, pageable);
+        verify(conversationRepository).countUnreadMessages(conversationIds, participant);
+        verify(conversation, times(2)).getId();
+        verify(conversation).setUnreadMessagesCount(3L);
         verify(conversation).getLastMessage();
         verify(message).getSystem();
         verify(message).getText();
@@ -192,8 +202,7 @@ public class ConversationServiceTest {
         verify(messageSource).getMessage(text, new String[]{systemArgs}, text, locale);
         verify(message).setText(translatedText);
         verify(conversation).setLastMessage(message);
-        verify(conversationRepository).findByParticipantsIn(participant, pageable);
-        verifyNoMoreInteractions(participant, conversation, messageSource, conversationRepository);
+        verifyNoMoreInteractions(participant, message, conversation, messageSource, conversationRepository);
 
         assertEquals("A list of one conversation is returned", result, conversations);
     }
