@@ -5,7 +5,6 @@ import club.tempvs.message.domain.Participant;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ConversationDtoBean {
 
@@ -14,20 +13,20 @@ public class ConversationDtoBean {
     private String name;
     private MessageDtoBean lastMessage;
     private String conversant;
+    private Long unreadMessagesCount;
 
     public ConversationDtoBean() {
 
     }
 
     public ConversationDtoBean(Conversation conversation, Participant self, String zoneId, Locale locale) {
-        Stream<Participant> participantStream = conversation.getParticipants().stream();
-
         this.id = conversation.getId();
         this.name = conversation.getName();
         this.type = conversation.getType().toString();
         this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self, zoneId, locale);
-        this.conversant = participantStream.filter(participant -> !participant.equals(self))
+        this.conversant = conversation.getParticipants().stream().filter(participant -> !participant.equals(self))
                 .map(Participant::getName).collect(Collectors.joining(", "));
+        this.unreadMessagesCount = conversation.getUnreadMessagesCount();
     }
 
     public Long getId() {
@@ -68,6 +67,14 @@ public class ConversationDtoBean {
 
     public void setConversant(String conversant) {
         this.conversant = conversant;
+    }
+
+    public Long getUnreadMessagesCount() {
+        return unreadMessagesCount;
+    }
+
+    public void setUnreadMessagesCount(Long unreadMessagesCount) {
+        this.unreadMessagesCount = unreadMessagesCount;
     }
 
     @Override

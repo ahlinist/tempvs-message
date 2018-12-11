@@ -86,30 +86,35 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
-        Set<Participant> participants = new LinkedHashSet<>();
-        participants.add(participant);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
-        List<Conversation> conversations = conversationRepository.findByParticipantsIn(participants, pageable);
+        List<Conversation> conversations = conversationRepository.findByParticipantsIn(participant, pageable);
+        List<Long> conversationIds = conversations.stream().map(Conversation::getId).collect(toList());
+        List<Object[]> unreadMessagesPerConversation = conversationRepository.countUnreadMessages(conversationIds, participant);
+        Map<Long, Long> unreadMessagesCountMap = unreadMessagesPerConversation.stream()
+                .collect(toMap(entry -> (Long) entry[0], entry -> (Long) entry[1]));
+
         return conversations.stream()
-                .map(conversation -> {
-                    Message lastMessage = conversation.getLastMessage();
+            .map(conversation -> {
+                Long id = conversation.getId();
+                Message lastMessage = conversation.getLastMessage();
+                conversation.setUnreadMessagesCount(unreadMessagesCountMap.get(id));
 
-                    if (lastMessage.getSystem()) {
-                        String text = lastMessage.getText();
-                        String[] args = new String[0];
-                        String argsString = lastMessage.getSystemArgs();
+                if (lastMessage.getSystem()) {
+                    String text = lastMessage.getText();
+                    String[] args = new String[0];
+                    String argsString = lastMessage.getSystemArgs();
 
-                        if (argsString != null) {
-                            args = argsString.split(",");
-                        }
-
-                        lastMessage.setText(
-                                messageSource.getMessage(text, args, text, locale));
-                        conversation.setLastMessage(lastMessage);
+                    if (argsString != null) {
+                        args = argsString.split(",");
                     }
 
-                    return conversation;
-                }).collect(toList());
+                    lastMessage.setText(
+                            messageSource.getMessage(text, args, text, locale));
+                    conversation.setLastMessage(lastMessage);
+                }
+
+                return conversation;
+            }).collect(toList());
     }
 
     public Conversation addParticipants(Conversation conversation, Participant adder, List<Participant> added) {

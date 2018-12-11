@@ -37,6 +37,8 @@ public class Conversation {
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Participant> participants = new LinkedHashSet<>();
 
+    private transient Long unreadMessagesCount;
+
     @CreatedDate
     private Instant createdDate;
 
@@ -114,6 +116,14 @@ public class Conversation {
 
     public void setCreatedDate(Instant createdDate) {
         this.createdDate = createdDate;
+    }
+
+    public Long getUnreadMessagesCount() {
+        return unreadMessagesCount;
+    }
+
+    public void setUnreadMessagesCount(Long unreadMessagesCount) {
+        this.unreadMessagesCount = unreadMessagesCount;
     }
 
     @Override
