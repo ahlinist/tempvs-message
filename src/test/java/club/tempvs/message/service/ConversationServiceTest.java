@@ -175,14 +175,11 @@ public class ConversationServiceTest {
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         String systemArgs = "systemArgs";
-        Long conversationId = 1L;
-        List<Long> conversationIds = Arrays.asList(conversationId);
         List<Object[]> unreadMessagesPerConversation = new ArrayList<>();
-        unreadMessagesPerConversation.add(new Object[]{1L, 3L});
+        unreadMessagesPerConversation.add(new Object[]{conversation, 3L});
 
         when(conversationRepository.findByParticipantsIn(participant, pageable)).thenReturn(conversations);
-        when(conversation.getId()).thenReturn(conversationId);
-        when(conversationRepository.countUnreadMessages(conversationIds, participant)).thenReturn(unreadMessagesPerConversation);
+        when(conversationRepository.countUnreadMessages(conversations, participant)).thenReturn(unreadMessagesPerConversation);
         when(conversation.getLastMessage()).thenReturn(message);
         when(message.getSystem()).thenReturn(true);
         when(message.getText()).thenReturn(text);
@@ -192,8 +189,7 @@ public class ConversationServiceTest {
         List<Conversation> result = conversationService.getConversationsByParticipant(participant, locale, page, size);
 
         verify(conversationRepository).findByParticipantsIn(participant, pageable);
-        verify(conversationRepository).countUnreadMessages(conversationIds, participant);
-        verify(conversation, times(2)).getId();
+        verify(conversationRepository).countUnreadMessages(conversations, participant);
         verify(conversation).setUnreadMessagesCount(3L);
         verify(conversation).getLastMessage();
         verify(message).getSystem();

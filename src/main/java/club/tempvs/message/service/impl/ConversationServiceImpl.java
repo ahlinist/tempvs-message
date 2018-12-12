@@ -88,16 +88,14 @@ public class ConversationServiceImpl implements ConversationService {
     public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         List<Conversation> conversations = conversationRepository.findByParticipantsIn(participant, pageable);
-        List<Long> conversationIds = conversations.stream().map(Conversation::getId).collect(toList());
-        List<Object[]> unreadMessagesPerConversation = conversationRepository.countUnreadMessages(conversationIds, participant);
-        Map<Long, Long> unreadMessagesCountMap = unreadMessagesPerConversation.stream()
-                .collect(toMap(entry -> (Long) entry[0], entry -> (Long) entry[1]));
+        List<Object[]> unreadMessagesPerConversation = conversationRepository.countUnreadMessages(conversations, participant);
+        Map<Conversation, Long> unreadMessagesCountMap = unreadMessagesPerConversation.stream()
+                .collect(toMap(entry -> (Conversation) entry[0], entry -> (Long) entry[1]));
 
         return conversations.stream()
             .map(conversation -> {
-                Long id = conversation.getId();
                 Message lastMessage = conversation.getLastMessage();
-                conversation.setUnreadMessagesCount(unreadMessagesCountMap.get(id));
+                conversation.setUnreadMessagesCount(unreadMessagesCountMap.get(conversation));
 
                 if (lastMessage.getSystem()) {
                     String text = lastMessage.getText();
