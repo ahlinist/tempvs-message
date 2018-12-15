@@ -13,6 +13,7 @@ import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.AuthHelper;
 import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
+import club.tempvs.message.util.ValidationHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +44,8 @@ public class ConversationControllerTest {
     private ParticipantService participantService;
     @Mock
     private MessageService messageService;
+    @Mock
+    private ValidationHelper validationHelper;
     @Mock
     private ObjectFactory objectFactory;
     @Mock
@@ -79,11 +82,13 @@ public class ConversationControllerTest {
     private UpdateConversationNameDto updateConversationNameDto;
     @Mock
     private ReadMessagesDto readMessagesDto;
+    @Mock
+    private ErrorsDto errorsDto;
 
     @Before
     public void setup() {
         conversationController = new ConversationController(objectFactory, conversationService, participantService,
-                messageService, authHelper, localeHelper);
+                messageService, authHelper, localeHelper, validationHelper);
     }
 
     @Test
@@ -475,7 +480,7 @@ public class ConversationControllerTest {
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
-        verifyNoMoreInteractions(authorDto, receiverDto, conversationService, participantService, objectFactory);
+        verifyNoMoreInteractions(authorDto, receiverDto, conversationService, participantService, objectFactory, validationHelper);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -488,10 +493,6 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
         conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
-
-        verify(addParticipantsDto).validate();
-        verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(conversationService, addParticipantsDto, participantService, objectFactory);
     }
 
     @Test(expected = NotFoundException.class)
@@ -504,10 +505,33 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
         conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
+    }
 
-        verify(addParticipantsDto).validate();
-        verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(conversationService, addParticipantsDto, participantService, objectFactory);
+    @Test(expected = IllegalStateException.class)
+    public void testRemoveParticipantForNonExistentInitiator() {
+        Long conversationId = 1L;
+        Long subjectId = 2L;
+        Long initiatorId = 1L;
+        String timeZone = "UTC";
+
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(participantService.getParticipant(initiatorId)).thenReturn(null);
+
+        conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testRemoveParticipantForNonExistentSubject() {
+        Long conversationId = 1L;
+        Long subjectId = 2L;
+        Long initiatorId = 1L;
+        String timeZone = "UTC";
+
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(participantService.getParticipant(initiatorId)).thenReturn(author);
+        when(participantService.getParticipant(subjectId)).thenReturn(null);
+
+        conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
     }
 
     @Test
