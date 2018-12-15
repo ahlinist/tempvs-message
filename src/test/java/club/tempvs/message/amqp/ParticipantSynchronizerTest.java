@@ -54,7 +54,9 @@ public class ParticipantSynchronizerTest {
         String jsonBodyAsString = "{}";
         byte[] jsonBodyAsByteArray = jsonBodyAsString.getBytes();
         Long participantId = 1L;
-        String participantName = "name";
+        String name = "name";
+        String type = "type";
+        String period = "period";
 
         when(amqpConnectionFactory.newConnection()).thenReturn(connection);
         when(connection.createChannel()).thenReturn(channel);
@@ -63,9 +65,11 @@ public class ParticipantSynchronizerTest {
         when(delivery.getBody()).thenReturn(jsonBodyAsByteArray);
         when(jacksonObjectMapper.readValue(jsonBodyAsString, ParticipantDto.class)).thenReturn(participantDto);
         when(participantDto.getId()).thenReturn(participantId);
-        when(participantDto.getName()).thenReturn(participantName);
+        when(participantDto.getName()).thenReturn(name);
+        when(participantDto.getType()).thenReturn(type);
+        when(participantDto.getPeriod()).thenReturn(period);
         //throws an exception only to break the infinite loop
-        when(participantService.refreshParticipant(participantId, participantName)).thenThrow(new RuntimeException());
+        when(participantService.refreshParticipant(participantId, name, type, period)).thenThrow(new RuntimeException());
 
         participantSynchronizer.execute();
 
@@ -79,9 +83,11 @@ public class ParticipantSynchronizerTest {
         verify(jacksonObjectMapper).readValue(jsonBodyAsString, ParticipantDto.class);
         verify(participantDto).getId();
         verify(participantDto).getName();
+        verify(participantDto).getType();
+        verify(participantDto).getPeriod();
         verify(channel).close();
         verify(connection).close();
-        verify(participantService).refreshParticipant(participantId, participantName);
+        verify(participantService).refreshParticipant(participantId, name, type, period);
         verifyNoMoreInteractions(amqpConnectionFactory, connection, channel, objectFactory, consumer, delivery,
                 jacksonObjectMapper, participantDto, participantService);
     }

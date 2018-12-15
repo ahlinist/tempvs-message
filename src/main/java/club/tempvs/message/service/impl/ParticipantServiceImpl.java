@@ -19,8 +19,8 @@ public class ParticipantServiceImpl implements ParticipantService {
         this.participantRepository = participantRepository;
     }
 
-    public Participant createParticipant(Long id, String name) {
-        Participant participant = objectFactory.getInstance(Participant.class, id, name);
+    public Participant createParticipant(Long id, String name, String type, String period) {
+        Participant participant = objectFactory.getInstance(Participant.class, id, name, type, period);
         return participantRepository.save(participant);
     }
 
@@ -28,13 +28,15 @@ public class ParticipantServiceImpl implements ParticipantService {
         return participantRepository.findById(id).orElse(null);
     }
 
-    public Participant refreshParticipant(Long id, String name) {
+    public Participant refreshParticipant(Long id, String name, String type, String period) {
         Participant participant = getParticipant(id);
 
         if (participant != null) {
             participant.setName(name);
+            participant.setType(type);
+            participant.setPeriod(period);
         } else {
-            participant = objectFactory.getInstance(Participant.class, id, name);
+            participant = objectFactory.getInstance(Participant.class, id, name, type, period);
         }
 
         return participantRepository.save(participant);

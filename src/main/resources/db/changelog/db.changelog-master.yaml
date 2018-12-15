@@ -7,3 +7,7 @@ databaseChangeLog:
       file: db/changelog/changes/message-add-system-args.yaml
   - include:
       file: db/changelog/changes/add-unread-msg-counters.yaml
+  - include:
+      file: db/changelog/changes/add-type-and-period-to-participant.yaml
+  - include:
+      file: db/changelog/changes/add-type-and-period-constraints.yaml

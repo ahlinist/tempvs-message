@@ -10,19 +10,25 @@ public class ParticipantDto implements Validateable {
 
     Long id;
     String name;
+    String type;
+    String period;
 
     public ParticipantDto() {
 
     }
 
-    public ParticipantDto(Long id, String name) {
+    public ParticipantDto(Long id, String name, String type, String period) {
         this.id = id;
         this.name = name;
+        this.type = type;
+        this.period = period;
     }
 
     public ParticipantDto(Participant participant) {
         this.id = participant.getId();
         this.name = participant.getName();
+        this.type = participant.getType();
+        this.period = participant.getPeriod();
     }
 
     public Long getId() {
@@ -39,6 +45,22 @@ public class ParticipantDto implements Validateable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(String period) {
+        this.period = period;
     }
 
     public void validate() {

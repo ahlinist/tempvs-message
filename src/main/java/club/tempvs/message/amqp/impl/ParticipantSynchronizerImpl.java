@@ -40,7 +40,11 @@ public class ParticipantSynchronizerImpl extends AbstractAMQPConnector implement
     private void refreshParticipant(String json) {
         try {
             ParticipantDto participantDto = jacksonObjectMapper.readValue(json, ParticipantDto.class);
-            participantService.refreshParticipant(participantDto.getId(), participantDto.getName());
+            participantService.refreshParticipant(
+                    participantDto.getId(),
+                    participantDto.getName(),
+                    participantDto.getType(),
+                    participantDto.getPeriod());
         } catch (IOException e) {
             e.printStackTrace();
         }
