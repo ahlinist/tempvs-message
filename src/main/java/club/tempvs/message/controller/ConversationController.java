@@ -33,6 +33,7 @@ public class ConversationController {
     private final MessageService messageService;
     private final AuthHelper authHelper;
     private final LocaleHelper localeHelper;
+    private final ValidationHelper validationHelper;
 
     @Autowired
     public ConversationController(ObjectFactory objectFactory,
@@ -40,13 +41,15 @@ public class ConversationController {
                                   ParticipantService participantService,
                                   MessageService messageService,
                                   AuthHelper authHelper,
-                                  LocaleHelper localeHelper) {
+                                  LocaleHelper localeHelper,
+                                  ValidationHelper validationHelper) {
         this.objectFactory = objectFactory;
         this.conversationService = conversationService;
         this.participantService = participantService;
         this.messageService = messageService;
         this.authHelper = authHelper;
         this.localeHelper = localeHelper;
+        this.validationHelper = validationHelper;
     }
 
     @GetMapping("/ping")
@@ -267,13 +270,13 @@ public class ConversationController {
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
-            throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
+            throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
         }
 
         Participant subject = participantService.getParticipant(subjectId);
 
         if (subject == null) {
-            throw new BadRequestException("Participant with id " + subjectId + " does not exist");
+            throw new IllegalStateException("Participant with id " + subjectId + " does not exist");
         }
 
         Conversation result = conversationService.removeParticipant(conversation, initiator, subject);
