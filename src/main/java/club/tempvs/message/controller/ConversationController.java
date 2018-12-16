@@ -280,7 +280,7 @@ public class ConversationController {
         String type = aParticipant.getType();
         String period = aParticipant.getPeriod();
 
-        if (subjects.stream().anyMatch(subject -> subject.getType() !=type)) {
+        if (subjects.stream().anyMatch(subject -> !subject.getType().equals(type))) {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH, null, locale);
         } else if (subjects.stream().anyMatch(subject -> subject.getPeriod() != period)) {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH, null, locale);
