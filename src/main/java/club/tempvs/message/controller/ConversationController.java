@@ -28,7 +28,6 @@ public class ConversationController {
     private static final String COUNT_HEADER = "X-Total-Count";
     private static final String PARTICIPANTS_FIELD = "participants";
     private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
-    private static final String CANT_DELETE_PARTICIPANT = "conversation.participant.cant.delete";
     private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
     private static final String TYPE_MISMATCH = "conversation.participant.type.mismatch";
     private static final String PERIOD_MISMATCH = "conversation.participant.period.mismatch";
@@ -302,17 +301,11 @@ public class ConversationController {
             @PathVariable("subjectId") Long subjectId,
             @RequestParam("initiator") Long initiatorId) {
         authHelper.authenticate(token);
-        ErrorsDto errorsDto = validationHelper.getErrors();
         Locale locale = localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
-        }
-
-        if (conversation.getParticipants().size() <= 2) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CANT_DELETE_PARTICIPANT, null, locale);
-            validationHelper.processErrors(errorsDto);
         }
 
         Participant initiator = participantService.getParticipant(initiatorId);
@@ -321,12 +314,7 @@ public class ConversationController {
             throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
         }
 
-        Participant admin = conversation.getAdmin();
         Participant subject = participantService.getParticipant(subjectId);
-
-        if ((admin == null || !admin.equals(initiator)) && !admin.equals(subject)) {
-            throw new ForbiddenException("Only admin user can remove participants from a conversation");
-        }
 
         if (subject == null) {
             throw new IllegalStateException("Participant with id " + subjectId + " does not exist");

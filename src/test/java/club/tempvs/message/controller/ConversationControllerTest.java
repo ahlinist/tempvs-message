@@ -620,14 +620,10 @@ public class ConversationControllerTest {
         int page = 0;
         int max = 40;
         List<Message> messages = Arrays.asList(message, message);
-        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, participant));
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(conversation.getParticipants()).thenReturn(participants);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(conversation.getAdmin()).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
@@ -635,12 +631,9 @@ public class ConversationControllerTest {
 
         GetConversationDto result = conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
 
-        verify(validationHelper).getErrors();
         verify(localeHelper).getLocale(lang);
         verify(conversationService).getConversation(conversationId);
-        verify(conversation).getParticipants();
         verify(participantService).getParticipant(initiatorId);
-        verify(conversation).getAdmin();
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
@@ -663,22 +656,6 @@ public class ConversationControllerTest {
         conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveParticipantForConversationOf2() {
-        Long conversationId = 1L;
-        Long subjectId = 2L;
-        Long initiatorId = 1L;
-        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
-        String timeZone = "UTC";
-
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(conversation.getParticipants()).thenReturn(participants);
-        doThrow(new IllegalArgumentException()).when(validationHelper).processErrors(errorsDto);
-
-        conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
-    }
-
     @Test(expected = IllegalStateException.class)
     public void testRemoveParticipantForNonExistentInitiator() {
         Long conversationId = 1L;
@@ -692,21 +669,6 @@ public class ConversationControllerTest {
         conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void testRemoveParticipantForNonAdminInitiator() {
-        Long conversationId = 1L;
-        Long subjectId = 2L;
-        Long initiatorId = 1L;
-        String timeZone = "UTC";
-
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(participantService.getParticipant(subjectId)).thenReturn(receiver);
-        when(conversation.getAdmin()).thenReturn(participant);
-
-        conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
-    }
-
     @Test(expected = IllegalStateException.class)
     public void testRemoveParticipantForNonExistentSubject() {
         Long conversationId = 1L;
@@ -716,7 +678,6 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(conversation.getAdmin()).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(null);
 
         conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);

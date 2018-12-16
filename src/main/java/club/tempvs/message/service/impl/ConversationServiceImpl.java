@@ -1,14 +1,18 @@
 package club.tempvs.message.service.impl;
 
+import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.ErrorsDto;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
+import club.tempvs.message.util.ValidationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,21 +30,26 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
     private static final String CONFERENCE_CREATED = "conversation.conference.created";
     private static final String CONVERSATION_RENAMED = "conversation.update.name";
+    private static final String PARTICIPANTS_FIELD = "participants";
+    private static final String CANT_DELETE_PARTICIPANT = "conversation.participant.cant.delete";
 
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
     private final MessageService messageService;
     private final MessageSource messageSource;
+    private final ValidationHelper validationHelper;
 
     @Autowired
     public ConversationServiceImpl(ObjectFactory objectFactory,
                                    MessageService messageService,
                                    ConversationRepository conversationRepository,
-                                   MessageSource messageSource) {
+                                   MessageSource messageSource,
+                                   ValidationHelper validationHelper) {
         this.objectFactory = objectFactory;
         this.messageService = messageService;
         this.conversationRepository = conversationRepository;
         this.messageSource = messageSource;
+        this.validationHelper = validationHelper;
     }
 
     public Conversation createConversation(
@@ -143,6 +152,20 @@ public class ConversationServiceImpl implements ConversationService {
 
     public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {
         Set<Participant> participants = conversation.getParticipants();
+
+        if (participants.size() <= 2) {
+            ErrorsDto errorsDto = validationHelper.getErrors();
+            Locale locale = LocaleContextHolder.getLocale();
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CANT_DELETE_PARTICIPANT, null, locale);
+            validationHelper.processErrors(errorsDto);
+        }
+
+        Participant admin = conversation.getAdmin();
+
+        if ((admin == null || !admin.equals(remover)) && !remover.equals(removed)) {
+            throw new ForbiddenException("Only admin user can remove participants from a conversation");
+        }
+
         conversation.removeParticipant(removed);
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new LinkedHashSet<>(participants);

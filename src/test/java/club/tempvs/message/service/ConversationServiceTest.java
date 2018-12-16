@@ -1,12 +1,16 @@
 package club.tempvs.message.service;
 
+import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.ErrorsDto;
 import club.tempvs.message.service.impl.ConversationServiceImpl;
 import club.tempvs.message.util.ObjectFactory;
 import static org.junit.Assert.*;
+
+import club.tempvs.message.util.ValidationHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,10 +53,15 @@ public class ConversationServiceTest {
     private ConversationRepository conversationRepository;
     @Mock
     private MessageSource messageSource;
+    @Mock
+    private ValidationHelper validationHelper;
+    @Mock
+    private ErrorsDto errorsDto;
 
     @Before
     public void setup() {
-        this.conversationService = new ConversationServiceImpl(objectFactory, messageService, conversationRepository, messageSource);
+        this.conversationService = new ConversationServiceImpl(objectFactory, messageService, conversationRepository,
+                messageSource, validationHelper);
     }
 
     @Test
@@ -284,12 +293,14 @@ public class ConversationServiceTest {
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(oneMoreReceiver, participant));
 
+        when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, receivers, text, isSystem, null, receiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, receiver);
 
+        verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(receiver);
         verify(messageService).createMessage(author, receivers, text, isSystem, null,receiver);
@@ -297,9 +308,27 @@ public class ConversationServiceTest {
         verify(message).setConversation(conversation);
         verify(conversation).setLastMessage(message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, conversationRepository);
+        verifyNoMoreInteractions(conversation, conversationRepository, messageService, message, receiver, author);
 
         assertEquals("Conversation is returned as a result", conversation, result);
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testRemoveParticipantAsNonAdmin() {
+        when(conversation.getAdmin()).thenReturn(participant);
+
+        conversationService.removeParticipant(conversation, author, receiver);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveParticipantForConversationOf2() {
+        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
+
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(validationHelper.getErrors()).thenReturn(errorsDto);
+        doThrow(new IllegalArgumentException()).when(validationHelper).processErrors(errorsDto);
+
+        conversationService.removeParticipant(conversation, author, receiver);
     }
 
     @Test
@@ -309,12 +338,14 @@ public class ConversationServiceTest {
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, oneMoreReceiver, participant));
 
+        when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, receivers, text, isSystem, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, author);
 
+        verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(author);
         verify(messageService).createMessage(author, receivers, text, isSystem, null);
@@ -322,7 +353,7 @@ public class ConversationServiceTest {
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, message, messageService, conversationRepository);
+        verifyNoMoreInteractions(conversation, message, messageService, conversationRepository, author, receiver);
 
         assertEquals("Conversation is returned as a result", conversation, result);
     }
