@@ -417,6 +417,7 @@ public class ConversationControllerTest {
         int page = 0;
         int max = 40;
         String timeZone = "UTC";
+        String userType = "USER";
         List<Message> messages = Arrays.asList(message, message);
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
@@ -431,6 +432,8 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
+        when(participant.getType()).thenReturn(userType);
+        when(receiver.getType()).thenReturn(userType);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
@@ -448,12 +451,16 @@ public class ConversationControllerTest {
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversation).getParticipants();
+        verify(receiver).getType();
+        verify(participant).getType();
+        verify(receiver).getPeriod();
+        verify(participant).getPeriod();
         verify(validationHelper).processErrors(errorsDto);
         verify(conversationService).addParticipants(conversation, author, receivers);
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
         verifyNoMoreInteractions(authorDto, receiverDto, conversationService, addParticipantsDto, participantService,
-                objectFactory, validationHelper, errorsDto, conversation);
+                objectFactory, validationHelper, errorsDto, conversation, receiver, author);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -572,6 +579,7 @@ public class ConversationControllerTest {
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
         Set<Participant> participants = new HashSet<>(Arrays.asList(participant));
         String timeZone = "UTC";
+        String clubType = "CLUB";
 
         when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
@@ -582,6 +590,8 @@ public class ConversationControllerTest {
         when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversation.getParticipants()).thenReturn(participants);
+        when(participant.getType()).thenReturn(clubType);
+        when(receiver.getType()).thenReturn(clubType);
         when(receiver.getPeriod()).thenReturn(receiverPeriod);
         when(receiver.getPeriod()).thenReturn(participantPeriod);
         doThrow(new IllegalArgumentException()).when(validationHelper).processErrors(errorsDto);
