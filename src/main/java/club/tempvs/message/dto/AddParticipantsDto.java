@@ -1,14 +1,11 @@
 package club.tempvs.message.dto;
 
-import club.tempvs.message.api.BadRequestException;
+import java.util.Set;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class AddParticipantsDto implements Validateable {
+public class AddParticipantsDto {
 
     private ParticipantDto initiator;
-    private List<ParticipantDto> subjects;
+    private Set<ParticipantDto> subjects;
 
     public AddParticipantsDto() {
 
@@ -22,27 +19,11 @@ public class AddParticipantsDto implements Validateable {
         this.initiator = initiator;
     }
 
-    public List<ParticipantDto> getSubjects() {
+    public Set<ParticipantDto> getSubjects() {
         return subjects;
     }
 
-    public void setSubjects(List<ParticipantDto> subjects) {
+    public void setSubjects(Set<ParticipantDto> subjects) {
         this.subjects = subjects;
-    }
-
-    public void validate() {
-        List<String> errors = new ArrayList<>();
-
-        if (this.initiator == null) {
-            errors.add("Initiator id is missing.");
-        }
-
-        if (this.subjects == null || this.subjects.isEmpty()) {
-            errors.add("Subjects are missing.");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new BadRequestException(String.join("\n", errors));
-        }
     }
 }

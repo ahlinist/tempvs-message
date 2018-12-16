@@ -2,6 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
+import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.*;
 import club.tempvs.message.util.EntityHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,15 +60,17 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testCreateConversation() throws Exception {
         Long authorId = 4L;
-        Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
         String message = "myMessage";
         String name = "conversation name";
-        String createConversationJson = getCreateConversationDtoJson(authorId, receivers, message, name);
 
-        entityHelper.createParticipant(1L, "name1", "USER", "");
-        entityHelper.createParticipant(2L, "name2", "USER", "");
-        entityHelper.createParticipant(3L, "name3", "USER", "");
-        entityHelper.createParticipant(4L, "name4", "USER", "");
+        Participant author = entityHelper.createParticipant(authorId, "name1", "USER", "");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(2L, "name2", "USER", ""),
+                entityHelper.createParticipant(3L, "name3", "USER", ""),
+                entityHelper.createParticipant(1L, "name4", "USER", "")
+        ));
+
+        String createConversationJson = getCreateConversationDtoJson(author, receivers, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -94,12 +97,17 @@ public class ConversationControllerIntegrationTest {
     public void testCreateConversationForExistentDialogue() throws Exception {
         Long authorId = 1L;
         Long receiverId = 2L;
-        Set<Long> receivers = new HashSet<>(Arrays.asList(receiverId));
         String oldMessage = "my old message";
         String newMessage = "my new message";
         String name = null;
-        entityHelper.createConversation(authorId, receivers, oldMessage, name);
-        String createConversationJson = getCreateConversationDtoJson(authorId, receivers, newMessage, name);
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(receiverId, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        entityHelper.createConversation(author, receivers, oldMessage, name);
+        String createConversationJson = getCreateConversationDtoJson(author, receivers, newMessage, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -129,9 +137,15 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testCreateConversationWithNoAuthor() throws Exception {
-        Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
         String message = "myMessage";
         String name = "conversation name";
+
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
         String createConversationJson = getCreateConversationDtoJson(null, receivers, message, name);
 
         mvc.perform(post("/api/conversations")
@@ -140,15 +154,18 @@ public class ConversationControllerIntegrationTest {
                 .content(createConversationJson)
                 .header("Authorization",TOKEN))
                     .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Participant id is missing."));
+                    .andExpect(content().string("Author id is missing."));
     }
 
     @Test
     public void testCreateConversationWithAuthorEqualReceiver() throws Exception {
-        Long author = 1L;
-        Set<Long> receivers = new HashSet<>(Arrays.asList(1L));
+        Long authorId = 1L;
         String message = "myMessage";
         String name = "conversation name";
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(author));
+
         String createConversationJson = getCreateConversationDtoJson(author, receivers, message, name);
 
         mvc.perform(post("/api/conversations")
@@ -163,9 +180,16 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testCreateConversationWithNoMessage() throws Exception {
         Long authorId = 4L;
-        Set<Long> receivers = new HashSet<>(Arrays.asList(1L, 2L, 3L));
         String name = "conversation name";
-        String createConversationJson = getCreateConversationDtoJson(authorId, receivers, null, name);
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        String createConversationJson = getCreateConversationDtoJson(author, receivers, null, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -179,10 +203,13 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testCreateConversationWithNoReceivers() throws Exception {
         Long authorId = 4L;
-        Set<Long> receivers = new HashSet<>();
+        Set<Participant> receivers = new HashSet<>();
         String message = "myMessage";
         String name = "conversation name";
-        String createConversationJson = getCreateConversationDtoJson(authorId, receivers, message, name);
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+
+        String createConversationJson = getCreateConversationDtoJson(author, receivers, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -196,11 +223,17 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testGetConversation() throws Exception {
         Long authorId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
         String name = "name";
 
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         int messagesSize = messages.size();
@@ -231,11 +264,17 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testGetConversationForInvalidPaging() throws Exception {
         Long authorId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
         String name = "name";
 
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1&caller=" + authorId)
@@ -262,11 +301,17 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testGetConversationForNoCallerSpecified() throws Exception {
         Long authorId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
         String name = "name";
 
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20")
@@ -278,13 +323,19 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testGetConversationForWrongCaller() throws Exception {
         Long authorId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         Long wrongCallerId = 5L;
         String text = "text";
         String name = "name";
 
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
         entityHelper.createParticipant(wrongCallerId, "name", "USER", "");
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20&caller=" + wrongCallerId)
@@ -297,59 +348,64 @@ public class ConversationControllerIntegrationTest {
     public void testGetConversationsByParticipant() throws Exception {
         Long authorId1 = 10L;
         Long authorId2 = 15L;
-        Long authorId3 = 15L;
-        Set<Long> receiverIds1 = new HashSet<>(Arrays.asList(15L));
-        Set<Long> receiverIds2 = new HashSet<>(Arrays.asList(10L));
-        Set<Long> receiverIds3 = new HashSet<>(Arrays.asList(10L, 5L, 3L));
+        Long callerId = 3L;
         String text = "text";
         String name = "name";
 
-        entityHelper.createConversation(authorId1, receiverIds1, text, name);
-        entityHelper.createConversation(authorId2, receiverIds2, text, name);
-        entityHelper.createConversation(authorId3, receiverIds3, text, name);
+        Participant author1 = entityHelper.createParticipant(authorId1, "name", "CLUB", "ANTIQUITY");
+        Participant author2 = entityHelper.createParticipant(authorId2, "name", "CLUB", "ANTIQUITY");
 
-        mvc.perform(get("/api/conversations?participant=" + authorId1 + "&page=0&size=10")
+        Set<Participant> receivers1 = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(authorId2, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(callerId, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Set<Participant> receivers2 = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(callerId, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        entityHelper.createConversation(author1, receivers1, text, name);
+        entityHelper.createConversation(author2, receivers2, text, name);
+
+        mvc.perform(get("/api/conversations?participant=" + callerId + "&page=0&size=10")
                 .header("Authorization",TOKEN))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("conversations", hasSize(3)))
+                    .andExpect(jsonPath("conversations", hasSize(2)))
                     .andExpect(jsonPath("conversations[0].name", is(name)))
                     .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
-                    .andExpect(jsonPath("conversations[0].lastMessage.author.id", is(authorId3.intValue())))
+                    .andExpect(jsonPath("conversations[0].lastMessage.author.id", is(authorId2.intValue())))
                     .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
                     .andExpect(jsonPath("conversations[0].lastMessage.unread", is(true)))
                     .andExpect(jsonPath("conversations[0].lastMessage.system", is(false)))
-                    .andExpect(jsonPath("conversations[0].type", is(CONFERENCE)))
-                    .andExpect(jsonPath("conversations[0].conversant", is("name, name, name")))
+                    .andExpect(jsonPath("conversations[0].type", is(DIALOGUE)))
+                    .andExpect(jsonPath("conversations[0].conversant", is("name")))
                     .andExpect(jsonPath("conversations[0].unreadMessagesCount", is(1)))
                     .andExpect(jsonPath("conversations[1].name", is(name)))
                     .andExpect(jsonPath("conversations[1].lastMessage.text", is(text)))
-                    .andExpect(jsonPath("conversations[1].lastMessage.author.id", is(authorId3.intValue())))
+                    .andExpect(jsonPath("conversations[1].lastMessage.author.id", is(authorId1.intValue())))
                     .andExpect(jsonPath("conversations[1].lastMessage.subject", isEmptyOrNullString()))
                     .andExpect(jsonPath("conversations[1].lastMessage.unread", is(true)))
                     .andExpect(jsonPath("conversations[1].lastMessage.system", is(false)))
-                    .andExpect(jsonPath("conversations[1].type", is(DIALOGUE)))
-                    .andExpect(jsonPath("conversations[1].conversant", is("name")))
+                    .andExpect(jsonPath("conversations[1].type", is(CONFERENCE)))
+                    .andExpect(jsonPath("conversations[1].conversant", is("name, name")))
                     .andExpect(jsonPath("conversations[1].unreadMessagesCount", is(1)))
-                    .andExpect(jsonPath("conversations[2].name", is(name)))
-                    .andExpect(jsonPath("conversations[2].lastMessage.text", is(text)))
-                    .andExpect(jsonPath("conversations[2].lastMessage.author.id", is(authorId1.intValue())))
-                    .andExpect(jsonPath("conversations[2].lastMessage.subject", isEmptyOrNullString()))
-                    .andExpect(jsonPath("conversations[2].lastMessage.unread", is(false)))
-                    .andExpect(jsonPath("conversations[2].lastMessage.system", is(false)))
-                    .andExpect(jsonPath("conversations[2].type", is(DIALOGUE)))
-                    .andExpect(jsonPath("conversations[2].conversant", is("name")))
-                    .andExpect(jsonPath("conversations[2].unreadMessagesCount", isEmptyOrNullString()))
-                    .andExpect(header().string(COUNT_HEADER, String.valueOf(3)));
+                    .andExpect(header().string(COUNT_HEADER, String.valueOf(2)));
     }
 
     @Test
     public void testGetConversationsByParticipantWithMultipleConversants() throws Exception {
         Long authorId = 10L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
         String name = "name";
 
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         Long messageId = messages.get(0).getId();
@@ -405,12 +461,18 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testAddMessage() throws Exception {
         Long authorId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
         String text = "text";
         String name = "name";
         String newMessageText = "new message text";
 
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         int initialMessagesSize = messages.size();
@@ -468,23 +530,24 @@ public class ConversationControllerIntegrationTest {
     public void testAddParticipantToDialogue() throws Exception {
         Long authorId = 1L;
         Long receiverId = 2L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
         String text = "an initial text";
         Long addedParticipantId = 3L;
-        Set<Long> participantIds = new HashSet<>(receiverIds);
-        participantIds.add(authorId);
-        participantIds.add(addedParticipantId);
 
-        entityHelper.createParticipant(authorId, "name", "USER", "");
-        entityHelper.createParticipant(receiverId, "name", "USER", "");
-        entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, "");
+        Participant author = entityHelper.createParticipant(authorId, "name", "USER", "");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(receiverId, "name", "USER", "")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, "");
         Long initialConversationId = conversation.getId();
         String conferenceCreatedMessage = "created a conference";
 
+        entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
+
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
         addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", ""));
-        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", "")));
+        addParticipantsDto.setSubjects(new HashSet<>(
+                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
@@ -509,20 +572,25 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testAddParticipantAlreadyPresentInDialogue() throws Exception {
+    public void testAddParticipantToDialogueForExistentOne() throws Exception {
         Long authorId = 1L;
         Long receiverId = 2L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
-        String text = "an initial text";
+        Long addedParticipantId = 2L;
 
-        entityHelper.createParticipant(authorId, "name", "USER", "");
-        entityHelper.createParticipant(receiverId, "name", "USER", "");
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, "name");
+        Participant author = entityHelper.createParticipant(authorId, "name", "USER", "");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(receiverId, "name", "USER", "")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, "", "");
         Long initialConversationId = conversation.getId();
+
+        entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
         addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", ""));
-        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(receiverId, "name", "USER", "")));
+        addParticipantsDto.setSubjects(new HashSet<>(
+                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
@@ -531,8 +599,41 @@ public class ConversationControllerIntegrationTest {
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
                 .header("Authorization",TOKEN))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("An existent member is being added to a conversation."));
+    }
+
+    @Test
+    public void testAddParticipantToDialogueForMismatchingPeriods() throws Exception {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        Long addedParticipantId = 3L;
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "EARLY_MIDDLE_AGES");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(receiverId, "name", "CLUB", "EARLY_MIDDLE_AGES")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, "an initial text", "");
+        Long conversationId = conversation.getId();
+
+        entityHelper.createParticipant(addedParticipantId, "name", "CLUB", "LATE_MIDDLE_AGES");
+
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "CLUB", "EARLY_MIDDLE_AGES"));
+        addParticipantsDto.setSubjects(new HashSet<>(
+                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "CLUB", "LATE_MIDDLE_AGES"))));
+
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
+
+        mvc.perform(post("/api/conversations/" + conversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
                     .andExpect(status().isBadRequest())
-                    .andExpect(content().string("The participant being added is already present in the conversation."));
+                    .andExpect(jsonPath("errors.participants",
+                            is("Conversation can contain only participants of the same period")));
     }
 
     @Test
@@ -546,104 +647,28 @@ public class ConversationControllerIntegrationTest {
         participantIds.add(authorId);
         participantIds.add(addedParticipantId);
 
-        entityHelper.createParticipant(1L, "name", "USER", "");
-        entityHelper.createParticipant(2L, "name", "USER", "");
-        entityHelper.createParticipant(3L, "name", "USER", "");
-        entityHelper.createParticipant(4L, "name", "USER", "");
-        entityHelper.createParticipant(5L, "name", "USER", "");
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(1L, "name", "USER", "");
+        Set<Participant> participants = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(2L, "name", "USER", ""),
+                entityHelper.createParticipant(3L, "name", "USER", ""),
+                entityHelper.createParticipant(4L, "name", "USER", "")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, participants, text, name);
         Long conversationId = conversation.getId();
         int messagesInitialSize = conversation.getMessages().size();
         String participantAddedMessage = "added";
 
+        entityHelper.createParticipant(5L, "name", "USER", "");
+
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
         addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", ""));
-        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", "")));
+        addParticipantsDto.setSubjects(new HashSet<>(
+                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/participants")
-                .accept(APPLICATION_JSON_VALUE)
-                .contentType(APPLICATION_JSON_VALUE)
-                .content(addParticipantJson)
-                .header("Authorization",TOKEN))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("id", is(conversationId.intValue())))
-                .andExpect(jsonPath("admin.id", is(authorId.intValue())))
-                .andExpect(jsonPath("participants", hasSize(participantIds.size())))
-                .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
-                .andExpect(jsonPath("messages[0].text", is(text)))
-                .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("messages[0].unread", is(false)))
-                .andExpect(jsonPath("messages[0].system", is(false)))
-                .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
-                .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[1].subject.id", is(addedParticipantId.intValue())))
-                .andExpect(jsonPath("messages[1].unread", is(false)))
-                .andExpect(jsonPath("messages[1].system", is(true)))
-                .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
-                .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                .andExpect(jsonPath("lastMessage.unread", is(false)))
-                .andExpect(jsonPath("lastMessage.system", is(true)))
-                .andExpect(jsonPath("lastMessage.subject.id", is(addedParticipantId.intValue())))
-                .andExpect(jsonPath("type", is(CONFERENCE)));
-    }
-
-    @Test
-    public void testAddParticipantWithNotExistentSubject() throws Exception {
-        Long authorId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
-        String text = "text";
-        String name = "name";
-        Long addedParticipantId = 5L;
-        Set<Long> participantIds = new HashSet<>(receiverIds);
-        participantIds.add(authorId);
-        participantIds.add(addedParticipantId);
-
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
-        Long conversationId = conversation.getId();
-
-        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", null));
-        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", null)));
-
-        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
-
-        mvc.perform(post("/api/conversations/" + conversationId + "/participants")
-                .accept(APPLICATION_JSON_VALUE)
-                .contentType(APPLICATION_JSON_VALUE)
-                .content(addParticipantJson)
-                .header("Authorization",TOKEN))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(equalTo("Non-existent participants are being added to a conversation.")));
-    }
-
-    @Test
-    public void testRemoveParticipant() throws Exception {
-        Long authorId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L, 4L));
-        String text = "text";
-        String name = "name";
-        Long removedParticipantId = 4L;
-        Set<Long> participantIds = new HashSet<>(receiverIds);
-        participantIds.add(authorId);
-        participantIds.add(removedParticipantId);
-
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
-        Long conversationId = conversation.getId();
-        int messagesInitialSize = conversation.getMessages().size();
-        String participantRemovedMessage = "removed";
-
-        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", null));
-        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(removedParticipantId, "name", "USER", null)));
-
-        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
-
-        String url = "/api/conversations/" + conversationId + "/participants/" + removedParticipantId + "?initiator=" + authorId;
-
-        mvc.perform(delete(url)
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
@@ -651,7 +676,81 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("participants", hasSize(participantIds.size() - 1)))
+                    .andExpect(jsonPath("participants", hasSize(participantIds.size())))
+                    .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
+                    .andExpect(jsonPath("messages[0].text", is(text)))
+                    .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].unread", is(false)))
+                    .andExpect(jsonPath("messages[0].system", is(false)))
+                    .andExpect(jsonPath("messages[1].text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[1].subject.id", is(addedParticipantId.intValue())))
+                    .andExpect(jsonPath("messages[1].unread", is(false)))
+                    .andExpect(jsonPath("messages[1].system", is(true)))
+                    .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
+                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.unread", is(false)))
+                    .andExpect(jsonPath("lastMessage.system", is(true)))
+                    .andExpect(jsonPath("lastMessage.subject.id", is(addedParticipantId.intValue())))
+                    .andExpect(jsonPath("type", is(CONFERENCE)));
+    }
+
+    @Test
+    public void testAddParticipantWithNotExistentSubject() throws Exception {
+        Long authorId = 1L;
+        Long addedParticipantId = 5L;
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "USER", "");
+        Participant receiver = entityHelper.createParticipant(2L, "name", "USER", "");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, "text", "name");
+        Long conversationId = conversation.getId();
+
+        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
+        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", null));
+        addParticipantsDto.setSubjects(new HashSet<>(
+                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", null))));
+
+        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
+
+        mvc.perform(post("/api/conversations/" + conversationId + "/participants")
+                .accept(APPLICATION_JSON_VALUE)
+                .contentType(APPLICATION_JSON_VALUE)
+                .content(addParticipantJson)
+                .header("Authorization",TOKEN))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(equalTo("No subjects found in database")));
+    }
+
+    @Test
+    public void testRemoveParticipant() throws Exception {
+        Long authorId = 1L;
+        String text = "text";
+        String name = "name";
+        Long removedParticipantId = 4L;
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
+        Long conversationId = conversation.getId();
+        int messagesInitialSize = conversation.getMessages().size();
+        String participantRemovedMessage = "removed";
+        String url = "/api/conversations/" + conversationId + "/participants/" + removedParticipantId + "?initiator=" + authorId;
+
+        mvc.perform(delete(url)
+                .contentType(APPLICATION_JSON_VALUE)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("id", is(conversationId.intValue())))
+                    .andExpect(jsonPath("admin.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("participants", hasSize(3)))
                     .andExpect(jsonPath("messages", hasSize(messagesInitialSize + 1)))
                     .andExpect(jsonPath("messages[0].text", is(text)))
                     .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
@@ -676,34 +775,54 @@ public class ConversationControllerIntegrationTest {
         Long authorId = 1L;
         Long removedParticipantId = 4L;
         Long nonExistentConversationId = 444L;
+        String url = "/api/conversations/" + nonExistentConversationId + "/participants/" +
+                removedParticipantId + "?initiator=" + authorId;
 
-        AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", null));
-        addParticipantsDto.setSubjects(Arrays.asList(new ParticipantDto(removedParticipantId, "name", "USER", null)));
-
-        String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
-
-        mvc.perform(post("/api/conversations/" + nonExistentConversationId + "/participants")
-                .accept(APPLICATION_JSON_VALUE)
+        mvc.perform(delete(url)
                 .contentType(APPLICATION_JSON_VALUE)
-                .content(addParticipantJson)
                 .header("Authorization",TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(content().string(equalTo("Conversation with id '444' has not been found.")));
     }
 
     @Test
+    public void testRemoveParticipantFromConversationOf2() throws Exception {
+        Long authorId = 1L;
+        Long removedParticipantId = 4L;
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, "text", "");
+        String url = "/api/conversations/" + conversation.getId() + "/participants/" +
+                removedParticipantId + "?initiator=" + authorId;
+
+        mvc.perform(delete(url)
+                .contentType(APPLICATION_JSON_VALUE)
+                .header("Authorization",TOKEN))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("errors.participants", is("Conversation may not contain from less than 2 participants.")));
+    }
+
+    @Test
     public void testCountNewConversations() throws Exception {
         Long authorId = 1L;
         Long receiver1Id = 2L;
-        Long receiver2Id = 3L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiver1Id, receiver2Id));
         String text = "text";
         String name = "name";
 
-        entityHelper.createConversation(authorId, receiverIds, text, name);
-        entityHelper.createConversation(authorId, receiverIds, text, name);
-        entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        entityHelper.createConversation(author, receivers, text, name);
+        entityHelper.createConversation(author, receivers, text, name);
+        entityHelper.createConversation(author, receivers, text, name);
 
         mvc.perform(head("/api/conversations?participant=" + receiver1Id)
                 .header("Authorization",TOKEN))
@@ -715,15 +834,18 @@ public class ConversationControllerIntegrationTest {
     public void testUpdateConversationName() throws Exception {
         Long authorId = 1L;
         String authorName = "author name";
-        Long receiver1Id = 2L;
-        Long receiver2Id = 3L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiver1Id, receiver2Id));
         String text = "text";
         String name = "name";
         String newName = "new name";
         String conversationRenamedMessage = "renamed a conversation to \"" + newName + "\"";
 
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
 
         UpdateConversationNameDto updateConversationNameDto = new UpdateConversationNameDto();
@@ -762,12 +884,17 @@ public class ConversationControllerIntegrationTest {
     public void testReadMessages() throws Exception {
         Long authorId = 1L;
         Long receiver1Id = 2L;
-        Long receiver2Id = 3L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiver1Id, receiver2Id));
         String text = "text";
         String name = "name";
 
-        Conversation conversation = entityHelper.createConversation(authorId, receiverIds, text, name);
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         List<Long> messagesIds = messages.stream().map(Message::getId).collect(toList());
@@ -786,10 +913,10 @@ public class ConversationControllerIntegrationTest {
     }
 
     private String getCreateConversationDtoJson(
-            Long authorId, Set<Long> receivers, String text, String name) throws Exception {
+            Participant author, Set<Participant> receivers, String text, String name) throws Exception {
         CreateConversationDto createConversationDto = new CreateConversationDto();
-        createConversationDto.setAuthor(new ParticipantDto(authorId, "name", "USER", null));
-        createConversationDto.setReceivers(receivers.stream().map(id -> new ParticipantDto(id, "name", "USER", null)).collect(toSet()));
+        createConversationDto.setAuthor(author != null ? new ParticipantDto(author) : null);
+        createConversationDto.setReceivers(receivers.stream().map(ParticipantDto::new).collect(toSet()));
         createConversationDto.setText(text);
         createConversationDto.setName(name);
 

@@ -5,6 +5,7 @@ import club.tempvs.message.domain.Participant;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ParticipantDto implements Validateable {
 
@@ -77,5 +78,18 @@ public class ParticipantDto implements Validateable {
         if (!errors.isEmpty()) {
             throw new BadRequestException(String.join("\n", errors));
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ParticipantDto that = (ParticipantDto) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

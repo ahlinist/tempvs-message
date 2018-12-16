@@ -14,7 +14,7 @@ public interface ConversationService {
     List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size);
     Conversation addMessage(Conversation conversation, Message message);
     Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed);
-    Conversation addParticipants(Conversation conversation, Participant adder, List<Participant> added);
+    Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added);
     Conversation findDialogue(Participant author, Participant receiver);
     long countUpdatedConversationsPerParticipant(Participant participant);
     Conversation updateName(Conversation conversation, Participant initiator, String name);

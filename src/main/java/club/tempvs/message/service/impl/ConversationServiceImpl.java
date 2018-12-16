@@ -115,32 +115,15 @@ public class ConversationServiceImpl implements ConversationService {
             }).collect(toList());
     }
 
-    public Conversation addParticipants(Conversation conversation, Participant adder, List<Participant> added) {
+    public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
         Set<Participant> initialParticipants = conversation.getParticipants();
-
-        initialParticipants.stream().forEach(participant -> {
-            if (added.contains(participant)) {
-                throw new IllegalArgumentException("The participant being added is already present in the conversation.");
-            }
-        });
-
-        if (initialParticipants.size() == 20) {
-            throw new IllegalArgumentException("Conversation may have only 20 participants max.");
-        }
-
-        Participant admin = conversation.getAdmin();
-        Conversation.Type type = conversation.getType();
-
-        if (type == Conversation.Type.CONFERENCE && (admin == null || !admin.equals(adder))) {
-            throw new IllegalArgumentException("Participants can be added only by admin.");
-        }
 
         Message message;
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
         receivers.remove(adder);
 
-        if (type == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
+        if (conversation.getType() == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
             receivers.addAll(added);
             message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null);
             return createConversation(adder, receivers, null, message);
@@ -160,18 +143,6 @@ public class ConversationServiceImpl implements ConversationService {
 
     public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {
         Set<Participant> participants = conversation.getParticipants();
-
-        if (participants.size() <= 2) {
-            throw new IllegalArgumentException("Conversation has only 2 participants. One can't delete one of them.");
-        }
-
-        Participant admin = conversation.getAdmin();
-        boolean isSelfRemoval = removed.equals(remover);
-
-        if ((admin == null || !admin.equals(remover)) && !isSelfRemoval) {
-            throw new IllegalArgumentException("Participants can be removed only by admin or by themselves.");
-        }
-
         conversation.removeParticipant(removed);
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new LinkedHashSet<>(participants);
@@ -180,7 +151,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         Message message;
 
-        if (isSelfRemoval) {
+        if (removed.equals(remover)) {
             message = messageService.createMessage(remover, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem, null);
 
         } else {

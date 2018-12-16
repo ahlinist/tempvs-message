@@ -26,6 +26,12 @@ public class ConversationController {
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
+    private static final String PARTICIPANTS_FIELD = "participants";
+    private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
+    private static final String CANT_DELETE_PARTICIPANT = "conversation.participant.cant.delete";
+    private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
+    private static final String TYPE_MISMATCH = "conversation.participant.type.mismatch";
+    private static final String PERIOD_MISMATCH = "conversation.participant.period.mismatch";
 
     private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
@@ -222,30 +228,66 @@ public class ConversationController {
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
+        ErrorsDto errorsDto = validationHelper.getErrors();
         authHelper.authenticate(token);
-        addParticipantsDto.validate();
         Locale locale = localeHelper.getLocale(lang);
+        ParticipantDto initiatorDto = addParticipantsDto.getInitiator();
+        Set<ParticipantDto> subjectDtos = addParticipantsDto.getSubjects();
+
+        if (initiatorDto == null) {
+            throw new IllegalStateException("Initiator is not specified");
+        }
+
+        if (subjectDtos == null || subjectDtos.isEmpty()) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_EMPTY, null, locale);
+            validationHelper.processErrors(errorsDto);
+        }
+
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
-        Long initiatorId = addParticipantsDto.getInitiator().getId();
+        Long initiatorId = initiatorDto.getId();
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
-            throw new BadRequestException("Participant with id " + initiatorId + " does not exist");
+            throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
         }
 
-        List<Participant> subjects = addParticipantsDto.getSubjects().stream()
-                .map(ParticipantDto::getId)
-                .map(participantService::getParticipant).collect(toList());
+        Set<Participant> subjects = subjectDtos.stream()
+                //TODO: implement "participantService#getParticipants()" for bulk retrieval
+                .map(dto -> participantService.getParticipant(dto.getId()))
+                .filter(Objects::nonNull)
+                .collect(toSet());
 
-        if (subjects.contains(null)) {
-            throw new BadRequestException("Non-existent participants are being added to a conversation.");
+        if (subjects == null || subjects.isEmpty()) {
+            throw new IllegalStateException("No subjects found in database");
         }
 
+        Set<Participant> participants = conversation.getParticipants();
+
+        if (participants.size() + subjects.size() > 20 || participants.size() + subjects.size() < 2) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE, null, locale);
+            validationHelper.processErrors(errorsDto);
+        }
+
+        if (participants.stream().filter(subjects::contains).findAny().isPresent()) {
+            throw new IllegalStateException("An existent member is being added to a conversation.");
+        }
+
+        Participant aParticipant = participants.iterator().next();
+        String type = aParticipant.getType();
+        String period = aParticipant.getPeriod();
+
+        if (subjects.stream().anyMatch(subject -> subject.getType() !=type)) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH, null, locale);
+        } else if (subjects.stream().anyMatch(subject -> subject.getPeriod() != period)) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH, null, locale);
+        }
+
+        validationHelper.processErrors(errorsDto);
         Conversation result = conversationService.addParticipants(conversation, initiator, subjects);
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
@@ -260,11 +302,17 @@ public class ConversationController {
             @PathVariable("subjectId") Long subjectId,
             @RequestParam("initiator") Long initiatorId) {
         authHelper.authenticate(token);
+        ErrorsDto errorsDto = validationHelper.getErrors();
         Locale locale = localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
+        }
+
+        if (conversation.getParticipants().size() <= 2) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CANT_DELETE_PARTICIPANT, null, locale);
+            validationHelper.processErrors(errorsDto);
         }
 
         Participant initiator = participantService.getParticipant(initiatorId);
@@ -273,7 +321,12 @@ public class ConversationController {
             throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
         }
 
+        Participant admin = conversation.getAdmin();
         Participant subject = participantService.getParticipant(subjectId);
+
+        if ((admin == null || !admin.equals(initiator)) && !admin.equals(subject)) {
+            throw new ForbiddenException("Only admin user can remove participants from a conversation");
+        }
 
         if (subject == null) {
             throw new IllegalStateException("Participant with id " + subjectId + " does not exist");

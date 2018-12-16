@@ -207,7 +207,7 @@ public class ConversationServiceTest {
     public void testAddParticipantForConversationOf2() {
         String text = "conversation.conference.created";
         Boolean isSystem = Boolean.TRUE;
-        List<Participant> participantsToAdd = Arrays.asList(oneMoreReceiver);
+        Set<Participant> participantsToAdd = new HashSet<>(Arrays.asList(oneMoreReceiver));
         Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
         Set<Participant> receivers = new HashSet<>(initialParticipants);
         receivers.add(oneMoreReceiver);
@@ -218,7 +218,6 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(newConversation);
-        when(conversation.getAdmin()).thenReturn(author);
         when(messageService.createMessage(author, receivers, text, isSystem, null)).thenReturn(message);
         when(newConversation.getParticipants()).thenReturn(finalParticipants);
         when(conversationRepository.save(newConversation)).thenReturn(newConversation);
@@ -227,7 +226,6 @@ public class ConversationServiceTest {
 
         verify(conversation).getParticipants();
         verify(conversation).getType();
-        verify(conversation).getAdmin();
         verify(messageService).createMessage(author, receivers, text, isSystem, null);
         verify(objectFactory).getInstance(Conversation.class);
         verify(newConversation).addParticipant(receiver);
@@ -247,25 +245,11 @@ public class ConversationServiceTest {
         assertEquals("New conversation is returned as a result", newConversation, result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddAlreadyPresentParticipantToConversationOf2() {
-        List<Participant> participantsToAdd = Arrays.asList(receiver);
-        Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
-
-        when(conversation.getParticipants()).thenReturn(initialParticipants);
-
-        conversationService.addParticipants(conversation, author, participantsToAdd);
-
-        verify(conversation).getParticipants();
-        verifyNoMoreInteractions(author, conversation,
-                newConversation, objectFactory, messageService, conversationRepository);
-    }
-
     @Test
     public void testAddParticipantForConversationOf4() {
         String text = "conversation.add.participant";
         Boolean isSystem = Boolean.TRUE;
-        List<Participant> participantsToAdd = Arrays.asList(oneMoreReceiver);
+        Set<Participant> participantsToAdd = new HashSet<>(Arrays.asList(oneMoreReceiver));
         Set<Participant> initialParticipants = new HashSet<>();
         initialParticipants.add(author);
         initialParticipants.add(receiver);
@@ -276,7 +260,6 @@ public class ConversationServiceTest {
 
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
-        when(conversation.getAdmin()).thenReturn(author);
         when(messageService.createMessage(author, receivers, text, isSystem, null, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
@@ -284,7 +267,6 @@ public class ConversationServiceTest {
 
         verify(conversation).getParticipants();
         verify(conversation).getType();
-        verify(conversation).getAdmin();
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
@@ -302,14 +284,12 @@ public class ConversationServiceTest {
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(oneMoreReceiver, participant));
 
-        when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, receivers, text, isSystem, null, receiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, receiver);
 
-        verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(receiver);
         verify(messageService).createMessage(author, receivers, text, isSystem, null,receiver);
@@ -329,14 +309,12 @@ public class ConversationServiceTest {
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, oneMoreReceiver, participant));
 
-        when(conversation.getAdmin()).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, receivers, text, isSystem, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, author);
 
-        verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(author);
         verify(messageService).createMessage(author, receivers, text, isSystem, null);
@@ -347,38 +325,6 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(conversation, message, messageService, conversationRepository);
 
         assertEquals("Conversation is returned as a result", conversation, result);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveParticipantFor2MembersOnly() {
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
-
-        when(conversation.getParticipants()).thenReturn(participants);
-
-        conversationService.removeParticipant(conversation, author, receiver);
-
-        verify(conversation).getParticipants();
-        verifyNoMoreInteractions(conversation, conversationRepository);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveParticipantByNonAdmin() {
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
-        participants.add(oneMoreReceiver);
-        participants.add(participant);
-
-        when(conversation.getAdmin()).thenReturn(oneMoreReceiver);
-        when(conversation.getParticipants()).thenReturn(participants);
-
-        conversationService.removeParticipant(conversation, author, receiver);
-
-        verify(conversation).getAdmin();
-        verify(conversation).getParticipants();
-        verifyNoMoreInteractions(conversation, conversationRepository);
     }
 
     @Test
