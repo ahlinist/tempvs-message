@@ -803,7 +803,7 @@ public class ConversationControllerIntegrationTest {
                 .contentType(APPLICATION_JSON_VALUE)
                 .header("Authorization",TOKEN))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("errors.participants", is("Conversation may not contain from less than 2 participants.")));
+                    .andExpect(jsonPath("errors.participants", is("Conversation may not contain less than 2 participants.")));
     }
 
     @Test
