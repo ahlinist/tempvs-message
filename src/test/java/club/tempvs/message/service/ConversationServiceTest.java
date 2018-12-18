@@ -286,8 +286,8 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(oneMoreReceiver.getType()).thenReturn(clubType);
         when(oneMoreReceiver.getPeriod()).thenReturn(antiquity);
-        when(author.getType()).thenReturn(clubType);
-        when(author.getPeriod()).thenReturn(antiquity);
+        when(participant.getType()).thenReturn(clubType);
+        when(participant.getPeriod()).thenReturn(antiquity);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
         when(messageService.createMessage(author, receivers, text, isSystem, null, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
@@ -298,8 +298,8 @@ public class ConversationServiceTest {
         verify(conversation).getParticipants();
         verify(oneMoreReceiver).getType();
         verify(oneMoreReceiver).getPeriod();
-        verify(author).getType();
-        verify(author).getPeriod();
+        verify(participant).getType();
+        verify(participant).getPeriod();
         verify(conversation).getType();
         verify(validationHelper).processErrors(errorsDto);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
