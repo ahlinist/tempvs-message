@@ -215,6 +215,8 @@ public class ConversationServiceTest {
     @Test
     public void testAddParticipantForConversationOf2() {
         String text = "conversation.conference.created";
+        String userType = "USER";
+        String emptyString = "";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participantsToAdd = new HashSet<>(Arrays.asList(oneMoreReceiver));
         Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
@@ -224,7 +226,12 @@ public class ConversationServiceTest {
         Set<Participant> finalParticipants = new HashSet<>(initialParticipants);
         finalParticipants.add(oneMoreReceiver);
 
+        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversation.getParticipants()).thenReturn(initialParticipants);
+        when(author.getType()).thenReturn(userType);
+        when(author.getPeriod()).thenReturn(emptyString);
+        when(oneMoreReceiver.getType()).thenReturn(userType);
+        when(oneMoreReceiver.getPeriod()).thenReturn(emptyString);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(newConversation);
         when(messageService.createMessage(author, receivers, text, isSystem, null)).thenReturn(message);
@@ -233,8 +240,14 @@ public class ConversationServiceTest {
 
         Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
+        verify(validationHelper).getErrors();
         verify(conversation).getParticipants();
+        verify(oneMoreReceiver).getType();
+        verify(oneMoreReceiver).getPeriod();
+        verify(author).getType();
+        verify(author).getPeriod();
         verify(conversation).getType();
+        verify(validationHelper).processErrors(errorsDto);
         verify(messageService).createMessage(author, receivers, text, isSystem, null);
         verify(objectFactory).getInstance(Conversation.class);
         verify(newConversation).addParticipant(receiver);
@@ -248,7 +261,7 @@ public class ConversationServiceTest {
         verify(newConversation).setAdmin(author);
         verify(newConversation).setType(Conversation.Type.CONFERENCE);
         verify(conversationRepository).save(newConversation);
-        verifyNoMoreInteractions(author, conversation,
+        verifyNoMoreInteractions(author, conversation, validationHelper, oneMoreReceiver,
                 newConversation, objectFactory, messageService, conversationRepository);
 
         assertEquals("New conversation is returned as a result", newConversation, result);
@@ -257,6 +270,8 @@ public class ConversationServiceTest {
     @Test
     public void testAddParticipantForConversationOf4() {
         String text = "conversation.add.participant";
+        String clubType = "CLUB";
+        String antiquity = "ANTIQUITY";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participantsToAdd = new HashSet<>(Arrays.asList(oneMoreReceiver));
         Set<Participant> initialParticipants = new HashSet<>();
@@ -267,21 +282,33 @@ public class ConversationServiceTest {
         receivers.add(oneMoreReceiver);
         receivers.remove(author);
 
+        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversation.getParticipants()).thenReturn(initialParticipants);
+        when(oneMoreReceiver.getType()).thenReturn(clubType);
+        when(oneMoreReceiver.getPeriod()).thenReturn(antiquity);
+        when(author.getType()).thenReturn(clubType);
+        when(author.getPeriod()).thenReturn(antiquity);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
         when(messageService.createMessage(author, receivers, text, isSystem, null, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
+        verify(validationHelper).getErrors();
         verify(conversation).getParticipants();
+        verify(oneMoreReceiver).getType();
+        verify(oneMoreReceiver).getPeriod();
+        verify(author).getType();
+        verify(author).getPeriod();
         verify(conversation).getType();
+        verify(validationHelper).processErrors(errorsDto);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(conversation).addParticipant(oneMoreReceiver);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(author, conversation, objectFactory, messageService, conversationRepository);
+        verifyNoMoreInteractions(author, conversation, objectFactory, messageService, conversationRepository,
+                validationHelper, oneMoreReceiver);
 
         assertEquals("Conversation is returned as a result", conversation, result);
     }

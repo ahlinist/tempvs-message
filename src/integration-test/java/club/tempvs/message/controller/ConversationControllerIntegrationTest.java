@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 import java.util.*;
+import java.util.stream.LongStream;
+
 import static java.util.stream.Collectors.*;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -606,13 +608,13 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testAddParticipantToDialogueForMismatchingPeriods() throws Exception {
         Long authorId = 1L;
-        Long receiverId = 2L;
-        Long addedParticipantId = 3L;
+        Long addedParticipantId = 33L;
+
+        Set<Participant> receivers = LongStream.rangeClosed(2L, 22L).boxed()
+                .map(i -> entityHelper.createParticipant(i, "name", "CLUB", "EARLY_MIDDLE_AGES"))
+                .collect(toSet());
 
         Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "EARLY_MIDDLE_AGES");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(receiverId, "name", "CLUB", "EARLY_MIDDLE_AGES")
-        ));
 
         Conversation conversation = entityHelper.createConversation(author, receivers, "an initial text", "");
         Long conversationId = conversation.getId();
@@ -633,7 +635,8 @@ public class ConversationControllerIntegrationTest {
                 .header("Authorization",TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants",
-                            is("Conversation can contain only participants of the same period")));
+                            is("Conversation may contain 2 min and 20 max participants" +
+                                    "\nConversation can contain only participants of the same period")));
     }
 
     @Test

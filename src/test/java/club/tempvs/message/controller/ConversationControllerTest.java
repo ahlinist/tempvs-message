@@ -13,7 +13,6 @@ import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.AuthHelper;
 import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
-import club.tempvs.message.util.ValidationHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,8 +43,6 @@ public class ConversationControllerTest {
     private ParticipantService participantService;
     @Mock
     private MessageService messageService;
-    @Mock
-    private ValidationHelper validationHelper;
     @Mock
     private ObjectFactory objectFactory;
     @Mock
@@ -88,7 +85,7 @@ public class ConversationControllerTest {
     @Before
     public void setup() {
         conversationController = new ConversationController(objectFactory, conversationService, participantService,
-                messageService, authHelper, localeHelper, validationHelper);
+                messageService, authHelper, localeHelper);
     }
 
     @Test
@@ -417,13 +414,11 @@ public class ConversationControllerTest {
         int page = 0;
         int max = 40;
         String timeZone = "UTC";
-        String userType = "USER";
         List<Message> messages = Arrays.asList(message, message);
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
         Set<Participant> participants = new HashSet<>(Arrays.asList(participant));
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
         when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
@@ -432,8 +427,6 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
-        when(participant.getType()).thenReturn(userType);
-        when(receiver.getType()).thenReturn(userType);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, locale, page, max)).thenReturn(messages);
@@ -441,7 +434,6 @@ public class ConversationControllerTest {
 
         GetConversationDto result = conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
 
-        verify(validationHelper).getErrors();
         verify(localeHelper).getLocale(lang);
         verify(conversationService).getConversation(conversationId);
         verify(addParticipantsDto).getInitiator();
@@ -451,16 +443,11 @@ public class ConversationControllerTest {
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversation).getParticipants();
-        verify(receiver).getType();
-        verify(participant).getType();
-        verify(receiver).getPeriod();
-        verify(participant).getPeriod();
-        verify(validationHelper).processErrors(errorsDto);
         verify(conversationService).addParticipants(conversation, author, receivers);
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
         verifyNoMoreInteractions(authorDto, receiverDto, conversationService, addParticipantsDto, participantService,
-                objectFactory, validationHelper, errorsDto, conversation, receiver, author);
+                objectFactory, errorsDto, conversation, receiver, author);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
@@ -470,21 +457,8 @@ public class ConversationControllerTest {
         Long conversationId = 1L;
         String timeZone = "UTC";
 
+        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(addParticipantsDto.getInitiator()).thenReturn(null);
-
-        conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddParticipantForNoSubjectsProvided() {
-        Long conversationId = 1L;
-        String timeZone = "UTC";
-
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
-        when(addParticipantsDto.getSubjects()).thenReturn(new HashSet<>());
-        doThrow(new IllegalArgumentException()).when(validationHelper).processErrors(errorsDto);
 
         conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
     }
@@ -493,13 +467,8 @@ public class ConversationControllerTest {
     public void testAddParticipantForNonExistentConversation() {
         Long conversationId = 1L;
         String timeZone = "UTC";
-        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(localeHelper.getLocale(lang)).thenReturn(locale);
-        when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
-        when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
         conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
@@ -511,7 +480,6 @@ public class ConversationControllerTest {
         Long initiatorId = 2L;
         String timeZone = "UTC";
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(initiatorId);
@@ -528,7 +496,6 @@ public class ConversationControllerTest {
         Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
         String timeZone = "UTC";
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(initiatorId);
@@ -537,64 +504,6 @@ public class ConversationControllerTest {
         when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
         when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(subjectId)).thenReturn(null);
-
-        conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddParticipantsForMismatchingType() {
-        Long conversationId = 1L;
-        Long initiatorId = 2L;
-        Long subjectId = 3L;
-        String userType = "USER";
-        String clubType = "CLUB";
-        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
-        Set<Participant> participants = new HashSet<>(Arrays.asList(participant));
-        String timeZone = "UTC";
-
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        when(localeHelper.getLocale(lang)).thenReturn(locale);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
-        when(authorDto.getId()).thenReturn(initiatorId);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
-        when(receiverDto.getId()).thenReturn(subjectId);
-        when(participantService.getParticipant(subjectId)).thenReturn(receiver);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(receiver.getType()).thenReturn(userType);
-        when(participant.getType()).thenReturn(clubType);
-        doThrow(new IllegalArgumentException()).when(validationHelper).processErrors(errorsDto);
-
-        conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddParticipantsForMismatchingPeriod() {
-        Long conversationId = 1L;
-        Long initiatorId = 2L;
-        Long subjectId = 3L;
-        String receiverPeriod = "ANTIQUITY";
-        String participantPeriod = "EARLY_MIDDLE_AGES";
-        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
-        Set<Participant> participants = new HashSet<>(Arrays.asList(participant));
-        String timeZone = "UTC";
-        String clubType = "CLUB";
-
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
-        when(authorDto.getId()).thenReturn(initiatorId);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
-        when(receiverDto.getId()).thenReturn(subjectId);
-        when(participantService.getParticipant(subjectId)).thenReturn(receiver);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(participant.getType()).thenReturn(clubType);
-        when(receiver.getType()).thenReturn(clubType);
-        when(receiver.getPeriod()).thenReturn(receiverPeriod);
-        when(receiver.getPeriod()).thenReturn(participantPeriod);
-        doThrow(new IllegalArgumentException()).when(validationHelper).processErrors(errorsDto);
 
         conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
     }
@@ -608,7 +517,6 @@ public class ConversationControllerTest {
         Set<Participant> participants = new HashSet<>(Arrays.asList(receiver));
         String timeZone = "UTC";
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(addParticipantsDto.getInitiator()).thenReturn(authorDto);
         when(authorDto.getId()).thenReturn(initiatorId);
@@ -648,8 +556,7 @@ public class ConversationControllerTest {
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, locale, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
-        verifyNoMoreInteractions(authorDto, receiverDto, conversationService, participantService, objectFactory,
-                validationHelper, conversation);
+        verifyNoMoreInteractions(authorDto, receiverDto, conversationService, participantService, objectFactory, conversation);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }

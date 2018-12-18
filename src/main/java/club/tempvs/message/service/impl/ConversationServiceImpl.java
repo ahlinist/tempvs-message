@@ -32,6 +32,10 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String CONVERSATION_RENAMED = "conversation.update.name";
     private static final String PARTICIPANTS_FIELD = "participants";
     private static final String CANT_DELETE_PARTICIPANT = "conversation.participant.cant.delete";
+    private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
+    private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
+    private static final String TYPE_MISMATCH = "conversation.participant.type.mismatch";
+    private static final String PERIOD_MISMATCH = "conversation.participant.period.mismatch";
 
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
@@ -125,7 +129,28 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
+        Locale locale = LocaleContextHolder.getLocale();
+        ErrorsDto errorsDto = validationHelper.getErrors();
+
+        if (added == null || added.isEmpty()) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_EMPTY, null, locale);
+        }
+
         Set<Participant> initialParticipants = conversation.getParticipants();
+
+        if (initialParticipants.size() + added.size() > 20) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE, null, locale);
+        }
+
+        Participant aParticipant = initialParticipants.iterator().next();
+
+        if (added.stream().anyMatch(subject -> !subject.getType().equals(aParticipant.getType()))) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH, null, locale);
+        } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(aParticipant.getPeriod()))) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH, null, locale);
+        }
+
+        validationHelper.processErrors(errorsDto);
 
         Message message;
         Boolean isSystem = Boolean.TRUE;

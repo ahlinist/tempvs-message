@@ -26,11 +26,6 @@ public class ConversationController {
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
-    private static final String PARTICIPANTS_FIELD = "participants";
-    private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
-    private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
-    private static final String TYPE_MISMATCH = "conversation.participant.type.mismatch";
-    private static final String PERIOD_MISMATCH = "conversation.participant.period.mismatch";
 
     private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
@@ -38,7 +33,6 @@ public class ConversationController {
     private final MessageService messageService;
     private final AuthHelper authHelper;
     private final LocaleHelper localeHelper;
-    private final ValidationHelper validationHelper;
 
     @Autowired
     public ConversationController(ObjectFactory objectFactory,
@@ -46,15 +40,13 @@ public class ConversationController {
                                   ParticipantService participantService,
                                   MessageService messageService,
                                   AuthHelper authHelper,
-                                  LocaleHelper localeHelper,
-                                  ValidationHelper validationHelper) {
+                                  LocaleHelper localeHelper) {
         this.objectFactory = objectFactory;
         this.conversationService = conversationService;
         this.participantService = participantService;
         this.messageService = messageService;
         this.authHelper = authHelper;
         this.localeHelper = localeHelper;
-        this.validationHelper = validationHelper;
     }
 
     @GetMapping("/ping")
@@ -227,25 +219,19 @@ public class ConversationController {
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
-        ErrorsDto errorsDto = validationHelper.getErrors();
         authHelper.authenticate(token);
         Locale locale = localeHelper.getLocale(lang);
+        Conversation conversation = conversationService.getConversation(conversationId);
+
+        if (conversation == null) {
+            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
+        }
+
         ParticipantDto initiatorDto = addParticipantsDto.getInitiator();
         Set<ParticipantDto> subjectDtos = addParticipantsDto.getSubjects();
 
         if (initiatorDto == null) {
             throw new IllegalStateException("Initiator is not specified");
-        }
-
-        if (subjectDtos == null || subjectDtos.isEmpty()) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_EMPTY, null, locale);
-            validationHelper.processErrors(errorsDto);
-        }
-
-        Conversation conversation = conversationService.getConversation(conversationId);
-
-        if (conversation == null) {
-            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
         Long initiatorId = initiatorDto.getId();
@@ -267,26 +253,10 @@ public class ConversationController {
 
         Set<Participant> participants = conversation.getParticipants();
 
-        if (participants.size() + subjects.size() > 20 || participants.size() + subjects.size() < 2) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE, null, locale);
-            validationHelper.processErrors(errorsDto);
-        }
-
         if (participants.stream().filter(subjects::contains).findAny().isPresent()) {
             throw new IllegalStateException("An existent member is being added to a conversation.");
         }
 
-        Participant aParticipant = participants.iterator().next();
-        String type = aParticipant.getType();
-        String period = aParticipant.getPeriod();
-
-        if (subjects.stream().anyMatch(subject -> !subject.getType().equals(type))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH, null, locale);
-        } else if (subjects.stream().anyMatch(subject -> subject.getPeriod() != period)) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH, null, locale);
-        }
-
-        validationHelper.processErrors(errorsDto);
         Conversation result = conversationService.addParticipants(conversation, initiator, subjects);
         List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
