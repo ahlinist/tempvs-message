@@ -142,12 +142,11 @@ public class ConversationServiceImpl implements ConversationService {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE, null, locale);
         }
 
-        String type = initialParticipants.stream().map(Participant::getType).findFirst().get();
-        String period = initialParticipants.stream().map(Participant::getPeriod).findFirst().get();
+        Participant aParticipant = initialParticipants.iterator().next();
 
-        if (added.stream().anyMatch(subject -> !subject.getType().equals(type))) {
+        if (added.stream().anyMatch(subject -> !subject.getType().equals(aParticipant.getType()))) {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH, null, locale);
-        } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(period))) {
+        } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(aParticipant.getPeriod()))) {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH, null, locale);
         }
 

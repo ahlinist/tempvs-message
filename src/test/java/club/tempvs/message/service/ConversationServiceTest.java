@@ -268,7 +268,7 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testAddParticipantForConversationOf4() {
+    public void testAddParticipantForConversationOf3() {
         String text = "conversation.add.participant";
         String clubType = "CLUB";
         String antiquity = "ANTIQUITY";
@@ -277,7 +277,6 @@ public class ConversationServiceTest {
         Set<Participant> initialParticipants = new HashSet<>();
         initialParticipants.add(author);
         initialParticipants.add(receiver);
-        initialParticipants.add(participant);
         Set<Participant> receivers = new HashSet<>(initialParticipants);
         receivers.add(oneMoreReceiver);
         receivers.remove(author);
@@ -286,8 +285,8 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(oneMoreReceiver.getType()).thenReturn(clubType);
         when(oneMoreReceiver.getPeriod()).thenReturn(antiquity);
-        when(participant.getType()).thenReturn(clubType);
-        when(participant.getPeriod()).thenReturn(antiquity);
+        when(author.getType()).thenReturn(clubType);
+        when(author.getPeriod()).thenReturn(antiquity);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
         when(messageService.createMessage(author, receivers, text, isSystem, null, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
@@ -298,8 +297,8 @@ public class ConversationServiceTest {
         verify(conversation).getParticipants();
         verify(oneMoreReceiver).getType();
         verify(oneMoreReceiver).getPeriod();
-        verify(participant).getType();
-        verify(participant).getPeriod();
+        verify(author).getType();
+        verify(author).getPeriod();
         verify(conversation).getType();
         verify(validationHelper).processErrors(errorsDto);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
@@ -307,7 +306,7 @@ public class ConversationServiceTest {
         verify(conversation).setLastMessage(message);
         verify(conversation).addParticipant(oneMoreReceiver);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(author, conversation, objectFactory, messageService, conversationRepository,
+        verifyNoMoreInteractions(author, receiver, conversation, objectFactory, messageService, conversationRepository,
                 validationHelper, oneMoreReceiver);
 
         assertEquals("Conversation is returned as a result", conversation, result);
