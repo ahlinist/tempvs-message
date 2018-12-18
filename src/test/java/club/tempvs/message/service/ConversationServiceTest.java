@@ -273,11 +273,9 @@ public class ConversationServiceTest {
         String clubType = "CLUB";
         String antiquity = "ANTIQUITY";
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> participantsToAdd = new HashSet<>(Arrays.asList(oneMoreReceiver));
-        Set<Participant> initialParticipants = new HashSet<>();
-        initialParticipants.add(author);
-        initialParticipants.add(receiver);
-        Set<Participant> receivers = new HashSet<>(initialParticipants);
+        Set<Participant> participantsToAdd = new LinkedHashSet<>(Arrays.asList(oneMoreReceiver));
+        Set<Participant> initialParticipants = new LinkedHashSet<>(Arrays.asList(author, receiver, participant));
+        Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
         receivers.add(oneMoreReceiver);
         receivers.remove(author);
 
