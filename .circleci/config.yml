@@ -25,7 +25,7 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: ./gradlew dependencies
+      - run: gradle dependencies
 
       - save_cache:
           paths:
@@ -33,7 +33,7 @@ jobs:
           key: v1-dependencies-{{ checksum "build.gradle" }}
 
       # run tests!
-      - run: ./gradlew test
+      - run: gradle test
       - run:
           name: Save test results
           command: |
@@ -44,7 +44,7 @@ jobs:
           path: ~/unit-test
 
       # run integration tests!
-      - run: ./gradlew integrationTest
+      - run: gradle integrationTest
       - run:
           name: Save integration-test results
           command: |
@@ -53,7 +53,7 @@ jobs:
           when: always
       - store_test_results:
           path: ~/integration-test
-      - run: ./gradlew clean stage
+      - run: gradle clean stage
       #store the build war
       - store_artifacts:
           path: ~/repo/build/libs
