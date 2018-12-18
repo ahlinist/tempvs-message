@@ -53,7 +53,7 @@ jobs:
           when: always
       - store_test_results:
           path: ~/integration-test
-      - run: gradle clean stage
+      - run: gradle clean stage -x test
       #store the build war
       - store_artifacts:
           path: ~/repo/build/libs
