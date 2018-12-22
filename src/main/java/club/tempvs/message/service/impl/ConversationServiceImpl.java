@@ -12,7 +12,6 @@ import club.tempvs.message.util.ObjectFactory;
 import club.tempvs.message.util.ValidationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,7 +30,9 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String CONFERENCE_CREATED = "conversation.conference.created";
     private static final String CONVERSATION_RENAMED = "conversation.update.name";
     private static final String PARTICIPANTS_FIELD = "participants";
-    private static final String CANT_DELETE_PARTICIPANT = "conversation.participant.cant.delete";
+    private static final String TEXT_FIELD = "text";
+    private static final String CONVERSATION_MIN_PARTICIPANTS_COUNT = "conversation.participant.2.min";
+    private static final String TEXT_EMPTY = "message.empty.text";
     private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
     private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
     private static final String TYPE_MISMATCH = "conversation.participant.type.mismatch";
@@ -58,7 +59,34 @@ public class ConversationServiceImpl implements ConversationService {
 
     public Conversation createConversation(
             Participant author, Set<Participant> receivers, String name, Message message) {
-        Conversation conversation = objectFactory.getInstance(Conversation.class);
+        if (receivers.size() == 1 && receivers.iterator().next().equals(author)) {
+            throw new IllegalStateException("Author can't be equal the only receiver");
+        }
+
+        ErrorsDto errorsDto = validationHelper.getErrors();
+        Conversation conversation;
+
+        if (receivers == null || receivers.isEmpty()) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CONVERSATION_MIN_PARTICIPANTS_COUNT);
+        }
+
+        String text = message.getText();
+
+        if (text == null || text.isEmpty()) {
+            validationHelper.addError(errorsDto, TEXT_FIELD, TEXT_EMPTY);
+        }
+
+        validationHelper.processErrors(errorsDto);
+
+        if (receivers.size() == 1) {
+            conversation = this.findDialogue(author, receivers.iterator().next());
+
+            if (conversation != null) {
+                return this.addMessage(conversation, message);
+            }
+        }
+
+        conversation = objectFactory.getInstance(Conversation.class);
         receivers.stream().forEach(conversation::addParticipant);
         conversation.addParticipant(author);
         conversation.setName(name);
@@ -84,17 +112,6 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.addMessage(message);
         conversation.setLastMessage(message);
         message.setConversation(conversation);
-        return conversationRepository.save(conversation);
-    }
-
-    private Conversation addMessages(Conversation conversation, List<Message> messages) {
-        conversation.setLastMessage(messages.get(messages.size() - 1));
-
-        messages.stream().forEach(message -> {
-            conversation.addMessage(message);
-            message.setConversation(conversation);
-        });
-
         return conversationRepository.save(conversation);
     }
 
@@ -129,25 +146,24 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
-        Locale locale = LocaleContextHolder.getLocale();
         ErrorsDto errorsDto = validationHelper.getErrors();
 
         if (added == null || added.isEmpty()) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_EMPTY, null, locale);
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_EMPTY);
         }
 
         Set<Participant> initialParticipants = conversation.getParticipants();
 
         if (initialParticipants.size() + added.size() > 20) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE, null, locale);
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
         }
 
         Participant aParticipant = initialParticipants.iterator().next();
 
         if (added.stream().anyMatch(subject -> !subject.getType().equals(aParticipant.getType()))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH, null, locale);
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH);
         } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(aParticipant.getPeriod()))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH, null, locale);
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH);
         }
 
         validationHelper.processErrors(errorsDto);
@@ -171,7 +187,14 @@ public class ConversationServiceImpl implements ConversationService {
                 messages.add(message);
             }
 
-            return addMessages(conversation, messages);
+            conversation.setLastMessage(messages.get(messages.size() - 1));
+
+            messages.stream().forEach(m -> {
+                conversation.addMessage(m);
+                m.setConversation(conversation);
+            });
+
+            return conversationRepository.save(conversation);
         }
     }
 
@@ -180,8 +203,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         if (participants.size() <= 2) {
             ErrorsDto errorsDto = validationHelper.getErrors();
-            Locale locale = LocaleContextHolder.getLocale();
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CANT_DELETE_PARTICIPANT, null, locale);
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CONVERSATION_MIN_PARTICIPANTS_COUNT);
             validationHelper.processErrors(errorsDto);
         }
 
@@ -210,10 +232,9 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation findDialogue(Participant author, Participant receiver) {
-        Set<Participant> authorSet = new LinkedHashSet<>();
-        authorSet.add(author);
-        Set<Participant> receiverSet = new LinkedHashSet<>();
-        receiverSet.add(receiver);
+        //TODO: improve the repository query to avoid redundant collections wrappings
+        Set<Participant> authorSet = new LinkedHashSet<>(Arrays.asList(author));
+        Set<Participant> receiverSet = new LinkedHashSet<>(Arrays.asList(receiver));
 
         return conversationRepository
                 .findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet);

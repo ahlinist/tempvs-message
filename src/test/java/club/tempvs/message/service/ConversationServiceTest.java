@@ -65,21 +65,73 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testCreateConversationOf2Participants() {
+    public void testCreateConversationOf2ParticipantsForExistentOne() {
+        String text = "text";
         String conversationName = "name";
-        Set<Participant> receivers = new HashSet<>();
-        receivers.add(receiver);
+        Set<Participant> authorSet = new HashSet<>(Arrays.asList(author));
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
         Set<Participant> participants = new HashSet<>();
         participants.add(author);
         participants.add(receiver);
 
+        when(validationHelper.getErrors()).thenReturn(errorsDto);
+        when(message.getText()).thenReturn(text);
+        when(conversationRepository.findOneByTypeAndParticipantsContainsAndParticipantsContains(
+                Conversation.Type.DIALOGUE, authorSet, receivers)).thenReturn(conversation);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
+
+        verify(validationHelper).getErrors();
+        verify(message).getText();
+        verify(validationHelper).processErrors(errorsDto);
+        verify(conversationRepository).findOneByTypeAndParticipantsContainsAndParticipantsContains(
+                Conversation.Type.DIALOGUE, authorSet, receivers);
+        verify(conversation).addMessage(message);
+        verify(conversation).setLastMessage(message);
+        verify(message).setConversation(conversation);
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(conversation, objectFactory, validationHelper, errorsDto,
+                author, receiver, message, messageService, conversationRepository);
+
+        assertEquals("Service returns a conversation instance", result, conversation);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testCreateConversationWhereAuthorEqualsTheOnlyReceiver() {
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(author));
+
+        conversationService.createConversation(author, receivers, null, message);
+    }
+
+    @Test
+    public void testCreateConversationOf2ParticipantsForNonExistentOne() {
+        String text = "text";
+        String conversationName = "name";
+        Set<Participant> authorSet = new HashSet<>(Arrays.asList(author));
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
+
+        Set<Participant> participants = new HashSet<>();
+        participants.add(author);
+        participants.add(receiver);
+
+        when(validationHelper.getErrors()).thenReturn(errorsDto);
+        when(message.getText()).thenReturn(text);
+        when(conversationRepository.findOneByTypeAndParticipantsContainsAndParticipantsContains(
+                Conversation.Type.DIALOGUE, authorSet, receivers)).thenReturn(null);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
 
+        verify(validationHelper).getErrors();
+        verify(message).getText();
+        verify(validationHelper).processErrors(errorsDto);
+        verify(conversationRepository).findOneByTypeAndParticipantsContainsAndParticipantsContains(
+                Conversation.Type.DIALOGUE, authorSet, receivers);
+        verify(objectFactory).getInstance(Conversation.class);
         verify(conversation).addParticipant(receiver);
         verify(conversation).addParticipant(author);
         verify(conversation).getParticipants();
@@ -89,13 +141,15 @@ public class ConversationServiceTest {
         verify(conversation).setType(Conversation.Type.DIALOGUE);
         verify(message).setConversation(conversation);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, author, receiver, message, conversationRepository);
+        verifyNoMoreInteractions(conversation, objectFactory, validationHelper,
+                author, receiver, message, messageService, conversationRepository);
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
 
     @Test
     public void testCreateConversationOf3Participants() {
+        String text = "text";
         String conversationName = "name";
         Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
@@ -106,12 +160,18 @@ public class ConversationServiceTest {
         participants.add(receiver);
         participants.add(oneMoreReceiver);
 
+        when(validationHelper.getErrors()).thenReturn(errorsDto);
+        when(message.getText()).thenReturn(text);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
 
+        verify(validationHelper).getErrors();
+        verify(message).getText();
+        verify(validationHelper).processErrors(errorsDto);
+        verify(objectFactory).getInstance(Conversation.class);
         verify(conversation).addParticipant(author);
         verify(conversation).addParticipant(receiver);
         verify(conversation).addParticipant(oneMoreReceiver);
@@ -123,7 +183,8 @@ public class ConversationServiceTest {
         verify(conversation).setType(Conversation.Type.CONFERENCE);
         verify(message).setConversation(conversation);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, author, receiver, message, conversationRepository);
+        verifyNoMoreInteractions(conversation, author, objectFactory, validationHelper, errorsDto,
+                receiver, oneMoreReceiver, message, messageService, conversationRepository);
 
         assertEquals("Service returns a conversation instance", result, conversation);
     }
@@ -213,17 +274,16 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testAddParticipantForConversationOf2() {
+    public void testAddParticipantToConversationOf2() {
         String text = "conversation.conference.created";
         String userType = "USER";
         String emptyString = "";
-        Boolean isSystem = Boolean.TRUE;
-        Set<Participant> participantsToAdd = new HashSet<>(Arrays.asList(oneMoreReceiver));
-        Set<Participant> initialParticipants = new HashSet<>(Arrays.asList(author, receiver));
-        Set<Participant> receivers = new HashSet<>(initialParticipants);
+        Set<Participant> participantsToAdd = new LinkedHashSet<>(Arrays.asList(oneMoreReceiver));
+        Set<Participant> initialParticipants = new LinkedHashSet<>(Arrays.asList(author, receiver));
+        Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
         receivers.add(oneMoreReceiver);
         receivers.remove(author);
-        Set<Participant> finalParticipants = new HashSet<>(initialParticipants);
+        Set<Participant> finalParticipants = new LinkedHashSet<>(initialParticipants);
         finalParticipants.add(oneMoreReceiver);
 
         when(validationHelper.getErrors()).thenReturn(errorsDto);
@@ -234,21 +294,23 @@ public class ConversationServiceTest {
         when(oneMoreReceiver.getPeriod()).thenReturn(emptyString);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(newConversation);
-        when(messageService.createMessage(author, receivers, text, isSystem, null)).thenReturn(message);
+        when(messageService.createMessage(author, receivers, text, true, null)).thenReturn(message);
+        when(message.getText()).thenReturn(text);
         when(newConversation.getParticipants()).thenReturn(finalParticipants);
         when(conversationRepository.save(newConversation)).thenReturn(newConversation);
 
         Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
-        verify(validationHelper).getErrors();
+        verify(validationHelper, times(2)).getErrors();
         verify(conversation).getParticipants();
         verify(oneMoreReceiver).getType();
         verify(oneMoreReceiver).getPeriod();
         verify(author).getType();
         verify(author).getPeriod();
         verify(conversation).getType();
-        verify(validationHelper).processErrors(errorsDto);
-        verify(messageService).createMessage(author, receivers, text, isSystem, null);
+        verify(validationHelper, times(2)).processErrors(errorsDto);
+        verify(messageService).createMessage(author, receivers, text, true, null);
+        verify(message).getText();
         verify(objectFactory).getInstance(Conversation.class);
         verify(newConversation).addParticipant(receiver);
         verify(newConversation).addParticipant(oneMoreReceiver);

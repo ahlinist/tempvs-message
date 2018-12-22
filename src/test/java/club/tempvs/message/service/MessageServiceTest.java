@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -84,7 +85,7 @@ public class MessageServiceTest {
         int size = 40;
         String text = "text";
         String translatedText = "translated text";
-        Locale locale = Locale.ENGLISH;
+        Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = Arrays.asList(message1, message1, message1);
         String[] args = new String[0];
@@ -94,7 +95,7 @@ public class MessageServiceTest {
         when(message1.getSystem()).thenReturn(true);
         when(messageSource.getMessage(text, args, text, locale)).thenReturn(translatedText);
 
-        List<Message> result = messageService.getMessagesFromConversation(conversation1, locale, page, size);
+        List<Message> result = messageService.getMessagesFromConversation(conversation1, page, size);
 
         verify(messageRepository).findByConversation(conversation1, pageable);
         verify(message1, times(3)).getText();

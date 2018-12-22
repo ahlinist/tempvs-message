@@ -8,6 +8,7 @@ import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -51,9 +52,11 @@ public class MessageServiceImpl implements MessageService {
         return createMessage(author, receivers, text, isSystem, systemArgs, null);
     }
 
-    public List<Message> getMessagesFromConversation(Conversation conversation, Locale locale, int page, int size) {
+    public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
+        Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = messageRepository.findByConversation(conversation, pageable);
+
         return messages.stream().map(message -> {
             if (message.getSystem()) {
                 String code = message.getText();

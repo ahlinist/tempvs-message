@@ -61,37 +61,28 @@ public class ConversationController {
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
-        createConversationDto.validate();
         Locale locale = localeHelper.getLocale(lang);
-        Participant author = participantService.getParticipant(createConversationDto.getAuthor().getId());
+        ParticipantDto authorDto = createConversationDto.getAuthor();
+
+        if (authorDto == null || authorDto.getId() == null) {
+            throw new IllegalStateException("Author is not specified");
+        }
+
+        Participant author = participantService.getParticipant(authorDto.getId());
+
+        if (author == null) {
+            throw new IllegalStateException("Participant with id " + authorDto.getId() + " does not exist in the database");
+        }
+
         Set<Participant> receivers = createConversationDto.getReceivers().stream()
+                //TODO: implement and use bulk participant retrieval method
                 .map(participantDto -> participantService.getParticipant(participantDto.getId()))
                 .collect(toSet());
         String text = createConversationDto.getText();
         String name = createConversationDto.getName();
         Message message = messageService.createMessage(author, receivers, text);
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.addAll(receivers);
-        Conversation conversation = null;
-        List<Message> messages = null;
-
-        if (participants.size() < 2) {
-            throw new BadRequestException("Conversation must contain at least 2 participants.");
-        } else if (participants.size() == 2) {
-            conversation = conversationService.findDialogue(author, receivers.iterator().next());
-
-            if (conversation != null) {
-                conversation = conversationService.addMessage(conversation, message);
-                messages = messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-            }
-        }
-
-        if (conversation == null) {
-            conversation = conversationService.createConversation(author, receivers, name, message);
-            messages = messageService.getMessagesFromConversation(conversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        }
-
+        Conversation conversation = conversationService.createConversation(author, receivers, name, message);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
     }
 
@@ -127,7 +118,7 @@ public class ConversationController {
             throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + conversationId);
         }
 
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, locale, page, size);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
         return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone, locale);
     }
 
@@ -205,7 +196,7 @@ public class ConversationController {
         receivers.remove(author);
         Message message = messageService.createMessage(author, receivers, text);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
-        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto getConversationDto = objectFactory.getInstance(
                 GetConversationDto.class, updatedConversation, messages, author, timeZone, locale);
 
@@ -258,7 +249,7 @@ public class ConversationController {
         }
 
         Conversation result = conversationService.addParticipants(conversation, initiator, subjects);
-        List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
@@ -291,7 +282,7 @@ public class ConversationController {
         }
 
         Conversation result = conversationService.removeParticipant(conversation, initiator, subject);
-        List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
@@ -310,7 +301,7 @@ public class ConversationController {
         Conversation conversation = conversationService.getConversation(conversationId);
         Conversation result = conversationService.updateName(conversation, initiator, updateConversationNameDto.getName());
 
-        List<Message> messages = messageService.getMessagesFromConversation(result, locale, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
     }
 
