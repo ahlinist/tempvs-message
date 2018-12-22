@@ -77,7 +77,7 @@ public class ConversationController {
         Set<Participant> receivers = new HashSet<>();
         Set<ParticipantDto> receiverDtos = createConversationDto.getReceivers();
 
-        if (receiverDtos != null || !receiverDtos.isEmpty()) {
+        if (receiverDtos != null && !receiverDtos.isEmpty()) {
             receivers = receiverDtos.stream()
                     //TODO: implement and use bulk participant retrieval method
                     .map(participantDto -> participantService.getParticipant(participantDto.getId()))
