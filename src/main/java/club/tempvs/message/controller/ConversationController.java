@@ -74,10 +74,16 @@ public class ConversationController {
             throw new IllegalStateException("Participant with id " + authorDto.getId() + " does not exist in the database");
         }
 
-        Set<Participant> receivers = createConversationDto.getReceivers().stream()
-                //TODO: implement and use bulk participant retrieval method
-                .map(participantDto -> participantService.getParticipant(participantDto.getId()))
-                .collect(toSet());
+        Set<Participant> receivers = new HashSet<>();
+        Set<ParticipantDto> receiverDtos = createConversationDto.getReceivers();
+
+        if (receiverDtos != null || !receiverDtos.isEmpty()) {
+            receivers = receiverDtos.stream()
+                    //TODO: implement and use bulk participant retrieval method
+                    .map(participantDto -> participantService.getParticipant(participantDto.getId()))
+                    .collect(toSet());
+        }
+
         String text = createConversationDto.getText();
         String name = createConversationDto.getName();
         Message message = messageService.createMessage(author, receivers, text);
