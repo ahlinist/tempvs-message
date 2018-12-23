@@ -167,7 +167,7 @@ public class ConversationController {
         Participant participant = participantService.getParticipant(participantId);
 
         if (participant == null) {
-            throw new BadRequestException("No participant with id " + participantId + " found.");
+            throw new IllegalStateException("No participant with id " + participantId + " found.");
         }
 
         long result = conversationService.countUpdatedConversationsPerParticipant(participant);

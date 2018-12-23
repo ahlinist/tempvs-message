@@ -551,7 +551,7 @@ public class ConversationControllerTest {
         assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = IllegalStateException.class)
     public void testCountNewConversationsForMissingParticipant() {
         Long participantId = 1L;
 
