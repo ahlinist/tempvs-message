@@ -436,7 +436,7 @@ public class ConversationControllerIntegrationTest {
 
         mvc.perform(get("/api/conversations?participant=2&page=0&size=20")
                 .header("Authorization",TOKEN))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(content().string(equalTo("No participant with id 2 exist!")));
     }
 

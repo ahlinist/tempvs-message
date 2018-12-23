@@ -253,7 +253,7 @@ public class ConversationControllerTest {
         assertEquals("GetCoversationsDto is returned as a result", getConversationsDto, result.getBody());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testGetConversationsByParticipantForLargeAmountOfDataBeingRetrieved() {
         Long participantId = 1L;
         int page = 0;

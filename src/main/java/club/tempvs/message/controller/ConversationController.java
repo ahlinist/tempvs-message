@@ -140,13 +140,13 @@ public class ConversationController {
         Locale locale = localeHelper.getLocale(lang);
 
         if (size > MAX_PAGE_SIZE) {
-            throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
+            throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
         Participant participant = participantService.getParticipant(participantId);
 
         if (participant == null) {
-            throw new BadRequestException("No participant with id " + participantId + " exist!");
+            throw new IllegalStateException("No participant with id " + participantId + " exist!");
         }
 
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, locale, page, size);
