@@ -7,6 +7,7 @@ import club.tempvs.message.service.*;
 import club.tempvs.message.util.*;
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -321,7 +322,7 @@ public class ConversationController {
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
-            throw new BadRequestException("No conversation with id " + conversationId + " found.");
+            throw new NotFoundException("No conversation with id " + conversationId + " found.");
         }
 
         ParticipantDto participantDto = readMessagesDto.getParticipant();
@@ -329,13 +330,13 @@ public class ConversationController {
         Participant participant = participantService.getParticipant(participantId);
 
         if (participant == null) {
-            throw new BadRequestException("No participant with id " + participantId + " found.");
+            throw new IllegalStateException("No participant with id " + participantId + " found.");
         }
 
         List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessageIds());
 
         if (messages.stream().anyMatch(Objects::isNull)) {
-            throw new BadRequestException("Some of the messages specified were not found.");
+            throw new IllegalStateException("Some of the messages specified were not found.");
         }
 
         messageService.markAsRead(conversation, participant, messages);

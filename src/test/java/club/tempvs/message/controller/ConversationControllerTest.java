@@ -632,7 +632,7 @@ public class ConversationControllerTest {
         assertEquals("Response is ok", result, ResponseEntity.ok().build());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NotFoundException.class)
     public void testReadMessagesForMissingConversation() {
         Long conversationId = 1L;
 
@@ -641,7 +641,7 @@ public class ConversationControllerTest {
         conversationController.readMessages(conversationId, token, readMessagesDto);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = IllegalStateException.class)
     public void testReadMessagesForMissingParticipant() {
         Long conversationId = 1L;
         Long participantId = 4L;
@@ -654,7 +654,7 @@ public class ConversationControllerTest {
         conversationController.readMessages(conversationId, token, readMessagesDto);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = IllegalStateException.class)
     public void testReadMessagesForMissingMessages() {
         Long conversationId = 1L;
         Long participantId = 4L;

@@ -1,5 +1,6 @@
 package club.tempvs.message.service;
 
+import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.MessageRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -130,7 +131,7 @@ public class MessageServiceTest {
         assertEquals("2 messages returned", 2, result.size());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ForbiddenException.class)
     public void testMarkAsReadForInvalidConversations() {
         List<Message> messages = Arrays.asList(message1, message2);
 
@@ -144,7 +145,7 @@ public class MessageServiceTest {
         verifyNoMoreInteractions(message1, messageRepository, participant, author, receiver1, conversation1, conversation2);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ForbiddenException.class)
     public void testMarkAsReadForInvalidParticipant() {
         List<Message> messages = Arrays.asList(message1, message1);
         Set<Participant> participants = new LinkedHashSet<>(Arrays.asList(author, receiver1));
@@ -159,7 +160,7 @@ public class MessageServiceTest {
         verifyNoMoreInteractions(message1, messageRepository, participant, author, receiver1, conversation1, conversation2);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void testMarkAsReadForEmptyMessagesList() {
         List<Message> messages = new ArrayList<>();
 

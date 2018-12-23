@@ -1,5 +1,6 @@
 package club.tempvs.message.service.impl;
 
+import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.MessageRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -76,15 +77,15 @@ public class MessageServiceImpl implements MessageService {
 
     public List<Message> markAsRead(Conversation conversation, Participant participant, List<Message> messages) {
         if (messages.isEmpty()) {
-            throw new IllegalArgumentException("Empty messages list.");
+            throw new IllegalStateException("Empty messages list.");
         }
 
         if (!messages.stream().map(Message::getConversation).allMatch(conversation::equals)) {
-            throw new IllegalArgumentException("Messages belong to different conversations.");
+            throw new ForbiddenException("Messages belong to different conversations.");
         }
 
         if (!conversation.getParticipants().contains(participant)) {
-            throw new IllegalArgumentException("The conversation should contain the given participant.");
+            throw new ForbiddenException("The conversation should contain the given participant.");
         }
 
         messages.stream().forEach(message -> message.getNewFor().remove(participant));
