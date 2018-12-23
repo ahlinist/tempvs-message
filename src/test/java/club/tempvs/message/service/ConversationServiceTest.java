@@ -256,7 +256,7 @@ public class ConversationServiceTest {
         when(message.getSystemArgs()).thenReturn(systemArgs);
         when(messageSource.getMessage(text, new String[]{systemArgs}, text, locale)).thenReturn(translatedText);
 
-        List<Conversation> result = conversationService.getConversationsByParticipant(participant, locale, page, size);
+        List<Conversation> result = conversationService.getConversationsByParticipant(participant, page, size);
 
         verify(conversationRepository).findByParticipantsIn(participant, pageable);
         verify(conversationRepository).countUnreadMessages(conversations, participant);

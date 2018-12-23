@@ -12,6 +12,7 @@ import club.tempvs.message.util.ObjectFactory;
 import club.tempvs.message.util.ValidationHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -115,7 +116,8 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.save(conversation);
     }
 
-    public List<Conversation> getConversationsByParticipant(Participant participant, Locale locale, int page, int size) {
+    public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
+        Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         List<Conversation> conversations = conversationRepository.findByParticipantsIn(participant, pageable);
         List<Object[]> unreadMessagesPerConversation = conversationRepository.countUnreadMessages(conversations, participant);

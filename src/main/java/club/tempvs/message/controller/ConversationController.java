@@ -89,7 +89,7 @@ public class ConversationController {
         Message message = messageService.createMessage(author, receivers, text);
         Conversation conversation = conversationService.createConversation(author, receivers, name, message);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
     }
 
     @GetMapping("/conversations/{conversationId}")
@@ -125,7 +125,7 @@ public class ConversationController {
         }
 
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone, locale);
+        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone);
     }
 
     @GetMapping("/conversations")
@@ -149,7 +149,7 @@ public class ConversationController {
             throw new IllegalStateException("No participant with id " + participantId + " exist!");
         }
 
-        List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, locale, page, size);
+        List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
         GetConversationsDto result = objectFactory.getInstance(GetConversationsDto.class, conversations, participant, timeZone, locale);
 
         int conversationsCount = result.getConversations().size();
@@ -204,7 +204,7 @@ public class ConversationController {
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto getConversationDto = objectFactory.getInstance(
-                GetConversationDto.class, updatedConversation, messages, author, timeZone, locale);
+                GetConversationDto.class, updatedConversation, messages, author, timeZone);
 
         return ResponseEntity.ok().body(getConversationDto);
     }
@@ -256,7 +256,7 @@ public class ConversationController {
 
         Conversation result = conversationService.addParticipants(conversation, initiator, subjects);
         List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone);
     }
 
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
@@ -289,7 +289,7 @@ public class ConversationController {
 
         Conversation result = conversationService.removeParticipant(conversation, initiator, subject);
         List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone);
     }
 
     @PostMapping("/conversations/{conversationId}/name")
@@ -308,7 +308,7 @@ public class ConversationController {
         Conversation result = conversationService.updateName(conversation, initiator, updateConversationNameDto.getName());
 
         List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone, locale);
+        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone);
     }
 
     @PostMapping("/conversations/{conversationId}/read")

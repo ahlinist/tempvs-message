@@ -2,13 +2,13 @@ package club.tempvs.message.dto;
 
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
+import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Locale;
 
 public class MessageDtoBean {
 
@@ -24,14 +24,14 @@ public class MessageDtoBean {
 
     }
 
-    public MessageDtoBean(Message message, Participant self, String zoneId, Locale locale) {
+    public MessageDtoBean(Message message, Participant self, String zoneId) {
         Participant subject = message.getSubject();
 
         this.id = message.getId();
         this.text = message.getText();
         this.author = new ParticipantDto(message.getAuthor());
         this.subject = subject != null ? new ParticipantDto(subject) : null;
-        this.createdDate = parseDate(message.getCreatedDate(), zoneId, locale);
+        this.createdDate = parseDate(message.getCreatedDate(), zoneId);
         this.isUnread = message.getNewFor().contains(self);
         this.isSystem = message.getSystem();
     }
@@ -92,9 +92,10 @@ public class MessageDtoBean {
         isSystem = system;
     }
 
-    private String parseDate(Instant instant, String zoneId, Locale locale) {
+    private String parseDate(Instant instant, String zoneId) {
         ZonedDateTime zonedDateTime = instant.atZone(ZoneId.of(zoneId));
-        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale);
+        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+                .withLocale(LocaleContextHolder.getLocale());
         return zonedDateTime.format(formatter);
     }
 }

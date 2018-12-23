@@ -1,6 +1,5 @@
 package club.tempvs.message.controller;
 
-import club.tempvs.message.api.BadRequestException;
 import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.api.NotFoundException;
 import club.tempvs.message.domain.Conversation;
@@ -18,6 +17,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
@@ -84,6 +84,7 @@ public class ConversationControllerTest {
 
     @Before
     public void setup() {
+        LocaleContextHolder.setLocale(locale);
         conversationController = new ConversationController(objectFactory, conversationService, participantService,
                 messageService, authHelper, localeHelper);
     }
@@ -119,7 +120,7 @@ public class ConversationControllerTest {
         when(messageService.createMessage(author, receivers, text)).thenReturn(message);
         when(conversationService.createConversation(author, receivers, name, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.createConversation(token, lang, timeZone, createConversationDto);
 
@@ -137,7 +138,7 @@ public class ConversationControllerTest {
         verify(messageService).createMessage(author, receivers, text);
         verify(conversationService).createConversation(author, receivers, name, message);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
         verifyNoMoreInteractions(authorDto, message, receiverDto, participantDto,
                 createConversationDto, participantService, messageService, conversationService, objectFactory);
 
@@ -171,7 +172,7 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(id)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone, locale)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.getConversation(token, lang, timeZone, id, page, size, callerId);
 
@@ -180,7 +181,7 @@ public class ConversationControllerTest {
         verify(conversationService).getConversation(id);
         verify(conversation).getParticipants();
         verify(messageService).getMessagesFromConversation(conversation, page, size);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant, timeZone, locale);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant, timeZone);
         verifyNoMoreInteractions(message, conversation,
                 participantService, conversationService, messageService, objectFactory, getConversationDto);
 
@@ -235,7 +236,7 @@ public class ConversationControllerTest {
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(conversationService.getConversationsByParticipant(participant, locale, page, size)).thenReturn(conversations);
+        when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
         when(objectFactory.getInstance(GetConversationsDto.class, conversations, participant, timeZone, locale)).thenReturn(getConversationsDto);
         when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
         when(getConversationsDto.getConversations()).thenReturn(conversationDtoBeans);
@@ -244,7 +245,7 @@ public class ConversationControllerTest {
 
         verify(localeHelper).getLocale(lang);
         verify(participantService).getParticipant(participantId);
-        verify(conversationService).getConversationsByParticipant(participant, locale, page, size);
+        verify(conversationService).getConversationsByParticipant(participant, page, size);
         verify(objectFactory).getInstance(GetConversationsDto.class, conversations, participant, timeZone, locale);
         verify(objectFactory).getInstance(HttpHeaders.class);
         verify(getConversationsDto).getConversations();
@@ -287,7 +288,7 @@ public class ConversationControllerTest {
         when(messageService.createMessage(author, participants, text)).thenReturn(message);
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
 
         ResponseEntity result = conversationController.addMessage(token, lang, timeZone, conversationId, addMessageDto);
 
@@ -302,7 +303,7 @@ public class ConversationControllerTest {
         verify(messageService).createMessage(author, participants, text);
         verify(conversationService).addMessage(conversation, message);
         verify(messageService).getMessagesFromConversation(conversation, page, size);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
         verifyNoMoreInteractions(authorDto,
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
 
@@ -361,7 +362,7 @@ public class ConversationControllerTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.addParticipants(token, lang, timeZone, conversationId, addParticipantsDto);
 
@@ -376,7 +377,7 @@ public class ConversationControllerTest {
         verify(conversation).getParticipants();
         verify(conversationService).addParticipants(conversation, author, receivers);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
         verifyNoMoreInteractions(authorDto, receiverDto, conversationService, addParticipantsDto, participantService,
                 objectFactory, errorsDto, conversation, receiver, author);
 
@@ -476,7 +477,7 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
 
@@ -486,7 +487,7 @@ public class ConversationControllerTest {
         verify(participantService).getParticipant(subjectId);
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone, locale);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
         verifyNoMoreInteractions(authorDto, receiverDto, conversationService, participantService, objectFactory, conversation);
 
         assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
@@ -580,7 +581,7 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(conversationService.updateName(conversation, participant, conversationName)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
-        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone, locale)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone)).thenReturn(getConversationDto);
 
         GetConversationDto result = conversationController.updateConversationName(token, lang, timeZone, conversationId, updateConversationNameDto);
 
@@ -594,7 +595,7 @@ public class ConversationControllerTest {
         verify(conversationService).getConversation(conversationId);
         verify(conversationService).updateName(conversation, participant, conversationName);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant, timeZone, locale);
+        verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant, timeZone);
         verifyNoMoreInteractions(authHelper, localeHelper, updateConversationNameDto, participantService,
                 conversationService, messageService, objectFactory);
 
