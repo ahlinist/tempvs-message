@@ -187,7 +187,7 @@ public class ConversationControllerTest {
         assertEquals("Result is a conversation", result, getConversationDto);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = IllegalStateException.class)
     public void testGetConversationForLargeAmountOfDataPerRequest() {
         long id = 1L;
         int page = 0;

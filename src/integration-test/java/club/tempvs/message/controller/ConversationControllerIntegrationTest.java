@@ -298,7 +298,7 @@ public class ConversationControllerIntegrationTest {
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20")
                 .header("Authorization",TOKEN))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(content().string("'caller' parameter is missing."));
     }
 

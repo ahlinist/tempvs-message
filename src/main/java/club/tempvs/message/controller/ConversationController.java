@@ -105,17 +105,17 @@ public class ConversationController {
         Locale locale = localeHelper.getLocale(lang);
 
         if (size > MAX_PAGE_SIZE) {
-            throw new BadRequestException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
+            throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
         if (callerId == null) {
-            throw new BadRequestException("'caller' parameter is missing.");
+            throw new IllegalStateException("'caller' parameter is missing.");
         }
 
         Participant caller = participantService.getParticipant(callerId);
 
         if (caller == null) {
-            throw new BadRequestException("The caller specified does not exist.");
+            throw new IllegalStateException("The caller specified does not exist.");
         }
 
         Conversation conversation = conversationService.getConversation(conversationId);
