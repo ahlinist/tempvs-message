@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,6 +29,7 @@ import java.util.*;
 public class ConversationServiceTest {
 
     private static final String CONVERSATION_RENAMED = "conversation.update.name";
+    private static final Locale locale = LocaleContextHolder.getLocale();
 
     private ConversationService conversationService;
 
@@ -240,7 +242,6 @@ public class ConversationServiceTest {
         int size = 40;
         String text = "text";
         String translatedText = "translated text";
-        Locale locale = Locale.ENGLISH;
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
