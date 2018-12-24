@@ -166,7 +166,7 @@ public class ConversationControllerTest {
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.getConversation(token, lang, timeZone, id, page, size, callerId);
+        GetConversationDto result = conversationController.getConversation(callerId, token, lang, timeZone, id, page, size);
 
         verify(localeHelper).getLocale(lang);
         verify(participantService).getParticipant(callerId);
@@ -188,7 +188,7 @@ public class ConversationControllerTest {
         Long callerId = 5L;
         String timeZone = "UTC";
 
-        conversationController.getConversation(token, lang, timeZone, id, page, size, callerId);
+        conversationController.getConversation(callerId, token, lang, timeZone, id, page, size);
 
         verifyNoMoreInteractions(message, conversation, conversationService, messageService, objectFactory, getConversationDto);
     }
@@ -206,7 +206,7 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(id)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
 
-        conversationController.getConversation(token, lang, timeZone, id, page, size, callerId);
+        conversationController.getConversation(callerId, token, lang, timeZone, id, page, size);
 
         verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);

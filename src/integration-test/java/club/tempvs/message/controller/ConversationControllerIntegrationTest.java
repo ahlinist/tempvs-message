@@ -36,6 +36,8 @@ import static org.springframework.http.MediaType.*;
 @Transactional
 public class ConversationControllerIntegrationTest {
 
+    private static final String PROFILE_HEADER = "Profile";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
     private static final String CONFERENCE = Conversation.Type.CONFERENCE.toString();
     private static final String DIALOGUE = Conversation.Type.DIALOGUE.toString();
@@ -77,8 +79,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Profile", authorId)
-                .header("Authorization", TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("participants", hasSize(4)))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))
@@ -116,8 +118,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Profile", authorId)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("participants", hasSize(2)))
                     .andExpect(jsonPath("admin", isEmptyOrNullString()))
@@ -140,7 +142,7 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testCreateConversationWithNoAuthor() throws Exception {
+    public void testCreateConversationWithNoCaller() throws Exception {
         String message = "myMessage";
         String name = "conversation name";
 
@@ -155,7 +157,7 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Authorization", TOKEN))
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
                     .andExpect(content().string("Author is not specified"));
     }
@@ -177,8 +179,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Profile", authorId)
-                .header("Authorization", TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.text", is("Please type your message")));
     }
@@ -197,8 +199,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Profile", authorId)
-                .header("Authorization", TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants", is("Conversation may not contain less than 2 participants")));
     }
@@ -224,7 +226,8 @@ public class ConversationControllerIntegrationTest {
         Boolean isSystem = messages.get(0).getSystem();
 
         mvc.perform(get("/api/conversations/" + conversationId + "?caller=" + authorId)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))
@@ -260,23 +263,27 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1&caller=" + authorId)
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1")
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page size must not be less than one!"));
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0&caller=" + authorId)
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0")
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page size must not be less than one!"));
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20&caller=" + authorId)
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20")
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page index must not be less than zero!"));
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=50&caller=" + authorId)
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=50")
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page size must not be larger than 40!"));
     }
@@ -298,9 +305,9 @@ public class ConversationControllerIntegrationTest {
         Long conversationId = conversation.getId();
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20")
-                .header("Authorization",TOKEN))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string("'caller' parameter is missing."));
+                .header(AUTHORIZATION_HEADER, TOKEN))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().string("'caller' parameter is missing."));
     }
 
     @Test
@@ -321,10 +328,11 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
 
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20&caller=" + wrongCallerId)
-                .header("Authorization", TOKEN))
-                .andExpect(status().isForbidden())
-                .andExpect(content().string("Participant " + wrongCallerId + " has no access to conversation " + conversationId));
+        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20")
+                .header(PROFILE_HEADER, wrongCallerId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
+                    .andExpect(status().isForbidden())
+                    .andExpect(content().string("Participant " + wrongCallerId + " has no access to conversation " + conversationId));
     }
 
     @Test

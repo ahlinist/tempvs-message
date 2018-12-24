@@ -96,15 +96,15 @@ public class ConversationController {
 
     @GetMapping("/conversations/{conversationId}")
     public GetConversationDto getConversation(
+            @RequestHeader(value = "Profile", required = false) Long callerId,
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "40") int size,
-            @RequestParam(value = "caller", required = false) Long callerId) {
+            @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
         authHelper.authenticate(token);
-        Locale locale = localeHelper.getLocale(lang);
+        localeHelper.getLocale(lang);
 
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
