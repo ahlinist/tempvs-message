@@ -533,7 +533,7 @@ public class ConversationControllerTest {
         when(conversationService.countUpdatedConversationsPerParticipant(participant)).thenReturn(conversationsCount);
         when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        ResponseEntity result = conversationController.countConversations(token, participantId);
+        ResponseEntity result = conversationController.countConversations(participantId, token);
 
         verify(authHelper).authenticate(token);
         verify(participantService).getParticipant(participantId);
@@ -550,7 +550,7 @@ public class ConversationControllerTest {
 
         when(participantService.getParticipant(participantId)).thenReturn(null);
 
-        conversationController.countConversations(token, participantId);
+        conversationController.countConversations(participantId, token);
 
         verify(authHelper).authenticate(token);
         verify(participantService).getParticipant(participantId);

@@ -163,8 +163,8 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations", method = HEAD)
     public ResponseEntity countConversations(
-            @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestParam("participant") Long participantId) {
+            @RequestHeader(value = "Profile", required = false) Long participantId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
         authHelper.authenticate(token);
         Participant participant = participantService.getParticipant(participantId);
 

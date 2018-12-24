@@ -794,25 +794,26 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testCountNewConversations() throws Exception {
         Long authorId = 1L;
-        Long receiver1Id = 2L;
+        Long receiverId = 2L;
         String text = "text";
         String name = "name";
 
         Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
         Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
+                entityHelper.createParticipant(receiverId, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY")
         ));
 
         entityHelper.createConversation(author, receivers, text, name);
         entityHelper.createConversation(author, receivers, text, name);
         entityHelper.createConversation(author, receivers, text, name);
 
-        mvc.perform(head("/api/conversations?participant=" + receiver1Id)
-                .header("Authorization",TOKEN))
-                .andExpect(status().isOk())
-                .andExpect(header().string(COUNT_HEADER, String.valueOf(3)));
+        mvc.perform(head("/api/conversations")
+                .header("Profile", receiverId)
+                .header("Authorization", TOKEN))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string(COUNT_HEADER, String.valueOf(3)));
     }
 
     @Test
