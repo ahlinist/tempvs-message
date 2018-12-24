@@ -220,28 +220,27 @@ public class ConversationController {
     }
 
     @PostMapping("/conversations/{conversationId}/participants")
-    public GetConversationDto addParticipants(
-            @RequestHeader(value = "Authorization", required = false) String token,
+    public ResponseEntity addParticipants(
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
         authHelper.authenticate(token);
-        Locale locale = localeHelper.getLocale(lang);
+        localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
-        ParticipantDto initiatorDto = addParticipantsDto.getInitiator();
         Set<ParticipantDto> subjectDtos = addParticipantsDto.getSubjects();
 
-        if (initiatorDto == null) {
+        if (initiatorId == null) {
             throw new IllegalStateException("Initiator is not specified");
         }
 
-        Long initiatorId = initiatorDto.getId();
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
@@ -264,9 +263,12 @@ public class ConversationController {
             throw new IllegalStateException("An existent member is being added to a conversation.");
         }
 
-        Conversation result = conversationService.addParticipants(conversation, initiator, subjects);
-        List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone);
+        Conversation updatedConversation = conversationService.addParticipants(conversation, initiator, subjects);
+        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(PROFILE_HEADER, String.valueOf(initiatorId));
+        return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")

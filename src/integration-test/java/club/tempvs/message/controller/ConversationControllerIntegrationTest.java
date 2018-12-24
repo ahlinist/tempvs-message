@@ -545,7 +545,6 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", ""));
         addParticipantsDto.setSubjects(new HashSet<>(
                 Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
 
@@ -555,7 +554,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", not(initialConversationId.intValue())))
                     .andExpect(jsonPath("participants", hasSize(3)))
@@ -589,7 +589,6 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", ""));
         addParticipantsDto.setSubjects(new HashSet<>(
                 Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
 
@@ -599,9 +598,10 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header("Authorization",TOKEN))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string("An existent member is being added to a conversation."));
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().string("An existent member is being added to a conversation."));
     }
 
     @Test
@@ -621,7 +621,6 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "CLUB", "LATE_MIDDLE_AGES");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "CLUB", "EARLY_MIDDLE_AGES"));
         addParticipantsDto.setSubjects(new HashSet<>(
                 Arrays.asList(new ParticipantDto(addedParticipantId, "name", "CLUB", "LATE_MIDDLE_AGES"))));
 
@@ -631,7 +630,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants",
                             is("Conversation may contain 2 min and 20 max participants" +
@@ -664,7 +664,6 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(5L, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", ""));
         addParticipantsDto.setSubjects(new HashSet<>(
                 Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
 
@@ -674,7 +673,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))
@@ -711,7 +711,6 @@ public class ConversationControllerIntegrationTest {
         Long conversationId = conversation.getId();
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setInitiator(new ParticipantDto(authorId, "name", "USER", null));
         addParticipantsDto.setSubjects(new HashSet<>(
                 Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", null))));
 
@@ -721,9 +720,10 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header("Authorization",TOKEN))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string(equalTo("No subjects found in database")));
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().string(equalTo("No subjects found in database")));
     }
 
     @Test
