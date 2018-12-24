@@ -165,8 +165,9 @@ public class ConversationControllerTest {
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        GetConversationDto result = conversationController.getConversation(callerId, token, lang, timeZone, id, page, size);
+        ResponseEntity result = conversationController.getConversation(callerId, token, lang, timeZone, id, page, size);
 
         verify(localeHelper).getLocale(lang);
         verify(participantService).getParticipant(callerId);
@@ -174,10 +175,11 @@ public class ConversationControllerTest {
         verify(conversation).getParticipants();
         verify(messageService).getMessagesFromConversation(conversation, page, size);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant, timeZone);
+        verify(objectFactory).getInstance(HttpHeaders.class);
         verifyNoMoreInteractions(message, conversation,
                 participantService, conversationService, messageService, objectFactory, getConversationDto);
 
-        assertEquals("Result is a conversation", result, getConversationDto);
+        assertEquals("Result is a conversation", getConversationDto, result.getBody());
     }
 
     @Test(expected = IllegalStateException.class)

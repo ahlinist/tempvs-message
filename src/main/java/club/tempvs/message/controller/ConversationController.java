@@ -95,7 +95,7 @@ public class ConversationController {
     }
 
     @GetMapping("/conversations/{conversationId}")
-    public GetConversationDto getConversation(
+    public ResponseEntity getConversation(
             @RequestHeader(value = "Profile", required = false) Long callerId,
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -127,7 +127,11 @@ public class ConversationController {
         }
 
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone);
+        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone);
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(PROFILE_HEADER, String.valueOf(callerId));
+
+        return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @GetMapping("/conversations")
