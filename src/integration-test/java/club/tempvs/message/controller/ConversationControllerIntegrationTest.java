@@ -358,8 +358,9 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createConversation(author1, receivers1, text, name);
         entityHelper.createConversation(author2, receivers2, text, name);
 
-        mvc.perform(get("/api/conversations?participant=" + callerId + "&page=0&size=10")
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations?page=0&size=10")
+                .header(PROFILE_HEADER, callerId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("conversations", hasSize(2)))
                     .andExpect(jsonPath("conversations[0].name", is(name)))
@@ -402,8 +403,9 @@ public class ConversationControllerIntegrationTest {
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getSystem();
 
-        mvc.perform(get("/api/conversations?participant=" + authorId + "&page=0&size=10")
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations?page=0&size=10")
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("conversations", hasSize(1)))
                     .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
@@ -423,30 +425,35 @@ public class ConversationControllerIntegrationTest {
     public void testGetConversationsByParticipantForInvalidInput() throws Exception {
         entityHelper.createParticipant(1L, "name", "USER", "");
 
-        mvc.perform(get("/api/conversations?participant=1&page=0&size=-1")
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations?page=0&size=-1")
+                .header(PROFILE_HEADER, "1")
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page size must not be less than one!")));
 
-        mvc.perform(get("/api/conversations?participant=1&page=0&size=0")
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations?page=0&size=0")
+                .header(PROFILE_HEADER, "1")
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page size must not be less than one!")));
 
-        mvc.perform(get("/api/conversations?participant=1&page=-1&size=20")
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations?page=-1&size=20")
+                .header(PROFILE_HEADER, "1")
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page index must not be less than zero!")));
 
-        mvc.perform(get("/api/conversations?participant=1&page=0&size=50")
-                .header("Authorization",TOKEN))
+        mvc.perform(get("/api/conversations?page=0&size=50")
+                .header(PROFILE_HEADER, "1")
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page size must not be larger than 40!")));
 
-        mvc.perform(get("/api/conversations?participant=2&page=0&size=20")
-                .header("Authorization",TOKEN))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string(equalTo("No participant with id 2 exist!")));
+        mvc.perform(get("/api/conversations?page=0&size=20")
+                .header(PROFILE_HEADER, "2")
+                .header(AUTHORIZATION_HEADER, TOKEN))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().string(equalTo("No participant with id 2 exist!")));
     }
 
     @Test

@@ -137,10 +137,10 @@ public class ConversationController {
 
     @GetMapping("/conversations")
     public ResponseEntity getConversationsByParticipant(
-            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long participantId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
-            @RequestParam("participant") Long participantId,
             @RequestParam(value = "page", required = false, defaultValue = "0") int page,
             @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
         authHelper.authenticate(token);
@@ -162,6 +162,7 @@ public class ConversationController {
         int conversationsCount = result.getConversations().size();
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
         headers.add(COUNT_HEADER, String.valueOf(conversationsCount));
+        headers.add(PROFILE_HEADER, String.valueOf(participantId));
 
         return ResponseEntity.status(HttpStatus.OK.value()).headers(headers).body(result);
     }

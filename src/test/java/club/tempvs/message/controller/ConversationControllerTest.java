@@ -235,7 +235,7 @@ public class ConversationControllerTest {
         when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
         when(getConversationsDto.getConversations()).thenReturn(conversationDtoBeans);
 
-        ResponseEntity result = conversationController.getConversationsByParticipant(token, lang, timeZone, participantId, page, size);
+        ResponseEntity result = conversationController.getConversationsByParticipant(participantId, token, lang, timeZone, page, size);
 
         verify(localeHelper).getLocale(lang);
         verify(participantService).getParticipant(participantId);
@@ -255,7 +255,7 @@ public class ConversationControllerTest {
         int size = 200;
         String timeZone = "UTC";
 
-        conversationController.getConversationsByParticipant(token, lang, timeZone, participantId, page, size);
+        conversationController.getConversationsByParticipant(participantId, token, lang, timeZone, page, size);
 
         verifyNoMoreInteractions(participantService, conversationService, objectFactory);
     }
