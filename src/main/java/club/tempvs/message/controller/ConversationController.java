@@ -27,6 +27,7 @@ public class ConversationController {
     private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
     private static final String PROFILE_HEADER = "Profile";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
 
     private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
@@ -57,8 +58,8 @@ public class ConversationController {
 
     @PostMapping("/conversations")
     public ResponseEntity createConversation(
-            @RequestHeader(value = "Profile", required = false) Long authorId,
-            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long authorId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @RequestBody CreateConversationDto createConversationDto) {
@@ -96,8 +97,8 @@ public class ConversationController {
 
     @GetMapping("/conversations/{conversationId}")
     public ResponseEntity getConversation(
-            @RequestHeader(value = "Profile", required = false) Long callerId,
-            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long callerId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
@@ -167,8 +168,8 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations", method = HEAD)
     public ResponseEntity countConversations(
-            @RequestHeader(value = "Profile", required = false) Long participantId,
-            @RequestHeader(value = "Authorization", required = false) String token) {
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long participantId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token) {
         authHelper.authenticate(token);
         Participant participant = participantService.getParticipant(participantId);
 
