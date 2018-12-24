@@ -294,7 +294,7 @@ public class ConversationServiceTest {
         when(oneMoreReceiver.getPeriod()).thenReturn(emptyString);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(newConversation);
-        when(messageService.createMessage(author, receivers, text, true, null)).thenReturn(message);
+        when(messageService.createMessage(author, receivers, text, true, null, null)).thenReturn(message);
         when(message.getText()).thenReturn(text);
         when(newConversation.getParticipants()).thenReturn(finalParticipants);
         when(conversationRepository.save(newConversation)).thenReturn(newConversation);
@@ -309,7 +309,7 @@ public class ConversationServiceTest {
         verify(author).getPeriod();
         verify(conversation).getType();
         verify(validationHelper, times(2)).processErrors(errorsDto);
-        verify(messageService).createMessage(author, receivers, text, true, null);
+        verify(messageService).createMessage(author, receivers, text, true, null, null);
         verify(message).getText();
         verify(objectFactory).getInstance(Conversation.class);
         verify(newConversation).addParticipant(receiver);
@@ -426,7 +426,7 @@ public class ConversationServiceTest {
 
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
-        when(messageService.createMessage(author, receivers, text, isSystem, null)).thenReturn(message);
+        when(messageService.createMessage(author, receivers, text, isSystem, null, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.removeParticipant(conversation, author, author);
@@ -434,7 +434,7 @@ public class ConversationServiceTest {
         verify(conversation).getAdmin();
         verify(conversation).getParticipants();
         verify(conversation).removeParticipant(author);
-        verify(messageService).createMessage(author, receivers, text, isSystem, null);
+        verify(messageService).createMessage(author, receivers, text, isSystem, null, null);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
@@ -482,12 +482,12 @@ public class ConversationServiceTest {
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
         when(conversation.getParticipants()).thenReturn(receivers);
-        when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name)).thenReturn(message);
+        when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.updateName(conversation, participant, name);
 
-        verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name);
+        verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null);
         verify(conversation).getParticipants();
         verify(conversation).setName(name);
         verify(conversation).addMessage(message);

@@ -86,7 +86,7 @@ public class ConversationController {
                     .collect(toSet());
         }
 
-        Message message = messageService.createMessage(author, receivers, createConversationDto.getText());
+        Message message = messageService.createMessage(author, receivers, createConversationDto.getText(), false, null, null);
         Conversation conversation = conversationService.createConversation(author, receivers, createConversationDto.getName(), message);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
@@ -188,15 +188,14 @@ public class ConversationController {
 
     @PostMapping("/conversations/{conversationId}/messages")
     public ResponseEntity addMessage(
-            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long authorId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
-        addMessageDto.validate();
-        Locale locale = localeHelper.getLocale(lang);
-        Long authorId = addMessageDto.getAuthor().getId();
+        localeHelper.getLocale(lang);
         String text = addMessageDto.getText();
 
         Conversation conversation = conversationService.getConversation(conversationId);
@@ -209,7 +208,7 @@ public class ConversationController {
         Participant author = participantService.getParticipant(authorId);
         Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
         receivers.remove(author);
-        Message message = messageService.createMessage(author, receivers, text);
+        Message message = messageService.createMessage(author, receivers, text, false, null, null);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto getConversationDto = objectFactory.getInstance(

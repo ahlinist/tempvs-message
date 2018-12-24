@@ -177,7 +177,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         if (conversation.getType() == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
             receivers.addAll(added);
-            message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null);
+            message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null, null);
             return createConversation(adder, receivers, null, message);
         } else {
             List<Message> messages = new ArrayList<>();
@@ -224,7 +224,7 @@ public class ConversationServiceImpl implements ConversationService {
         Message message;
 
         if (removed.equals(remover)) {
-            message = messageService.createMessage(remover, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem, null);
+            message = messageService.createMessage(remover, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem, null, null);
 
         } else {
             message = messageService.createMessage(remover, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, null, removed);
@@ -250,7 +250,7 @@ public class ConversationServiceImpl implements ConversationService {
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new LinkedHashSet<>(conversation.getParticipants());
         receivers.remove(initiator);
-        Message message = messageService.createMessage(initiator, receivers, CONVERSATION_RENAMED, isSystem, name);
+        Message message = messageService.createMessage(initiator, receivers, CONVERSATION_RENAMED, isSystem, name, null);
         conversation.setName(name);
         return addMessage(conversation, message);
     }

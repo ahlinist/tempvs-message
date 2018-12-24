@@ -475,13 +475,14 @@ public class ConversationControllerIntegrationTest {
         List<Message> messages = conversation.getMessages();
         int initialMessagesSize = messages.size();
         Long messageId = messages.get(0).getId();
-        String addMessageJson = getAddMessageDtoJson(authorId, newMessageText);
+        String addMessageJson = getAddMessageDtoJson(newMessageText);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addMessageJson)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))
@@ -513,13 +514,14 @@ public class ConversationControllerIntegrationTest {
         String newMessageText = "new message text";
         Long missingConversationId = 2L;
 
-        String addMessageJson = getAddMessageDtoJson(authorId, newMessageText);
+        String addMessageJson = getAddMessageDtoJson(newMessageText);
 
         mvc.perform(post("/api/conversations/" + missingConversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addMessageJson)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
     }
@@ -922,9 +924,8 @@ public class ConversationControllerIntegrationTest {
         return mapper.writeValueAsString(createConversationDto);
     }
 
-    private String getAddMessageDtoJson(Long authorId, String text) throws Exception {
+    private String getAddMessageDtoJson(String text) throws Exception {
         AddMessageDto addMessageDto = new AddMessageDto();
-        addMessageDto.setAuthor(new ParticipantDto(authorId, "name", "USER", null));
         addMessageDto.setText(text);
         return mapper.writeValueAsString(addMessageDto);
     }

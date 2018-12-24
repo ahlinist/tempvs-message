@@ -45,14 +45,6 @@ public class MessageServiceImpl implements MessageService {
         return message;
     }
 
-    public Message createMessage(Participant author, Set<Participant> receivers, String text) {
-        return createMessage(author, receivers, text, Boolean.FALSE, null, null);
-    }
-
-    public Message createMessage(Participant author, Set<Participant> receivers, String text, Boolean isSystem, String systemArgs) {
-        return createMessage(author, receivers, text, isSystem, systemArgs, null);
-    }
-
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
         Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
