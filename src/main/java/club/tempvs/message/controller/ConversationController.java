@@ -175,6 +175,7 @@ public class ConversationController {
         long result = conversationService.countUpdatedConversationsPerParticipant(participant);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
         headers.add(COUNT_HEADER, String.valueOf(result));
+        headers.add(PROFILE_HEADER, String.valueOf(participantId));
 
         return ResponseEntity.ok().headers(headers).build();
     }
