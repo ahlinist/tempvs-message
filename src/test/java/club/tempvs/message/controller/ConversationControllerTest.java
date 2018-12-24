@@ -102,14 +102,12 @@ public class ConversationControllerTest {
         String text = "text";
         String name = "name";
         String timeZone = "UTC";
-        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto, participantDto));
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId, participantId));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, participant));
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
-        when(createConversationDto.getReceivers()).thenReturn(receiverDtos);
-        when(receiverDto.getId()).thenReturn(receiverId);
-        when(participantDto.getId()).thenReturn(participantId);
+        when(createConversationDto.getReceivers()).thenReturn(receiverIds);
         when(participantService.getParticipant(authorId)).thenReturn(author);
         when(participantService.getParticipant(receiverId)).thenReturn(receiver);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
@@ -119,12 +117,11 @@ public class ConversationControllerTest {
         when(conversationService.createConversation(author, receivers, name, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        GetConversationDto result = conversationController.createConversation(authorId, token, lang, timeZone, createConversationDto);
+        ResponseEntity result = conversationController.createConversation(authorId, token, lang, timeZone, createConversationDto);
 
         verify(localeHelper).getLocale(lang);
-        verify(receiverDto).getId();
-        verify(participantDto).getId();
         verify(createConversationDto).getReceivers();
         verify(participantService).getParticipant(authorId);
         verify(participantService).getParticipant(receiverId);
@@ -135,10 +132,11 @@ public class ConversationControllerTest {
         verify(conversationService).createConversation(author, receivers, name, message);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
+        verify(objectFactory).getInstance(HttpHeaders.class);
         verifyNoMoreInteractions(authorDto, message, receiverDto, participantDto,
                 createConversationDto, participantService, messageService, conversationService, objectFactory);
 
-        assertEquals("Result is a getConversationDto", result, getConversationDto);
+        assertEquals("Result is a getConversationDto", getConversationDto, result.getBody());
     }
 
     @Test(expected = IllegalStateException.class)

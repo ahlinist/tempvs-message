@@ -65,14 +65,13 @@ public class ConversationControllerIntegrationTest {
         String message = "myMessage";
         String name = "conversation name";
 
-        Participant author = entityHelper.createParticipant(authorId, "name1", "USER", "");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(2L, "name2", "USER", ""),
-                entityHelper.createParticipant(3L, "name3", "USER", ""),
-                entityHelper.createParticipant(1L, "name4", "USER", "")
-        ));
+        entityHelper.createParticipant(authorId, "name1", "USER", "");
+        entityHelper.createParticipant(2L, "name2", "USER", "");
+        entityHelper.createParticipant(3L, "name3", "USER", "");
+        entityHelper.createParticipant(1L, "name4", "USER", "");
 
-        String createConversationJson = getCreateConversationDtoJson(receivers, message, name);
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+        String createConversationJson = getCreateConversationDtoJson(receiverIds, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -110,7 +109,8 @@ public class ConversationControllerIntegrationTest {
         ));
 
         entityHelper.createConversation(author, receivers, oldMessage, name);
-        String createConversationJson = getCreateConversationDtoJson(receivers, newMessage, name);
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
+        String createConversationJson = getCreateConversationDtoJson(receiverIds, newMessage, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -144,13 +144,12 @@ public class ConversationControllerIntegrationTest {
         String message = "myMessage";
         String name = "conversation name";
 
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
-        ));
+        entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY");
+        entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY");
+        entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY");
 
-        String createConversationJson = getCreateConversationDtoJson(receivers, message, name);
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+        String createConversationJson = getCreateConversationDtoJson(receiverIds, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -166,14 +165,13 @@ public class ConversationControllerIntegrationTest {
         Long authorId = 4L;
         String name = "conversation name";
 
-        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
-        ));
+        entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY");
+        entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY");
+        entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY");
 
-        String createConversationJson = getCreateConversationDtoJson(receivers, null, name);
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+        String createConversationJson = getCreateConversationDtoJson(receiverIds, null, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -188,13 +186,12 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testCreateConversationWithNoReceivers() throws Exception {
         Long authorId = 4L;
-        Set<Participant> receivers = new HashSet<>();
+        Set<Long> receiverIds = new HashSet<>();
         String message = "myMessage";
         String name = "conversation name";
 
-        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
-
-        String createConversationJson = getCreateConversationDtoJson(receivers, message, name);
+        entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        String createConversationJson = getCreateConversationDtoJson(receiverIds, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
@@ -900,9 +897,9 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(status().isOk());
     }
 
-    private String getCreateConversationDtoJson(Set<Participant> receivers, String text, String name) throws Exception {
+    private String getCreateConversationDtoJson(Set<Long> receivers, String text, String name) throws Exception {
         CreateConversationDto createConversationDto = new CreateConversationDto();
-        createConversationDto.setReceivers(receivers.stream().map(ParticipantDto::new).collect(toSet()));
+        createConversationDto.setReceivers(receivers);
         createConversationDto.setText(text);
         createConversationDto.setName(name);
 

@@ -26,6 +26,7 @@ public class ConversationController {
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
+    private static final String PROFILE_HEADER = "Profile";
 
     private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
@@ -55,7 +56,7 @@ public class ConversationController {
     }
 
     @PostMapping("/conversations")
-    public GetConversationDto createConversation(
+    public ResponseEntity createConversation(
             @RequestHeader(value = "Profile", required = false) Long authorId,
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -75,21 +76,22 @@ public class ConversationController {
         }
 
         Set<Participant> receivers = new HashSet<>();
-        Set<ParticipantDto> receiverDtos = createConversationDto.getReceivers();
+        Set<Long> receiverIds = createConversationDto.getReceivers();
 
-        if (receiverDtos != null && !receiverDtos.isEmpty()) {
-            receivers = receiverDtos.stream()
+        if (receiverIds != null && !receiverIds.isEmpty()) {
+            receivers = receiverIds.stream()
                     //TODO: implement and use bulk participant retrieval method
-                    .map(participantDto -> participantService.getParticipant(participantDto.getId()))
+                    .map(participantService::getParticipant)
                     .collect(toSet());
         }
 
-        String text = createConversationDto.getText();
-        String name = createConversationDto.getName();
-        Message message = messageService.createMessage(author, receivers, text);
-        Conversation conversation = conversationService.createConversation(author, receivers, name, message);
+        Message message = messageService.createMessage(author, receivers, createConversationDto.getText());
+        Conversation conversation = conversationService.createConversation(author, receivers, createConversationDto.getName(), message);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
+        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(PROFILE_HEADER, String.valueOf(authorId));
+        return ResponseEntity.status(HttpStatus.OK.value()).headers(headers).body(result);
     }
 
     @GetMapping("/conversations/{conversationId}")

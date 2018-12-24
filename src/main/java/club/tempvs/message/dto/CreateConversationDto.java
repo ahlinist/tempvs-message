@@ -4,7 +4,7 @@ import java.util.*;
 
 public class CreateConversationDto {
 
-    private Set<ParticipantDto> receivers = new LinkedHashSet<>();
+    private Set<Long> receivers = new LinkedHashSet<>();
     private String text;
     private String name;
 
@@ -12,11 +12,11 @@ public class CreateConversationDto {
 
     }
 
-    public Set<ParticipantDto> getReceivers() {
+    public Set<Long> getReceivers() {
         return receivers;
     }
 
-    public void setReceivers(Set<ParticipantDto> receivers) {
+    public void setReceivers(Set<Long> receivers) {
         this.receivers = receivers;
     }
 
