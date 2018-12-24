@@ -56,22 +56,22 @@ public class ConversationController {
 
     @PostMapping("/conversations")
     public GetConversationDto createConversation(
+            @RequestHeader(value = "Profile", required = false) Long authorId,
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
-        Locale locale = localeHelper.getLocale(lang);
-        ParticipantDto authorDto = createConversationDto.getAuthor();
+        localeHelper.getLocale(lang);
 
-        if (authorDto == null || authorDto.getId() == null) {
+        if (authorId == null) {
             throw new IllegalStateException("Author is not specified");
         }
 
-        Participant author = participantService.getParticipant(authorDto.getId());
+        Participant author = participantService.getParticipant(authorId);
 
         if (author == null) {
-            throw new IllegalStateException("Participant with id " + authorDto.getId() + " does not exist in the database");
+            throw new IllegalStateException("Participant with id " + authorId + " does not exist in the database");
         }
 
         Set<Participant> receivers = new HashSet<>();

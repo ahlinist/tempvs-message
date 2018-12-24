@@ -72,13 +72,14 @@ public class ConversationControllerIntegrationTest {
                 entityHelper.createParticipant(1L, "name4", "USER", "")
         ));
 
-        String createConversationJson = getCreateConversationDtoJson(author, receivers, message, name);
+        String createConversationJson = getCreateConversationDtoJson(receivers, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Authorization",TOKEN))
+                .header("Profile", authorId)
+                .header("Authorization", TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("participants", hasSize(4)))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))
@@ -109,32 +110,33 @@ public class ConversationControllerIntegrationTest {
         ));
 
         entityHelper.createConversation(author, receivers, oldMessage, name);
-        String createConversationJson = getCreateConversationDtoJson(author, receivers, newMessage, name);
+        String createConversationJson = getCreateConversationDtoJson(receivers, newMessage, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
+                .header("Profile", authorId)
                 .header("Authorization",TOKEN))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("participants", hasSize(2)))
-                .andExpect(jsonPath("admin", isEmptyOrNullString()))
-                .andExpect(jsonPath("messages", hasSize(2)))
-                .andExpect(jsonPath("messages[0].text", is(oldMessage)))
-                .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("messages[0].unread", is(false)))
-                .andExpect(jsonPath("messages[0].system", is(false)))
-                .andExpect(jsonPath("messages[1].text", is(newMessage)))
-                .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
-                .andExpect(jsonPath("messages[1].subject", isEmptyOrNullString()))
-                .andExpect(jsonPath("messages[1].unread", is(false)))
-                .andExpect(jsonPath("messages[1].system", is(false)))
-                .andExpect(jsonPath("lastMessage.text", is(newMessage)))
-                .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                .andExpect(jsonPath("lastMessage.unread", is(false)))
-                .andExpect(jsonPath("lastMessage.system", is(false)))
-                .andExpect(jsonPath("type", is(DIALOGUE)));
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("participants", hasSize(2)))
+                    .andExpect(jsonPath("admin", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages", hasSize(2)))
+                    .andExpect(jsonPath("messages[0].text", is(oldMessage)))
+                    .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[0].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[0].unread", is(false)))
+                    .andExpect(jsonPath("messages[0].system", is(false)))
+                    .andExpect(jsonPath("messages[1].text", is(newMessage)))
+                    .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("messages[1].subject", isEmptyOrNullString()))
+                    .andExpect(jsonPath("messages[1].unread", is(false)))
+                    .andExpect(jsonPath("messages[1].system", is(false)))
+                    .andExpect(jsonPath("lastMessage.text", is(newMessage)))
+                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("lastMessage.unread", is(false)))
+                    .andExpect(jsonPath("lastMessage.system", is(false)))
+                    .andExpect(jsonPath("type", is(DIALOGUE)));
     }
 
     @Test
@@ -148,13 +150,13 @@ public class ConversationControllerIntegrationTest {
                 entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
         ));
 
-        String createConversationJson = getCreateConversationDtoJson(null, receivers, message, name);
+        String createConversationJson = getCreateConversationDtoJson(receivers, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Authorization",TOKEN))
+                .header("Authorization", TOKEN))
                     .andExpect(status().isInternalServerError())
                     .andExpect(content().string("Author is not specified"));
     }
@@ -171,13 +173,14 @@ public class ConversationControllerIntegrationTest {
                 entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
         ));
 
-        String createConversationJson = getCreateConversationDtoJson(author, receivers, null, name);
+        String createConversationJson = getCreateConversationDtoJson(receivers, null, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Authorization",TOKEN))
+                .header("Profile", authorId)
+                .header("Authorization", TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.text", is("Please type your message")));
     }
@@ -191,13 +194,14 @@ public class ConversationControllerIntegrationTest {
 
         Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
 
-        String createConversationJson = getCreateConversationDtoJson(author, receivers, message, name);
+        String createConversationJson = getCreateConversationDtoJson(receivers, message, name);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header("Authorization",TOKEN))
+                .header("Profile", authorId)
+                .header("Authorization", TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants", is("Conversation may not contain less than 2 participants")));
     }
@@ -896,10 +900,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(status().isOk());
     }
 
-    private String getCreateConversationDtoJson(
-            Participant author, Set<Participant> receivers, String text, String name) throws Exception {
+    private String getCreateConversationDtoJson(Set<Participant> receivers, String text, String name) throws Exception {
         CreateConversationDto createConversationDto = new CreateConversationDto();
-        createConversationDto.setAuthor(author != null ? new ParticipantDto(author) : null);
         createConversationDto.setReceivers(receivers.stream().map(ParticipantDto::new).collect(toSet()));
         createConversationDto.setText(text);
         createConversationDto.setName(name);

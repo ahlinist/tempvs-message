@@ -107,9 +107,7 @@ public class ConversationControllerTest {
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
-        when(createConversationDto.getAuthor()).thenReturn(authorDto);
         when(createConversationDto.getReceivers()).thenReturn(receiverDtos);
-        when(authorDto.getId()).thenReturn(authorId);
         when(receiverDto.getId()).thenReturn(receiverId);
         when(participantDto.getId()).thenReturn(participantId);
         when(participantService.getParticipant(authorId)).thenReturn(author);
@@ -122,11 +120,9 @@ public class ConversationControllerTest {
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.createConversation(token, lang, timeZone, createConversationDto);
+        GetConversationDto result = conversationController.createConversation(authorId, token, lang, timeZone, createConversationDto);
 
         verify(localeHelper).getLocale(lang);
-        verify(createConversationDto).getAuthor();
-        verify(authorDto, times(2)).getId();
         verify(receiverDto).getId();
         verify(participantDto).getId();
         verify(createConversationDto).getReceivers();
@@ -150,11 +146,9 @@ public class ConversationControllerTest {
         Long authorId = 1L;
         String timeZone = "UTC";
 
-        when(createConversationDto.getAuthor()).thenReturn(authorDto);
-        when(authorDto.getId()).thenReturn(authorId);
         when(participantService.getParticipant(authorId)).thenReturn(null);
 
-        conversationController.createConversation(token, lang, timeZone, createConversationDto);
+        conversationController.createConversation(authorId, token, lang, timeZone, createConversationDto);
     }
 
     @Test
