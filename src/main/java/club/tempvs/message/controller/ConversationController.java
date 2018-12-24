@@ -211,10 +211,12 @@ public class ConversationController {
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto getConversationDto = objectFactory.getInstance(
+        GetConversationDto result = objectFactory.getInstance(
                 GetConversationDto.class, updatedConversation, messages, author, timeZone);
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(PROFILE_HEADER, String.valueOf(authorId));
 
-        return ResponseEntity.ok().body(getConversationDto);
+        return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @PostMapping("/conversations/{conversationId}/participants")

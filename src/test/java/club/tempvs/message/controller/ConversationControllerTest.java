@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.*;
@@ -281,6 +282,7 @@ public class ConversationControllerTest {
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
         ResponseEntity result = conversationController.addMessage(authorId, token, lang, timeZone, conversationId, addMessageDto);
 
@@ -293,6 +295,7 @@ public class ConversationControllerTest {
         verify(conversationService).addMessage(conversation, message);
         verify(messageService).getMessagesFromConversation(conversation, page, size);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
+        verify(objectFactory).getInstance(HttpHeaders.class);
         verifyNoMoreInteractions(authorDto,
                 addMessageDto, participantService, conversationService, conversation, messageService, objectFactory);
 
