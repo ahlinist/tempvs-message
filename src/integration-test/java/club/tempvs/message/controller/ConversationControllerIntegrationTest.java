@@ -60,7 +60,7 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(equalTo("pong!")));
     }
-
+    
     @Test
     public void testCreateConversation() throws Exception {
         Long authorId = 4L;
@@ -545,8 +545,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setSubjects(new HashSet<>(
-                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
+        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
@@ -589,8 +588,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setSubjects(new HashSet<>(
-                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
+        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
@@ -621,8 +619,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "CLUB", "LATE_MIDDLE_AGES");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setSubjects(new HashSet<>(
-                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "CLUB", "LATE_MIDDLE_AGES"))));
+        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
@@ -664,8 +661,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(5L, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setSubjects(new HashSet<>(
-                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", ""))));
+        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 
@@ -711,8 +707,7 @@ public class ConversationControllerIntegrationTest {
         Long conversationId = conversation.getId();
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setSubjects(new HashSet<>(
-                Arrays.asList(new ParticipantDto(addedParticipantId, "name", "USER", null))));
+        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
 

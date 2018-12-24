@@ -235,7 +235,7 @@ public class ConversationController {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
-        Set<ParticipantDto> subjectDtos = addParticipantsDto.getSubjects();
+        Set<Long> participantIds = addParticipantsDto.getParticipants();
 
         if (initiatorId == null) {
             throw new IllegalStateException("Initiator is not specified");
@@ -247,9 +247,9 @@ public class ConversationController {
             throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
         }
 
-        Set<Participant> subjects = subjectDtos.stream()
+        Set<Participant> subjects = participantIds.stream()
                 //TODO: implement "participantService#getParticipants()" for bulk retrieval
-                .map(dto -> participantService.getParticipant(dto.getId()))
+                .map(participantService::getParticipant)
                 .filter(Objects::nonNull)
                 .collect(toSet());
 

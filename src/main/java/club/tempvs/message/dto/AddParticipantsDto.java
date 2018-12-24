@@ -4,17 +4,17 @@ import java.util.Set;
 
 public class AddParticipantsDto {
 
-    private Set<ParticipantDto> subjects;
+    private Set<Long> participants;
 
     public AddParticipantsDto() {
 
     }
 
-    public Set<ParticipantDto> getSubjects() {
-        return subjects;
+    public Set<Long> getParticipants() {
+        return participants;
     }
 
-    public void setSubjects(Set<ParticipantDto> subjects) {
-        this.subjects = subjects;
+    public void setParticipants(Set<Long> participants) {
+        this.participants = participants;
     }
 }

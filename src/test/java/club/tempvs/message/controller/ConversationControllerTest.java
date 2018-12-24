@@ -334,15 +334,14 @@ public class ConversationControllerTest {
         int max = 40;
         String timeZone = "UTC";
         List<Message> messages = Arrays.asList(message, message);
-        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
+        Set<Long> participantIds = new HashSet<>(Arrays.asList(subjectId));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
         Set<Participant> participants = new HashSet<>(Arrays.asList(participant));
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
-        when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
+        when(addParticipantsDto.getParticipants()).thenReturn(participantIds);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(receiverDto.getId()).thenReturn(subjectId);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
@@ -354,8 +353,7 @@ public class ConversationControllerTest {
 
         verify(localeHelper).getLocale(lang);
         verify(conversationService).getConversation(conversationId);
-        verify(addParticipantsDto).getSubjects();
-        verify(receiverDto).getId();
+        verify(addParticipantsDto).getParticipants();
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipant(subjectId);
         verify(conversation).getParticipants();
@@ -408,14 +406,13 @@ public class ConversationControllerTest {
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
-        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
+        Set<Long> participantIds = new HashSet<>(Arrays.asList(subjectId));
         String timeZone = "UTC";
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(initiatorId)).thenReturn(null);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
-        when(receiverDto.getId()).thenReturn(subjectId);
+        when(addParticipantsDto.getParticipants()).thenReturn(participantIds);
         when(participantService.getParticipant(subjectId)).thenReturn(null);
 
         conversationController.addParticipants(initiatorId, token, lang, timeZone, conversationId, addParticipantsDto);
@@ -426,14 +423,13 @@ public class ConversationControllerTest {
         Long conversationId = 1L;
         Long initiatorId = 2L;
         Long subjectId = 3L;
-        Set<ParticipantDto> receiverDtos = new HashSet<>(Arrays.asList(receiverDto));
+        Set<Long> participantIds = new HashSet<>(Arrays.asList(subjectId));
         Set<Participant> participants = new HashSet<>(Arrays.asList(receiver));
         String timeZone = "UTC";
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(addParticipantsDto.getSubjects()).thenReturn(receiverDtos);
-        when(receiverDto.getId()).thenReturn(subjectId);
+        when(addParticipantsDto.getParticipants()).thenReturn(participantIds);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(conversation.getParticipants()).thenReturn(participants);
 
