@@ -832,7 +832,6 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testUpdateConversationName() throws Exception {
         Long authorId = 1L;
-        String authorName = "author name";
         String text = "text";
         String name = "name";
         String newName = "new name";
@@ -849,14 +848,14 @@ public class ConversationControllerIntegrationTest {
 
         UpdateConversationNameDto updateConversationNameDto = new UpdateConversationNameDto();
         updateConversationNameDto.setName(newName);
-        updateConversationNameDto.setInitiator(new ParticipantDto(authorId, authorName, "USER", null));
         String updateConversationNameJson = mapper.writeValueAsString(updateConversationNameDto);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/name")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(updateConversationNameJson)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))

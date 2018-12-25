@@ -5,7 +5,7 @@ import club.tempvs.message.api.BadRequestException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReadMessagesDto implements Validateable {
+public class ReadMessagesDto {
 
     private ParticipantDto participant;
     private List<Long> messageIds;

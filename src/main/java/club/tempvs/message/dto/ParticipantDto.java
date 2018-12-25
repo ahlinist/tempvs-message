@@ -1,13 +1,10 @@
 package club.tempvs.message.dto;
 
-import club.tempvs.message.api.BadRequestException;
 import club.tempvs.message.domain.Participant;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-public class ParticipantDto implements Validateable {
+public class ParticipantDto {
 
     Long id;
     String name;
@@ -62,22 +59,6 @@ public class ParticipantDto implements Validateable {
 
     public void setPeriod(String period) {
         this.period = period;
-    }
-
-    public void validate() {
-        List<String> errors = new ArrayList<>();
-
-        if (this.id == null) {
-            errors.add("Participant id is missing.");
-        }
-
-        if (this.name == null || this.name.isEmpty()) {
-            errors.add("Participant name is missing.");
-        }
-
-        if (!errors.isEmpty()) {
-            throw new BadRequestException(String.join("\n", errors));
-        }
     }
 
     @Override

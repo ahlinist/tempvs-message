@@ -553,31 +553,28 @@ public class ConversationControllerTest {
 
         when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(updateConversationNameDto.getName()).thenReturn(conversationName);
-        when(updateConversationNameDto.getInitiator()).thenReturn(participantDto);
-        when(participantDto.getId()).thenReturn(participantId);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(conversationService.updateName(conversation, participant, conversationName)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        GetConversationDto result = conversationController.updateConversationName(token, lang, timeZone, conversationId, updateConversationNameDto);
+        ResponseEntity result = conversationController.updateConversationName(participantId, token, lang, timeZone, conversationId, updateConversationNameDto);
 
         verify(authHelper).authenticate(token);
-        verify(updateConversationNameDto).validate();
         verify(localeHelper).getLocale(lang);
         verify(updateConversationNameDto).getName();
-        verify(updateConversationNameDto).getInitiator();
-        verify(participantDto).getId();
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversation(conversationId);
         verify(conversationService).updateName(conversation, participant, conversationName);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant, timeZone);
+        verify(objectFactory).getInstance(HttpHeaders.class);
         verifyNoMoreInteractions(authHelper, localeHelper, updateConversationNameDto, participantService,
                 conversationService, messageService, objectFactory);
 
-        assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
+        assertEquals("GetConversationDto is returned as a result", getConversationDto, result.getBody());
     }
 
     @Test

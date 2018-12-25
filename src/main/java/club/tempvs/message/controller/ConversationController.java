@@ -274,7 +274,7 @@ public class ConversationController {
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
     public ResponseEntity removeParticipant(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
-            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
@@ -308,22 +308,34 @@ public class ConversationController {
     }
 
     @PostMapping("/conversations/{conversationId}/name")
-    public GetConversationDto updateConversationName(
-            @RequestHeader(value = "Authorization", required = false) String token,
+    public ResponseEntity updateConversationName(
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
         authHelper.authenticate(token);
-        updateConversationNameDto.validate();
-        Locale locale = localeHelper.getLocale(lang);
-        ParticipantDto participantDto = updateConversationNameDto.getInitiator();
-        Participant initiator = participantService.getParticipant(participantDto.getId());
-        Conversation conversation = conversationService.getConversation(conversationId);
-        Conversation result = conversationService.updateName(conversation, initiator, updateConversationNameDto.getName());
+        localeHelper.getLocale(lang);
 
-        List<Message> messages = messageService.getMessagesFromConversation(result, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return objectFactory.getInstance(GetConversationDto.class, result, messages, initiator, timeZone);
+        if (initiatorId == null) {
+            throw new IllegalStateException("No initiator specified");
+        }
+
+        Participant initiator = participantService.getParticipant(initiatorId);
+
+        if (initiator == null) {
+            throw new IllegalStateException("The specified initiator doesn't exist in the database");
+        }
+
+        Conversation conversation = conversationService.getConversation(conversationId);
+        Conversation updatedConversation = conversationService.updateName(conversation, initiator, updateConversationNameDto.getName());
+
+        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(PROFILE_HEADER, String.valueOf(initiatorId));
+        return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @PostMapping("/conversations/{conversationId}/read")
