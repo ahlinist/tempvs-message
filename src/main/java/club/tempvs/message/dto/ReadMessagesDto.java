@@ -4,17 +4,17 @@ import java.util.List;
 
 public class ReadMessagesDto {
 
-    private List<Long> messageIds;
+    private List<Long> messages;
 
     public ReadMessagesDto() {
 
     }
 
-    public List<Long> getMessageIds() {
-        return messageIds;
+    public List<Long> getMessages() {
+        return messages;
     }
 
-    public void setMessageIds(List<Long> messageIds) {
-        this.messageIds = messageIds;
+    public void setMessages(List<Long> messages) {
+        this.messages = messages;
     }
 }

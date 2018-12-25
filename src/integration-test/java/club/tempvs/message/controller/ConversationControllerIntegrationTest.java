@@ -898,7 +898,7 @@ public class ConversationControllerIntegrationTest {
         List<Long> messagesIds = messages.stream().map(Message::getId).collect(toList());
 
         ReadMessagesDto readMessagesDto = new ReadMessagesDto();
-        readMessagesDto.setMessageIds(messagesIds);
+        readMessagesDto.setMessages(messagesIds);
         String readMessagesJson = mapper.writeValueAsString(readMessagesDto);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/read")

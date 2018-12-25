@@ -585,7 +585,7 @@ public class ConversationControllerTest {
         List<Message> messages = Arrays.asList(message, message);
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(readMessagesDto.getMessageIds()).thenReturn(messageIds);
+        when(readMessagesDto.getMessages()).thenReturn(messageIds);
         when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(messageService.markAsRead(conversation, participant, messages)).thenReturn(messages);
@@ -595,7 +595,7 @@ public class ConversationControllerTest {
 
         verify(authHelper).authenticate(token);
         verify(conversationService).getConversation(conversationId);
-        verify(readMessagesDto).getMessageIds();
+        verify(readMessagesDto).getMessages();
         verify(messageService).findMessagesByIds(messageIds);
         verify(participantService).getParticipant(participantId);
         verify(messageService).markAsRead(conversation, participant, messages);
@@ -636,7 +636,7 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(readMessagesDto.getMessageIds()).thenReturn(messageIds);
+        when(readMessagesDto.getMessages()).thenReturn(messageIds);
         when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
 
         conversationController.readMessages(participantId, token, conversationId, readMessagesDto);

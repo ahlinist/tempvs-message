@@ -361,7 +361,7 @@ public class ConversationController {
             throw new IllegalStateException("No participant with id " + participantId + " found");
         }
 
-        List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessageIds());
+        List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessages());
 
         if (messages.stream().anyMatch(Objects::isNull)) {
             throw new IllegalStateException("Some of the messages specified were not found.");
