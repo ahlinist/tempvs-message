@@ -454,7 +454,7 @@ public class ConversationControllerTest {
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
+        GetConversationDto result = conversationController.removeParticipant(initiatorId, token, lang, timeZone, conversationId, subjectId);
 
         verify(localeHelper).getLocale(lang);
         verify(conversationService).getConversation(conversationId);
@@ -477,7 +477,7 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
+        conversationController.removeParticipant(initiatorId, token, lang, timeZone, conversationId, subjectId);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -490,7 +490,7 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(initiatorId)).thenReturn(null);
 
-        conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
+        conversationController.removeParticipant(initiatorId, token, lang, timeZone, conversationId, subjectId);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -504,7 +504,7 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(null);
 
-        conversationController.removeParticipant(token, lang, timeZone, conversationId, subjectId, initiatorId);
+        conversationController.removeParticipant(initiatorId, token, lang, timeZone, conversationId, subjectId);
     }
 
     @Test

@@ -739,11 +739,12 @@ public class ConversationControllerIntegrationTest {
         Long conversationId = conversation.getId();
         int messagesInitialSize = conversation.getMessages().size();
         String participantRemovedMessage = "removed";
-        String url = "/api/conversations/" + conversationId + "/participants/" + removedParticipantId + "?initiator=" + authorId;
+        String url = "/api/conversations/" + conversationId + "/participants/" + removedParticipantId;
 
         mvc.perform(delete(url)
                 .contentType(APPLICATION_JSON_VALUE)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
                     .andExpect(jsonPath("admin.id", is(authorId.intValue())))
@@ -772,12 +773,12 @@ public class ConversationControllerIntegrationTest {
         Long authorId = 1L;
         Long removedParticipantId = 4L;
         Long nonExistentConversationId = 444L;
-        String url = "/api/conversations/" + nonExistentConversationId + "/participants/" +
-                removedParticipantId + "?initiator=" + authorId;
+        String url = "/api/conversations/" + nonExistentConversationId + "/participants/" + removedParticipantId;
 
         mvc.perform(delete(url)
                 .contentType(APPLICATION_JSON_VALUE)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(content().string(equalTo("Conversation with id '444' has not been found.")));
     }
@@ -793,12 +794,12 @@ public class ConversationControllerIntegrationTest {
         ));
 
         Conversation conversation = entityHelper.createConversation(author, receivers, "text", "");
-        String url = "/api/conversations/" + conversation.getId() + "/participants/" +
-                removedParticipantId + "?initiator=" + authorId;
+        String url = "/api/conversations/" + conversation.getId() + "/participants/" + removedParticipantId;
 
         mvc.perform(delete(url)
                 .contentType(APPLICATION_JSON_VALUE)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, authorId)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants", is("Conversation may not contain less than 2 participants")));
     }

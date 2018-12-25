@@ -273,14 +273,14 @@ public class ConversationController {
 
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
     public GetConversationDto removeParticipant(
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
             @PathVariable("conversationId") Long conversationId,
-            @PathVariable("subjectId") Long subjectId,
-            @RequestParam("initiator") Long initiatorId) {
+            @PathVariable("subjectId") Long subjectId) {
         authHelper.authenticate(token);
-        Locale locale = localeHelper.getLocale(lang);
+        localeHelper.getLocale(lang);
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
