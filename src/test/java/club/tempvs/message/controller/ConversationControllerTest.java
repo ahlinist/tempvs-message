@@ -585,25 +585,23 @@ public class ConversationControllerTest {
         List<Message> messages = Arrays.asList(message, message);
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(readMessagesDto.getParticipant()).thenReturn(participantDto);
-        when(participantDto.getId()).thenReturn(participantId);
         when(readMessagesDto.getMessageIds()).thenReturn(messageIds);
         when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(messageService.markAsRead(conversation, participant, messages)).thenReturn(messages);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        ResponseEntity result = conversationController.readMessages(conversationId, token, readMessagesDto);
+        ResponseEntity result = conversationController.readMessages(participantId, token, conversationId, readMessagesDto);
 
         verify(authHelper).authenticate(token);
-        verify(readMessagesDto).validate();
         verify(conversationService).getConversation(conversationId);
-        verify(readMessagesDto).getParticipant();
-        verify(participantDto).getId();
         verify(readMessagesDto).getMessageIds();
         verify(messageService).findMessagesByIds(messageIds);
         verify(participantService).getParticipant(participantId);
         verify(messageService).markAsRead(conversation, participant, messages);
-        verifyNoMoreInteractions(conversationService, authHelper, readMessagesDto);
+        verify(objectFactory).getInstance(HttpHeaders.class);
+        verifyNoMoreInteractions(conversationService, authHelper, readMessagesDto, objectFactory, messageService,
+                participantService, conversation, message, participant);
 
         assertEquals("Response is ok", result, ResponseEntity.ok().build());
     }
@@ -611,10 +609,11 @@ public class ConversationControllerTest {
     @Test(expected = NotFoundException.class)
     public void testReadMessagesForMissingConversation() {
         Long conversationId = 1L;
+        Long participantId = 4L;
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.readMessages(conversationId, token, readMessagesDto);
+        conversationController.readMessages(participantId, token, conversationId, readMessagesDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -623,11 +622,9 @@ public class ConversationControllerTest {
         Long participantId = 4L;
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(readMessagesDto.getParticipant()).thenReturn(participantDto);
-        when(participantDto.getId()).thenReturn(participantId);
         when(participantService.getParticipant(participantId)).thenReturn(null);
 
-        conversationController.readMessages(conversationId, token, readMessagesDto);
+        conversationController.readMessages(participantId, token, conversationId, readMessagesDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -638,12 +635,10 @@ public class ConversationControllerTest {
         List<Message> messages = Arrays.asList(message, null);
 
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(readMessagesDto.getParticipant()).thenReturn(participantDto);
-        when(participantDto.getId()).thenReturn(participantId);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(readMessagesDto.getMessageIds()).thenReturn(messageIds);
         when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
 
-        conversationController.readMessages(conversationId, token, readMessagesDto);
+        conversationController.readMessages(participantId, token, conversationId, readMessagesDto);
     }
 }

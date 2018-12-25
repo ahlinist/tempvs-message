@@ -898,7 +898,6 @@ public class ConversationControllerIntegrationTest {
         List<Long> messagesIds = messages.stream().map(Message::getId).collect(toList());
 
         ReadMessagesDto readMessagesDto = new ReadMessagesDto();
-        readMessagesDto.setParticipant(new ParticipantDto(receiver1Id, "name", "USER", null));
         readMessagesDto.setMessageIds(messagesIds);
         String readMessagesJson = mapper.writeValueAsString(readMessagesDto);
 
@@ -906,7 +905,8 @@ public class ConversationControllerIntegrationTest {
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(readMessagesJson)
-                .header("Authorization",TOKEN))
+                .header(PROFILE_HEADER, receiver1Id)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk());
     }
 

@@ -340,23 +340,25 @@ public class ConversationController {
 
     @PostMapping("/conversations/{conversationId}/read")
     public ResponseEntity readMessages(
+            @RequestHeader(value = PROFILE_HEADER, required = false) Long participantId,
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
-            @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody ReadMessagesDto readMessagesDto) {
         authHelper.authenticate(token);
-        readMessagesDto.validate();
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
             throw new NotFoundException("No conversation with id " + conversationId + " found.");
         }
 
-        ParticipantDto participantDto = readMessagesDto.getParticipant();
-        Long participantId = participantDto.getId();
+        if (participantId == null) {
+            throw new IllegalStateException("No participant specified");
+        }
+
         Participant participant = participantService.getParticipant(participantId);
 
         if (participant == null) {
-            throw new IllegalStateException("No participant with id " + participantId + " found.");
+            throw new IllegalStateException("No participant with id " + participantId + " found");
         }
 
         List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessageIds());
@@ -366,6 +368,8 @@ public class ConversationController {
         }
 
         messageService.markAsRead(conversation, participant, messages);
+        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        headers.add(PROFILE_HEADER, String.valueOf(participantId));
         return ResponseEntity.ok().build();
     }
 
