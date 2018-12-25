@@ -453,8 +453,9 @@ public class ConversationControllerTest {
         when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone)).thenReturn(getConversationDto);
+        when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        GetConversationDto result = conversationController.removeParticipant(initiatorId, token, lang, timeZone, conversationId, subjectId);
+        ResponseEntity result = conversationController.removeParticipant(initiatorId, token, lang, timeZone, conversationId, subjectId);
 
         verify(localeHelper).getLocale(lang);
         verify(conversationService).getConversation(conversationId);
@@ -463,9 +464,11 @@ public class ConversationControllerTest {
         verify(conversationService).removeParticipant(conversation, author, receiver);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
-        verifyNoMoreInteractions(authorDto, receiverDto, conversationService, participantService, objectFactory, conversation);
+        verify(objectFactory).getInstance(HttpHeaders.class);
+        verifyNoMoreInteractions(authorDto, receiverDto, localeHelper, messageService, message, author, receiver,
+                conversationService, participantService, objectFactory, conversation);
 
-        assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
+        assertEquals("GetConversationDto is returned as a result", getConversationDto, result.getBody());
     }
 
     @Test(expected = NotFoundException.class)
