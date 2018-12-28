@@ -92,7 +92,7 @@ public class ConversationController {
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
         headers.add(PROFILE_HEADER, String.valueOf(authorId));
-        return ResponseEntity.status(HttpStatus.OK.value()).headers(headers).body(result);
+        return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @GetMapping("/conversations/{conversationId}")
@@ -164,7 +164,7 @@ public class ConversationController {
         headers.add(COUNT_HEADER, String.valueOf(conversationsCount));
         headers.add(PROFILE_HEADER, String.valueOf(participantId));
 
-        return ResponseEntity.status(HttpStatus.OK.value()).headers(headers).body(result);
+        return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @RequestMapping(value="/conversations", method = HEAD)
