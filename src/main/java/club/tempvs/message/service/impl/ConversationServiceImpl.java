@@ -32,7 +32,6 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String CONVERSATION_RENAMED = "conversation.update.name";
     private static final String PARTICIPANTS_FIELD = "participants";
     private static final String TEXT_FIELD = "text";
-    private static final String CONVERSATION_MIN_PARTICIPANTS_COUNT = "conversation.participant.2.min";
     private static final String TEXT_EMPTY = "message.empty.text";
     private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
     private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
@@ -67,14 +66,23 @@ public class ConversationServiceImpl implements ConversationService {
         ErrorsDto errorsDto = validationHelper.getErrors();
         Conversation conversation;
 
-        if (receivers == null || receivers.isEmpty()) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CONVERSATION_MIN_PARTICIPANTS_COUNT);
+        if (receivers == null || receivers.isEmpty() || receivers.size() > 19) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
         }
 
         String text = message.getText();
 
         if (text == null || text.isEmpty()) {
             validationHelper.addError(errorsDto, TEXT_FIELD, TEXT_EMPTY);
+        }
+
+        String type = author.getType();
+        String period = author.getPeriod();
+
+        if (receivers.stream().anyMatch(subject -> !subject.getType().equals(type))) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH);
+        } else if (receivers.stream().anyMatch(subject -> !subject.getPeriod().equals(period))) {
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH);
         }
 
         validationHelper.processErrors(errorsDto);
@@ -160,11 +168,12 @@ public class ConversationServiceImpl implements ConversationService {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
         }
 
-        Participant aParticipant = initialParticipants.iterator().next();
+        String type = adder.getType();
+        String period = adder.getPeriod();
 
-        if (added.stream().anyMatch(subject -> !subject.getType().equals(aParticipant.getType()))) {
+        if (added.stream().anyMatch(subject -> !subject.getType().equals(type))) {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH);
-        } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(aParticipant.getPeriod()))) {
+        } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(period))) {
             validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH);
         }
 
@@ -205,7 +214,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         if (participants.size() <= 2) {
             ErrorsDto errorsDto = validationHelper.getErrors();
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, CONVERSATION_MIN_PARTICIPANTS_COUNT);
+            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
             validationHelper.processErrors(errorsDto);
         }
 

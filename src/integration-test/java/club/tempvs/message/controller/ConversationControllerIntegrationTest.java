@@ -202,7 +202,7 @@ public class ConversationControllerIntegrationTest {
                 .header(PROFILE_HEADER, authorId)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("errors.participants", is("Conversation may not contain less than 2 participants")));
+                    .andExpect(jsonPath("errors.participants", is("Conversation may contain from 2 to 20 participants")));
     }
 
     @Test
@@ -607,7 +607,7 @@ public class ConversationControllerIntegrationTest {
         Long authorId = 1L;
         Long addedParticipantId = 33L;
 
-        Set<Participant> receivers = LongStream.rangeClosed(2L, 22L).boxed()
+        Set<Participant> receivers = LongStream.rangeClosed(2L, 20L).boxed()
                 .map(i -> entityHelper.createParticipant(i, "name", "CLUB", "EARLY_MIDDLE_AGES"))
                 .collect(toSet());
 
@@ -631,7 +631,7 @@ public class ConversationControllerIntegrationTest {
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants",
-                            is("Conversation may contain 2 min and 20 max participants" +
+                            is("Conversation may contain from 2 to 20 participants" +
                                     "\nConversation can contain only participants of the same period")));
     }
 
@@ -801,7 +801,7 @@ public class ConversationControllerIntegrationTest {
                 .header(PROFILE_HEADER, authorId)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("errors.participants", is("Conversation may not contain less than 2 participants")));
+                    .andExpect(jsonPath("errors.participants", is("Conversation may contain from 2 to 20 participants")));
     }
 
     @Test

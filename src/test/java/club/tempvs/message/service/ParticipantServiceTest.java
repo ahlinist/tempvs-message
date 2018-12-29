@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Optional;
+import java.util.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ParticipantServiceTest {
@@ -117,5 +117,21 @@ public class ParticipantServiceTest {
         verifyNoMoreInteractions(participant, objectFactory, participantRepository);
 
         assertEquals("A participant instance is returned", result, participant);
+    }
+
+    @Test
+    public void testGetParticipants() {
+        Set<Long> participantIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+        Set<Participant> participantSet = new HashSet<>(Arrays.asList(participant));
+        List<Participant> participantList = Arrays.asList(participant);
+
+        when(participantRepository.findAllById(participantIds)).thenReturn(participantList);
+
+        Set<Participant> result = participantService.getParticipants(participantIds);
+
+        verify(participantRepository).findAllById(participantIds);
+        verifyNoMoreInteractions(participant, participantRepository);
+
+        assertEquals("A set of participants is returned", participantSet, result);
     }
 }

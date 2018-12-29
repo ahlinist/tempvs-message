@@ -7,6 +7,10 @@ import club.tempvs.message.util.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Service
 public class ParticipantServiceImpl implements ParticipantService {
 
@@ -26,6 +30,11 @@ public class ParticipantServiceImpl implements ParticipantService {
 
     public Participant getParticipant(Long id) {
         return participantRepository.findById(id).orElse(null);
+    }
+
+    public Set<Participant> getParticipants(Set<Long> ids) {
+        List<Participant> participants = participantRepository.findAllById(ids);
+        return new HashSet<>(participants);
     }
 
     public Participant refreshParticipant(Long id, String name, String type, String period) {

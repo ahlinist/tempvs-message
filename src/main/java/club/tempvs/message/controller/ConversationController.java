@@ -80,10 +80,7 @@ public class ConversationController {
         Set<Long> receiverIds = createConversationDto.getReceivers();
 
         if (receiverIds != null && !receiverIds.isEmpty()) {
-            receivers = receiverIds.stream()
-                    //TODO: implement and use bulk participant retrieval method
-                    .map(participantService::getParticipant)
-                    .collect(toSet());
+            receivers = participantService.getParticipants(receiverIds);
         }
 
         Message message = messageService.createMessage(author, receivers, createConversationDto.getText(), false, null, null);
@@ -235,8 +232,6 @@ public class ConversationController {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
-        Set<Long> participantIds = addParticipantsDto.getParticipants();
-
         if (initiatorId == null) {
             throw new IllegalStateException("Initiator is not specified");
         }
@@ -247,11 +242,8 @@ public class ConversationController {
             throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
         }
 
-        Set<Participant> subjects = participantIds.stream()
-                //TODO: implement "participantService#getParticipants()" for bulk retrieval
-                .map(participantService::getParticipant)
-                .filter(Objects::nonNull)
-                .collect(toSet());
+        Set<Long> subjectIds = addParticipantsDto.getParticipants();
+        Set<Participant> subjects = participantService.getParticipants(subjectIds);
 
         if (subjects == null || subjects.isEmpty()) {
             throw new IllegalStateException("No subjects found in database");
