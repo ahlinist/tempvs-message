@@ -74,12 +74,7 @@ public class ConversationServiceTest {
     public void testCreateConversationOf2ParticipantsForExistentOne() {
         String text = "text";
         String conversationName = "name";
-        Set<Participant> authorSet = new HashSet<>(Arrays.asList(author));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
-
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
 
         when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(message.getText()).thenReturn(text);
@@ -87,8 +82,7 @@ public class ConversationServiceTest {
         when(author.getType()).thenReturn(USER_TYPE);
         when(receiver.getPeriod()).thenReturn(EMPTY_STRING);
         when(author.getPeriod()).thenReturn(EMPTY_STRING);
-        when(conversationRepository.findOneByTypeAndParticipantsContainsAndParticipantsContains(
-                Conversation.Type.DIALOGUE, authorSet, receivers)).thenReturn(conversation);
+        when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
@@ -100,8 +94,7 @@ public class ConversationServiceTest {
         verify(receiver).getPeriod();
         verify(author).getPeriod();
         verify(validationHelper).processErrors(errorsDto);
-        verify(conversationRepository).findOneByTypeAndParticipantsContainsAndParticipantsContains(
-                Conversation.Type.DIALOGUE, authorSet, receivers);
+        verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
         verify(message).setConversation(conversation);
@@ -123,12 +116,9 @@ public class ConversationServiceTest {
     public void testCreateConversationOf2ParticipantsForNonExistentOne() {
         String text = "text";
         String conversationName = "name";
-        Set<Participant> authorSet = new HashSet<>(Arrays.asList(author));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
+        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
 
         when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(message.getText()).thenReturn(text);
@@ -136,8 +126,7 @@ public class ConversationServiceTest {
         when(author.getType()).thenReturn(USER_TYPE);
         when(receiver.getPeriod()).thenReturn(EMPTY_STRING);
         when(author.getPeriod()).thenReturn(EMPTY_STRING);
-        when(conversationRepository.findOneByTypeAndParticipantsContainsAndParticipantsContains(
-                Conversation.Type.DIALOGUE, authorSet, receivers)).thenReturn(null);
+        when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(null);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
@@ -151,8 +140,7 @@ public class ConversationServiceTest {
         verify(receiver).getPeriod();
         verify(author).getPeriod();
         verify(validationHelper).processErrors(errorsDto);
-        verify(conversationRepository).findOneByTypeAndParticipantsContainsAndParticipantsContains(
-                Conversation.Type.DIALOGUE, authorSet, receivers);
+        verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
         verify(objectFactory).getInstance(Conversation.class);
         verify(conversation).addParticipant(receiver);
         verify(conversation).addParticipant(author);
@@ -480,16 +468,11 @@ public class ConversationServiceTest {
 
     @Test
     public void testFindConversation() {
-        Set<Participant> authorSet = new HashSet<>(Arrays.asList(author));
-        Set<Participant> receiverSet = new HashSet<>(Arrays.asList(receiver));
-
-        when(conversationRepository
-                .findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet))
-                .thenReturn(conversation);
+        when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(conversation);
 
         Conversation result = conversationService.findDialogue(author, receiver);
 
-        verify(conversationRepository).findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet);
+        verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
         verifyNoMoreInteractions(conversationRepository, conversation, author, receiver);
 
         assertEquals("Conversation is returned as a result", conversation, result);

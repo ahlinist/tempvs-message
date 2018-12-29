@@ -8,19 +8,23 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Set;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
-    @Query("SELECT c from Conversation c JOIN c.participants p WHERE :participant IN p")
+    @Query("SELECT c FROM Conversation c WHERE :participant MEMBER OF c.participants")
     List<Conversation> findByParticipantsIn(Participant participant, Pageable pageable);
-    @Query("SELECT c, count(n) from Conversation c " +
+
+    @Query("SELECT c, count(n) FROM Conversation c " +
             "JOIN c.messages m " +
             "JOIN m.newFor n " +
             "WHERE :participant IN n and c IN :conversations " +
             "GROUP BY c")
+    //TODO: simplify the query. Consider 'member of' clause.
     List<Object[]> countUnreadMessages(List<Conversation> conversations, Participant participant);
-    Conversation findOneByTypeAndParticipantsContainsAndParticipantsContains(
-            Conversation.Type type, Set<Participant> authorSet, Set<Participant> receiverSet);
-    @Query("select count(distinct m.conversation) from Message m join m.newFor n where n = :participant")
+
+    @Query("SELECT c FROM Conversation c " +
+            "WHERE :author MEMBER OF c.participants AND :receiver MEMBER OF c.participants AND c.type = :type")
+    Conversation findDialogue(Conversation.Type type, Participant author, Participant receiver);
+
+    @Query("SELECT COUNT(distinct m.conversation) FROM Message m WHERE :participant MEMBER OF m.newFor")
     long countByNewMessagesPerParticipant(@Param("participant") Participant participant);
 }
