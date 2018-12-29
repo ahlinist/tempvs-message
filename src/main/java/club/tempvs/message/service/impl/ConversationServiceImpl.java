@@ -243,12 +243,7 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     public Conversation findDialogue(Participant author, Participant receiver) {
-        //TODO: improve the repository query to avoid redundant collections wrappings
-        Set<Participant> authorSet = new LinkedHashSet<>(Arrays.asList(author));
-        Set<Participant> receiverSet = new LinkedHashSet<>(Arrays.asList(receiver));
-
-        return conversationRepository
-                .findOneByTypeAndParticipantsContainsAndParticipantsContains(Conversation.Type.DIALOGUE, authorSet, receiverSet);
+        return conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver);
     }
 
     public long countUpdatedConversationsPerParticipant(Participant participant) {
