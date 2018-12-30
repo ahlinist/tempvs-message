@@ -28,7 +28,8 @@ import java.util.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationServiceTest {
 
-    private static final String CONVERSATION_RENAMED = "conversation.update.name";
+    private static final String CONVERSATION_RENAMED = "conversation.rename";
+    private static final String CONVERSATION_NAME_DROPPED = "conversation.drop.name";
     private static final Locale locale = LocaleContextHolder.getLocale();
     private static final String EMPTY_STRING = "";
     private static final String USER_TYPE = "USER";
@@ -493,7 +494,7 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testUpdateName() {
+    public void testRename() {
         String name = "name";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
@@ -502,7 +503,7 @@ public class ConversationServiceTest {
         when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.updateName(conversation, participant, name);
+        Conversation result = conversationService.rename(conversation, participant, name);
 
         verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null);
         verify(conversation).getParticipants();
@@ -512,6 +513,32 @@ public class ConversationServiceTest {
         verify(message).setConversation(conversation);
         verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(participant, message, conversation, messageService, conversationRepository);
+
+        assertEquals("Updated conversation is returned as a result", conversation, result);
+    }
+
+    @Test
+    public void testRenameForEmptyName() {
+        String name = "";
+        Boolean isSystem = Boolean.TRUE;
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
+
+        when(conversation.getParticipants()).thenReturn(receivers);
+        when(messageService.createMessage(participant, receivers,
+                CONVERSATION_NAME_DROPPED, isSystem, null, null)).thenReturn(message);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+
+        Conversation result = conversationService.rename(conversation, participant, name);
+
+        verify(messageService).createMessage(participant, receivers,
+                CONVERSATION_NAME_DROPPED, isSystem, null, null);
+        verify(conversation).getParticipants();
+        verify(conversation).setName(name);
+        verify(conversation).addMessage(message);
+        verify(conversation).setLastMessage(message);
+        verify(message).setConversation(conversation);
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(participant, receiver, message, conversation, messageService, conversationRepository);
 
         assertEquals("Updated conversation is returned as a result", conversation, result);
     }

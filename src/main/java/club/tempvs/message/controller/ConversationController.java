@@ -15,7 +15,6 @@ import java.io.*;
 import java.util.*;
 
 import static org.springframework.web.bind.annotation.RequestMethod.*;
-import static java.util.stream.Collectors.*;
 
 @RestController
 @RequestMapping("/api")
@@ -300,7 +299,7 @@ public class ConversationController {
     }
 
     @PostMapping("/conversations/{conversationId}/name")
-    public ResponseEntity updateConversationName(
+    public ResponseEntity renameConversation(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = "Accept-Language", required = false) String lang,
@@ -321,7 +320,7 @@ public class ConversationController {
         }
 
         Conversation conversation = conversationService.getConversation(conversationId);
-        Conversation updatedConversation = conversationService.updateName(conversation, initiator, updateConversationNameDto.getName());
+        Conversation updatedConversation = conversationService.rename(conversation, initiator, updateConversationNameDto.getName());
 
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);

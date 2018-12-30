@@ -19,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.*;
@@ -553,19 +552,19 @@ public class ConversationControllerTest {
         when(updateConversationNameDto.getName()).thenReturn(conversationName);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(conversationService.updateName(conversation, participant, conversationName)).thenReturn(conversation);
+        when(conversationService.rename(conversation, participant, conversationName)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
         when(objectFactory.getInstance(GetConversationDto.class, conversation, messages, participant, timeZone)).thenReturn(getConversationDto);
         when(objectFactory.getInstance(HttpHeaders.class)).thenReturn(new HttpHeaders());
 
-        ResponseEntity result = conversationController.updateConversationName(participantId, token, lang, timeZone, conversationId, updateConversationNameDto);
+        ResponseEntity result = conversationController.renameConversation(participantId, token, lang, timeZone, conversationId, updateConversationNameDto);
 
         verify(authHelper).authenticate(token);
         verify(localeHelper).getLocale(lang);
         verify(updateConversationNameDto).getName();
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversation(conversationId);
-        verify(conversationService).updateName(conversation, participant, conversationName);
+        verify(conversationService).rename(conversation, participant, conversationName);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verify(objectFactory).getInstance(GetConversationDto.class, conversation, messages, participant, timeZone);
         verify(objectFactory).getInstance(HttpHeaders.class);

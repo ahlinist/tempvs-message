@@ -835,7 +835,7 @@ public class ConversationControllerIntegrationTest {
         String text = "text";
         String name = "name";
         String newName = "new name";
-        String conversationRenamedMessage = "renamed a conversation to \"" + newName + "\"";
+        String conversationRenamedMessage = "renamed the conversation to \"" + newName + "\"";
 
         Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
         Set<Participant> receivers = new HashSet<>(Arrays.asList(

@@ -16,5 +16,5 @@ public interface ConversationService {
     Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added);
     Conversation findDialogue(Participant author, Participant receiver);
     long countUpdatedConversationsPerParticipant(Participant participant);
-    Conversation updateName(Conversation conversation, Participant initiator, String name);
+    Conversation rename(Conversation conversation, Participant initiator, String name);
 }
