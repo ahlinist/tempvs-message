@@ -250,7 +250,7 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.countByNewMessagesPerParticipant(participant);
     }
 
-    public Conversation updateName(Conversation conversation, Participant initiator, String name) {
+    public Conversation rename(Conversation conversation, Participant initiator, String name) {
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new LinkedHashSet<>(conversation.getParticipants());
         receivers.remove(initiator);

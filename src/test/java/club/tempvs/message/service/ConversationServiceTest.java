@@ -502,7 +502,7 @@ public class ConversationServiceTest {
         when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.updateName(conversation, participant, name);
+        Conversation result = conversationService.rename(conversation, participant, name);
 
         verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null);
         verify(conversation).getParticipants();
