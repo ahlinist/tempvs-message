@@ -29,7 +29,8 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String PARTICIPANT_REMOVED_MESSAGE = "conversation.remove.participant";
     private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
     private static final String CONFERENCE_CREATED = "conversation.conference.created";
-    private static final String CONVERSATION_RENAMED = "conversation.update.name";
+    private static final String CONVERSATION_RENAMED = "conversation.rename";
+    private static final String CONVERSATION_NAME_DROPPED = "conversation.drop.name";
     private static final String PARTICIPANTS_FIELD = "participants";
     private static final String TEXT_FIELD = "text";
     private static final String TEXT_EMPTY = "message.empty.text";
@@ -254,7 +255,16 @@ public class ConversationServiceImpl implements ConversationService {
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new LinkedHashSet<>(conversation.getParticipants());
         receivers.remove(initiator);
-        Message message = messageService.createMessage(initiator, receivers, CONVERSATION_RENAMED, isSystem, name, null);
+        Message message;
+
+        if (name == null || name.isEmpty()) {
+            message = messageService.createMessage(
+                    initiator, receivers, CONVERSATION_NAME_DROPPED, isSystem, null, null);
+        } else {
+            message = messageService.createMessage(
+                    initiator, receivers, CONVERSATION_RENAMED, isSystem, name, null);
+        }
+
         conversation.setName(name);
         return addMessage(conversation, message);
     }
