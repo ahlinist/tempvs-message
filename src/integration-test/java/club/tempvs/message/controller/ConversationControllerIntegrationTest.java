@@ -830,6 +830,37 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
+    public void testCountNewConversationsWhenRemovingTheUserFromConversation() throws Exception {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        String text = "text";
+        String name = "name";
+
+        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+                entityHelper.createParticipant(receiverId, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY"),
+                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY")
+        ));
+
+        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
+        entityHelper.createConversation(author, receivers, text, name);
+        entityHelper.createConversation(author, receivers, text, name);
+
+        //removing the receiver from the first conversation
+        mvc.perform(delete("/api/conversations/" + conversation.getId() + "/participants/" + receiverId)
+                .header("Profile", receiverId)
+                .header("Authorization", TOKEN));
+
+        //verifying if only 2 conversations of 3 found
+        mvc.perform(head("/api/conversations")
+                .header("Profile", receiverId)
+                .header("Authorization", TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(header().string(COUNT_HEADER, String.valueOf(2)));
+    }
+
+    @Test
     public void testUpdateConversationName() throws Exception {
         Long authorId = 1L;
         String text = "text";

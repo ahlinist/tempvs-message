@@ -25,6 +25,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
             "WHERE :author MEMBER OF c.participants AND :receiver MEMBER OF c.participants AND c.type = :type")
     Conversation findDialogue(Conversation.Type type, Participant author, Participant receiver);
 
-    @Query("SELECT COUNT(distinct m.conversation) FROM Message m WHERE :participant MEMBER OF m.newFor")
+    @Query("SELECT COUNT(distinct m.conversation) FROM Message m " +
+            "WHERE :participant MEMBER OF m.newFor AND :participant MEMBER OF m.conversation.participants")
     long countByNewMessagesPerParticipant(@Param("participant") Participant participant);
 }
