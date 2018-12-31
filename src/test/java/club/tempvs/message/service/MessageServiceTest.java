@@ -6,6 +6,7 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.impl.MessageServiceImpl;
+import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -14,8 +15,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -50,11 +49,11 @@ public class MessageServiceTest {
     @Mock
     private MessageRepository messageRepository;
     @Mock
-    private MessageSource messageSource;
+    private LocaleHelper localeHelper;
 
     @Before
     public void setup() {
-        this.messageService = new MessageServiceImpl(objectFactory, messageRepository, messageSource);
+        this.messageService = new MessageServiceImpl(objectFactory, messageRepository, localeHelper);
     }
 
     @Test
@@ -84,29 +83,20 @@ public class MessageServiceTest {
     public void testGetMessagesFromConversation() {
         int page = 0;
         int size = 40;
-        String text = "text";
-        String translatedText = "translated text";
-        Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
-        List<Message> messages = Arrays.asList(message1, message1, message1);
-        String[] args = new String[0];
+        List<Message> originalMessages = Arrays.asList(message1, message1, message1);
+        List<Message> translatedMessages = Arrays.asList(message2, message2, message2);
 
-        when(messageRepository.findByConversation(conversation1, pageable)).thenReturn(messages);
-        when(message1.getText()).thenReturn(text);
-        when(message1.getSystem()).thenReturn(true);
-        when(messageSource.getMessage(text, args, text, locale)).thenReturn(translatedText);
+        when(messageRepository.findByConversation(conversation1, pageable)).thenReturn(originalMessages);
+        when(localeHelper.translateMessageIfSystem(message1)).thenReturn(message2);
 
         List<Message> result = messageService.getMessagesFromConversation(conversation1, page, size);
 
         verify(messageRepository).findByConversation(conversation1, pageable);
-        verify(message1, times(3)).getText();
-        verify(message1, times(3)).getSystem();
-        verify(message1, times(3)).getSystemArgs();
-        verify(messageSource, times(3)).getMessage(text, args, text, locale);
-        verify(message1, times(3)).setText(translatedText);
-        verifyNoMoreInteractions(message1, messageSource, messageRepository);
+        verify(localeHelper, times(3)).translateMessageIfSystem(message1);
+        verifyNoMoreInteractions(message1, localeHelper, messageRepository);
 
-        assertEquals("A list of messages is returned", messages, result);
+        assertEquals("A list of messages is returned", translatedMessages, result);
     }
 
     @Test

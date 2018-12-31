@@ -43,6 +43,17 @@ public class Message {
 
     }
 
+    public Message(Message message) {
+        this.isSystem = message.getSystem();
+        this.systemArgs = message.getSystemArgs();
+        this.conversation = message.getConversation();
+        this.author = message.getAuthor();
+        this.subject = message.getSubject();
+        this.newFor = message.getNewFor();
+        this.text = message.getText();
+        this.createdDate = message.getCreatedDate();
+    }
+
     public Long getId() {
         return id;
     }

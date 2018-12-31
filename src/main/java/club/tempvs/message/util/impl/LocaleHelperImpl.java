@@ -1,6 +1,10 @@
 package club.tempvs.message.util.impl;
 
+import club.tempvs.message.domain.Message;
 import club.tempvs.message.util.LocaleHelper;
+import club.tempvs.message.util.ObjectFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +12,15 @@ import java.util.Locale;
 
 @Component
 public class LocaleHelperImpl implements LocaleHelper {
+
+    private final MessageSource messageSource;
+    private final ObjectFactory objectFactory;
+
+    @Autowired
+    public LocaleHelperImpl(MessageSource messageSource, ObjectFactory objectFactory) {
+        this.messageSource = messageSource;
+        this.objectFactory = objectFactory;
+    }
 
     public Locale getLocale(String lang) {
         Locale locale;
@@ -20,5 +33,24 @@ public class LocaleHelperImpl implements LocaleHelper {
         }
 
         return locale;
+    }
+
+    public Message translateMessageIfSystem(Message originalMessage) {
+        if (originalMessage.getSystem()) {
+            String code = originalMessage.getText();
+            String[] args = new String[0];
+            String argsString = originalMessage.getSystemArgs();
+
+            if (argsString != null) {
+                args = argsString.split(",");
+            }
+
+            Message translatedMessage = objectFactory.getInstance(Message.class, originalMessage);
+            String translatedMessageString = messageSource.getMessage(code, args, code, LocaleContextHolder.getLocale());
+            translatedMessage.setText(translatedMessageString);
+            return translatedMessage;
+        } else {
+            return originalMessage;
+        }
     }
 }
