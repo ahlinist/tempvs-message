@@ -15,7 +15,6 @@ public class GetConversationDto {
     private String name;
     private ParticipantDto admin;
     private Set<ParticipantDto> participants = new LinkedHashSet<>();
-    private MessageDtoBean lastMessage;
     private List<MessageDtoBean> messages = new ArrayList<>();
 
     public GetConversationDto() {
@@ -31,7 +30,6 @@ public class GetConversationDto {
         this.name = conversation.getName();
         this.admin = admin != null ? new ParticipantDto(admin) : null;
         this.participants = conversation.getParticipants().stream().map(ParticipantDto::new).collect(toSet());
-        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self, zoneId);
         this.messages = messages.stream().map(message -> new MessageDtoBean(message, self, zoneId)).collect(toList());
     }
 
@@ -73,14 +71,6 @@ public class GetConversationDto {
 
     public void setParticipants(Set<ParticipantDto> participants) {
         this.participants = participants;
-    }
-
-    public MessageDtoBean getLastMessage() {
-        return lastMessage;
-    }
-
-    public void setLastMessage(MessageDtoBean lastMessage) {
-        this.lastMessage = lastMessage;
     }
 
     public List<MessageDtoBean> getMessages() {
