@@ -6,12 +6,11 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.MessageService;
+import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,13 +25,13 @@ public class MessageServiceImpl implements MessageService {
 
     private final ObjectFactory objectFactory;
     private final MessageRepository messageRepository;
-    private final MessageSource messageSource;
+    private final LocaleHelper localeHelper;
 
     @Autowired
-    public MessageServiceImpl(ObjectFactory objectFactory, MessageRepository messageRepository, MessageSource messageSource) {
+    public MessageServiceImpl(ObjectFactory objectFactory, MessageRepository messageRepository, LocaleHelper localeHelper) {
         this.objectFactory = objectFactory;
         this.messageRepository = messageRepository;
-        this.messageSource = messageSource;
+        this.localeHelper = localeHelper;
     }
 
     public Message createMessage(Participant author,
@@ -51,25 +50,11 @@ public class MessageServiceImpl implements MessageService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
-        Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
         List<Message> messages = messageRepository.findByConversation(conversation, pageable);
-
-        return messages.stream().map(message -> {
-            if (message.getSystem()) {
-                String code = message.getText();
-                String[] args = new String[0];
-                String argsString = message.getSystemArgs();
-
-                if (argsString != null) {
-                    args = argsString.split(",");
-                }
-
-                message.setText(messageSource.getMessage(code, args, code, locale));
-            }
-
-            return message;
-        }).collect(toList());
+        return messages.stream()
+                .map(localeHelper::translateMessageIfSystem)
+                .collect(toList());
     }
 
     @HystrixCommand(commandProperties = {

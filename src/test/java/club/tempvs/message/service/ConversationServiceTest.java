@@ -7,6 +7,7 @@ import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.ErrorsDto;
 import club.tempvs.message.service.impl.ConversationServiceImpl;
+import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import static org.junit.Assert.*;
 
@@ -17,8 +18,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,45 +29,55 @@ public class ConversationServiceTest {
 
     private static final String CONVERSATION_RENAMED = "conversation.rename";
     private static final String CONVERSATION_NAME_DROPPED = "conversation.drop.name";
-    private static final Locale locale = LocaleContextHolder.getLocale();
     private static final String EMPTY_STRING = "";
     private static final String USER_TYPE = "USER";
     private static final String CLUB_TYPE = "CLUB";
-
 
     private ConversationService conversationService;
 
     @Mock
     private Message message;
+
     @Mock
     private Conversation conversation;
+
     @Mock
     private Conversation newConversation;
+
     @Mock
     private Participant author;
+
     @Mock
     private Participant receiver;
+
     @Mock
     private Participant participant;
+
     @Mock
     private Participant oneMoreReceiver;
+
     @Mock
     private ObjectFactory objectFactory;
+
     @Mock
     private MessageService messageService;
+
     @Mock
     private ConversationRepository conversationRepository;
+
     @Mock
-    private MessageSource messageSource;
+    private LocaleHelper localeHelper;
+
     @Mock
     private ValidationHelper validationHelper;
+
     @Mock
     private ErrorsDto errorsDto;
 
     @Before
     public void setup() {
-        this.conversationService = new ConversationServiceImpl(objectFactory, messageService, conversationRepository,
-                messageSource, validationHelper);
+        this.conversationService = new ConversationServiceImpl(
+                objectFactory, messageService, conversationRepository, localeHelper, validationHelper);
     }
 
     @Test
@@ -261,22 +270,16 @@ public class ConversationServiceTest {
     public void testGetConversationsByParticipant() {
         int page = 0;
         int size = 40;
-        String text = "text";
-        String translatedText = "translated text";
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
-        String systemArgs = "systemArgs";
         List<Object[]> unreadMessagesPerConversation = new ArrayList<>();
         unreadMessagesPerConversation.add(new Object[]{conversation, 3L});
 
         when(conversationRepository.findByParticipantsIn(participant, pageable)).thenReturn(conversations);
         when(conversationRepository.countUnreadMessages(conversations, participant)).thenReturn(unreadMessagesPerConversation);
         when(conversation.getLastMessage()).thenReturn(message);
-        when(message.getSystem()).thenReturn(true);
-        when(message.getText()).thenReturn(text);
-        when(message.getSystemArgs()).thenReturn(systemArgs);
-        when(messageSource.getMessage(text, new String[]{systemArgs}, text, locale)).thenReturn(translatedText);
+        when(localeHelper.translateMessageIfSystem(message)).thenReturn(message);
 
         List<Conversation> result = conversationService.getConversationsByParticipant(participant, page, size);
 
@@ -284,13 +287,9 @@ public class ConversationServiceTest {
         verify(conversationRepository).countUnreadMessages(conversations, participant);
         verify(conversation).setUnreadMessagesCount(3L);
         verify(conversation).getLastMessage();
-        verify(message).getSystem();
-        verify(message).getText();
-        verify(message).getSystemArgs();
-        verify(messageSource).getMessage(text, new String[]{systemArgs}, text, locale);
-        verify(message).setText(translatedText);
+        verify(localeHelper).translateMessageIfSystem(message);
         verify(conversation).setLastMessage(message);
-        verifyNoMoreInteractions(participant, message, conversation, messageSource, conversationRepository);
+        verifyNoMoreInteractions(participant, message, conversation, localeHelper, conversationRepository);
 
         assertEquals("A list of one conversation is returned", result, conversations);
     }

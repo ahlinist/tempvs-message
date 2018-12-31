@@ -8,13 +8,12 @@ import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.ErrorsDto;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
+import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import club.tempvs.message.util.ValidationHelper;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -44,19 +43,19 @@ public class ConversationServiceImpl implements ConversationService {
     private final ObjectFactory objectFactory;
     private final ConversationRepository conversationRepository;
     private final MessageService messageService;
-    private final MessageSource messageSource;
+    private final LocaleHelper localeHelper;
     private final ValidationHelper validationHelper;
 
     @Autowired
     public ConversationServiceImpl(ObjectFactory objectFactory,
                                    MessageService messageService,
                                    ConversationRepository conversationRepository,
-                                   MessageSource messageSource,
+                                   LocaleHelper localeHelper,
                                    ValidationHelper validationHelper) {
         this.objectFactory = objectFactory;
         this.messageService = messageService;
         this.conversationRepository = conversationRepository;
-        this.messageSource = messageSource;
+        this.localeHelper = localeHelper;
         this.validationHelper = validationHelper;
     }
 
@@ -140,7 +139,6 @@ public class ConversationServiceImpl implements ConversationService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
-        Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
         List<Conversation> conversations = conversationRepository.findByParticipantsIn(participant, pageable);
         List<Object[]> unreadMessagesPerConversation = conversationRepository.countUnreadMessages(conversations, participant);
@@ -149,23 +147,10 @@ public class ConversationServiceImpl implements ConversationService {
 
         return conversations.stream()
             .map(conversation -> {
-                Message lastMessage = conversation.getLastMessage();
                 conversation.setUnreadMessagesCount(unreadMessagesCountMap.get(conversation));
-
-                if (lastMessage.getSystem()) {
-                    String text = lastMessage.getText();
-                    String[] args = new String[0];
-                    String argsString = lastMessage.getSystemArgs();
-
-                    if (argsString != null) {
-                        args = argsString.split(",");
-                    }
-
-                    lastMessage.setText(
-                            messageSource.getMessage(text, args, text, locale));
-                    conversation.setLastMessage(lastMessage);
-                }
-
+                Message lastMessage = conversation.getLastMessage();
+                Message translatedLastMessage = localeHelper.translateMessageIfSystem(lastMessage);
+                conversation.setLastMessage(translatedLastMessage);
                 return conversation;
             }).collect(toList());
     }

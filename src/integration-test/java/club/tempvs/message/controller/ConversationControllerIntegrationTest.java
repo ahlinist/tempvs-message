@@ -563,10 +563,6 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[0].author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[0].unread", is(false)))
                     .andExpect(jsonPath("messages[0].system", is(true)))
-                    .andExpect(jsonPath("lastMessage.text", is(conferenceCreatedMessage)))
-                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(false)))
-                    .andExpect(jsonPath("lastMessage.system", is(true)))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
@@ -686,11 +682,6 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[1].subject.id", is(addedParticipantId.intValue())))
                     .andExpect(jsonPath("messages[1].unread", is(false)))
                     .andExpect(jsonPath("messages[1].system", is(true)))
-                    .andExpect(jsonPath("lastMessage.text", is(participantAddedMessage)))
-                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(false)))
-                    .andExpect(jsonPath("lastMessage.system", is(true)))
-                    .andExpect(jsonPath("lastMessage.subject.id", is(addedParticipantId.intValue())))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
@@ -760,11 +751,6 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[1].subject.id", is(removedParticipantId.intValue())))
                     .andExpect(jsonPath("messages[1].unread", is(false)))
                     .andExpect(jsonPath("messages[1].system", is(true)))
-                    .andExpect(jsonPath("lastMessage.text", is(participantRemovedMessage)))
-                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(false)))
-                    .andExpect(jsonPath("lastMessage.system", is(true)))
-                    .andExpect(jsonPath("lastMessage.subject.id", is(removedParticipantId.intValue())))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
@@ -902,10 +888,6 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
                     .andExpect(jsonPath("messages[1].unread", is(false)))
                     .andExpect(jsonPath("messages[1].system", is(true)))
-                    .andExpect(jsonPath("lastMessage.text", is(conversationRenamedMessage)))
-                    .andExpect(jsonPath("lastMessage.author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("lastMessage.unread", is(false)))
-                    .andExpect(jsonPath("lastMessage.system", is(true)))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
     }
 
