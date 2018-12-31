@@ -10,6 +10,8 @@ import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
 import club.tempvs.message.util.ValidationHelper;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -58,6 +60,9 @@ public class ConversationServiceImpl implements ConversationService {
         this.validationHelper = validationHelper;
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public Conversation createConversation(
             Participant author, Set<Participant> receivers, String name, Message message) {
         if (receivers.size() == 1 && receivers.iterator().next().equals(author)) {
@@ -114,10 +119,16 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.save(conversation);
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public Conversation getConversation(Long id) {
         return conversationRepository.findById(id).orElse(null);
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public Conversation addMessage(Conversation conversation, Message message) {
         conversation.addMessage(message);
         conversation.setLastMessage(message);
@@ -125,6 +136,9 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.save(conversation);
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
         Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
@@ -156,6 +170,9 @@ public class ConversationServiceImpl implements ConversationService {
             }).collect(toList());
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
         ErrorsDto errorsDto = validationHelper.getErrors();
 
@@ -243,10 +260,16 @@ public class ConversationServiceImpl implements ConversationService {
         return addMessage(conversation, message);
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public Conversation findDialogue(Participant author, Participant receiver) {
         return conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver);
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public long countUpdatedConversationsPerParticipant(Participant participant) {
         return conversationRepository.countByNewMessagesPerParticipant(participant);
     }

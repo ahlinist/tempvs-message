@@ -5,6 +5,7 @@ import club.tempvs.message.domain.*;
 import club.tempvs.message.dto.*;
 import club.tempvs.message.service.*;
 import club.tempvs.message.util.*;
+import com.netflix.hystrix.exception.HystrixRuntimeException;
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -391,6 +392,12 @@ public class ConversationController {
     @ExceptionHandler(ForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public String returnForbidden(ForbiddenException e) {
+        return processException(e);
+    }
+
+    @ExceptionHandler(HystrixRuntimeException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public String returnServiceUnavailable(HystrixRuntimeException e) {
         return processException(e);
     }
 

@@ -7,6 +7,8 @@ import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.util.ObjectFactory;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -45,6 +47,9 @@ public class MessageServiceImpl implements MessageService {
         return message;
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
         Locale locale = LocaleContextHolder.getLocale();
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
@@ -67,6 +72,9 @@ public class MessageServiceImpl implements MessageService {
         }).collect(toList());
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public List<Message> markAsRead(Conversation conversation, Participant participant, List<Message> messages) {
         if (messages.isEmpty()) {
             throw new IllegalStateException("Empty messages list.");
@@ -84,6 +92,9 @@ public class MessageServiceImpl implements MessageService {
         return messageRepository.saveAll(messages);
     }
 
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
     public List<Message> findMessagesByIds(List<Long> ids) {
         return messageRepository.findAllById(ids);
     }
