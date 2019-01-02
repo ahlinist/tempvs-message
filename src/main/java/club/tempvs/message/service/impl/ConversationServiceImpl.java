@@ -16,7 +16,6 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -139,15 +138,14 @@ public class ConversationServiceImpl implements ConversationService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
-        List<Conversation> conversations = conversationRepository.findByParticipantsIn(participant, pageable);
-        List<Object[]> unreadMessagesPerConversation = conversationRepository.countUnreadMessages(conversations, participant);
-        Map<Conversation, Long> unreadMessagesCountMap = unreadMessagesPerConversation.stream()
-                .collect(toMap(entry -> (Conversation) entry[0], entry -> (Long) entry[1]));
+        Pageable pageable = PageRequest.of(page, size);
+        List<Object[]> conversationsPerParticipant = conversationRepository.findConversationsPerParticipant(participant, pageable);
 
-        return conversations.stream()
-            .map(conversation -> {
-                conversation.setUnreadMessagesCount(unreadMessagesCountMap.get(conversation));
+        return conversationsPerParticipant.stream()
+            .map(entry -> {
+                Conversation conversation = (Conversation) entry[0];
+                Long count = (Long) entry[1];
+                conversation.setUnreadMessagesCount(count);
                 Message lastMessage = conversation.getLastMessage();
                 Message translatedLastMessage = localeHelper.translateMessageIfSystem(lastMessage);
                 conversation.setLastMessage(translatedLastMessage);

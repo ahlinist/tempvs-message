@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import java.util.*;
 
@@ -272,19 +271,17 @@ public class ConversationServiceTest {
         int size = 40;
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
-        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "lastMessage.createdDate");
-        List<Object[]> unreadMessagesPerConversation = new ArrayList<>();
-        unreadMessagesPerConversation.add(new Object[]{conversation, 3L});
+        Pageable pageable = PageRequest.of(page, size);
+        List<Object[]> conversationsPerParticipant = new ArrayList<>();
+        conversationsPerParticipant.add(new Object[]{conversation, 3L});
 
-        when(conversationRepository.findByParticipantsIn(participant, pageable)).thenReturn(conversations);
-        when(conversationRepository.countUnreadMessages(conversations, participant)).thenReturn(unreadMessagesPerConversation);
+        when(conversationRepository.findConversationsPerParticipant(participant, pageable)).thenReturn(conversationsPerParticipant);
         when(conversation.getLastMessage()).thenReturn(message);
         when(localeHelper.translateMessageIfSystem(message)).thenReturn(message);
 
         List<Conversation> result = conversationService.getConversationsByParticipant(participant, page, size);
 
-        verify(conversationRepository).findByParticipantsIn(participant, pageable);
-        verify(conversationRepository).countUnreadMessages(conversations, participant);
+        verify(conversationRepository).findConversationsPerParticipant(participant, pageable);
         verify(conversation).setUnreadMessagesCount(3L);
         verify(conversation).getLastMessage();
         verify(localeHelper).translateMessageIfSystem(message);

@@ -10,16 +10,13 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
-    @Query("SELECT c FROM Conversation c WHERE :participant MEMBER OF c.participants")
-    List<Conversation> findByParticipantsIn(Participant participant, Pageable pageable);
 
-    @Query("SELECT c, count(n) FROM Conversation c " +
-            "JOIN c.messages m " +
-            "JOIN m.newFor n " +
-            "WHERE :participant IN n and c IN :conversations " +
-            "GROUP BY c")
-    //TODO: simplify the query. Consider 'member of' clause.
-    List<Object[]> countUnreadMessages(List<Conversation> conversations, Participant participant);
+    @Query("SELECT c, (SELECT COUNT(m) FROM Message m WHERE m.conversation = c AND :participant MEMBER OF m.newFor) " +
+            "FROM Conversation c " +
+            "WHERE :participant MEMBER OF c.participants " +
+            "GROUP BY c, c.lastMessage.createdDate " +
+            "ORDER BY c.lastMessage.createdDate DESC")
+    List<Object[]> findConversationsPerParticipant(Participant participant, Pageable pageable);
 
     @Query("SELECT c FROM Conversation c " +
             "WHERE :author MEMBER OF c.participants AND :receiver MEMBER OF c.participants AND c.type = :type")
