@@ -44,6 +44,7 @@ public class Message {
     }
 
     public Message(Message message) {
+        this.id = message.getId();
         this.isSystem = message.getSystem();
         this.systemArgs = message.getSystemArgs();
         this.conversation = message.getConversation();
