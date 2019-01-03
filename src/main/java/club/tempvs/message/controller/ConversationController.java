@@ -28,6 +28,13 @@ public class ConversationController {
     private static final String COUNT_HEADER = "X-Total-Count";
     private static final String PROFILE_HEADER = "Profile";
     private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String LANGUAGE_HEADER = "Accept-Language";
+    private static final String TIMEZONE_HEADER = "Accept-Timezone";
+    private static final String DEFAULT_TIMEZONE = "UTC";
+    private static final String PAGE_PARAM = "page";
+    private static final String SIZE_PARAM = "size";
+    private static final String DEFAULT_PAGE_VALUE = "0";
+    private static final String DEFAULT_SIZE_VALUE = "40";
 
     private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
@@ -60,8 +67,8 @@ public class ConversationController {
     public ResponseEntity createConversation(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long authorId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
+            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
+            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
         localeHelper.getLocale(lang);
@@ -96,11 +103,11 @@ public class ConversationController {
     public ResponseEntity getConversation(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long callerId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
+            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
+            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
-            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
+            @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
+            @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
         authHelper.authenticate(token);
         localeHelper.getLocale(lang);
 
@@ -136,10 +143,10 @@ public class ConversationController {
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long participantId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
-            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false, defaultValue = "40") int size) {
+            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
+            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
+            @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
+            @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
         authHelper.authenticate(token);
         Locale locale = localeHelper.getLocale(lang);
 
@@ -187,8 +194,8 @@ public class ConversationController {
     public ResponseEntity addMessage(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long authorId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
+            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
+            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
@@ -220,8 +227,8 @@ public class ConversationController {
     public ResponseEntity addParticipants(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
+            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
+            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
         authHelper.authenticate(token);
@@ -267,8 +274,8 @@ public class ConversationController {
     public ResponseEntity removeParticipant(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
+            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
+            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId) {
         authHelper.authenticate(token);
@@ -303,8 +310,8 @@ public class ConversationController {
     public ResponseEntity renameConversation(
             @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestHeader(value = "Accept-Timezone", required = false, defaultValue = "UTC") String timeZone,
+            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
+            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
         authHelper.authenticate(token);
