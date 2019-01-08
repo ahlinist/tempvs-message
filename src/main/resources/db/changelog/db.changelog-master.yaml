@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/add-type-and-period-to-participant.yaml
   - include:
       file: db/changelog/changes/add-type-and-period-constraints.yaml
+  - include:
+      file: change-boolean-fieldnames.yaml

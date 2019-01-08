@@ -4,7 +4,7 @@ import club.tempvs.message.dto.ErrorsDto;
 import club.tempvs.message.util.ValidationHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
@@ -12,18 +12,11 @@ import org.springframework.stereotype.Component;
 import java.util.Locale;
 
 @Component
+@RequiredArgsConstructor
 public class ValidationHelperImpl implements ValidationHelper {
 
-    private MessageSource messageSource;
-    private ObjectMapper objectMapper;
-    private Locale locale;
-
-    @Autowired
-    public ValidationHelperImpl(MessageSource messageSource, ObjectMapper objectMapper) {
-        this.messageSource = messageSource;
-        this.objectMapper = objectMapper;
-        this.locale = LocaleContextHolder.getLocale();
-    }
+    private final MessageSource messageSource;
+    private final ObjectMapper objectMapper;
 
     public ErrorsDto getErrors() {
         return new ErrorsDto();
@@ -34,7 +27,8 @@ public class ValidationHelperImpl implements ValidationHelper {
     }
 
     public void addError(ErrorsDto errorsDto, String field, String messageKey, Object[] args) {
-        String value = messageSource.getMessage(messageKey, args, messageKey, this.locale);
+        Locale locale = LocaleContextHolder.getLocale();
+        String value = messageSource.getMessage(messageKey, args, messageKey, locale);
         errorsDto.addError(field, value);
     }
 

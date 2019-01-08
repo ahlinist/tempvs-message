@@ -6,8 +6,8 @@ import club.tempvs.message.dto.*;
 import club.tempvs.message.service.*;
 import club.tempvs.message.util.*;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +19,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class ConversationController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConversationController.class);
@@ -42,21 +43,6 @@ public class ConversationController {
     private final MessageService messageService;
     private final AuthHelper authHelper;
     private final LocaleHelper localeHelper;
-
-    @Autowired
-    public ConversationController(ObjectFactory objectFactory,
-                                  ConversationService conversationService,
-                                  ParticipantService participantService,
-                                  MessageService messageService,
-                                  AuthHelper authHelper,
-                                  LocaleHelper localeHelper) {
-        this.objectFactory = objectFactory;
-        this.conversationService = conversationService;
-        this.participantService = participantService;
-        this.messageService = messageService;
-        this.authHelper = authHelper;
-        this.localeHelper = localeHelper;
-    }
 
     @GetMapping("/ping")
     public String getPong() {

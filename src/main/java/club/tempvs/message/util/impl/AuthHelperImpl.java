@@ -5,8 +5,6 @@ import club.tempvs.message.util.AuthHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
-import java.io.UnsupportedEncodingException;
-
 @Component
 public class AuthHelperImpl implements AuthHelper {
 

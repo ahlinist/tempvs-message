@@ -13,7 +13,7 @@ import club.tempvs.message.util.ObjectFactory;
 import club.tempvs.message.util.ValidationHelper;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +23,7 @@ import java.util.*;
 import static java.util.stream.Collectors.*;
 
 @Service
+@RequiredArgsConstructor
 public class ConversationServiceImpl implements ConversationService {
 
     private static final String PARTICIPANT_ADDED_MESSAGE = "conversation.add.participant";
@@ -40,23 +41,10 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String PERIOD_MISMATCH = "conversation.participant.period.mismatch";
 
     private final ObjectFactory objectFactory;
-    private final ConversationRepository conversationRepository;
     private final MessageService messageService;
+    private final ConversationRepository conversationRepository;
     private final LocaleHelper localeHelper;
     private final ValidationHelper validationHelper;
-
-    @Autowired
-    public ConversationServiceImpl(ObjectFactory objectFactory,
-                                   MessageService messageService,
-                                   ConversationRepository conversationRepository,
-                                   LocaleHelper localeHelper,
-                                   ValidationHelper validationHelper) {
-        this.objectFactory = objectFactory;
-        this.messageService = messageService;
-        this.conversationRepository = conversationRepository;
-        this.localeHelper = localeHelper;
-        this.validationHelper = validationHelper;
-    }
 
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")

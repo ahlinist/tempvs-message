@@ -1,5 +1,7 @@
 package club.tempvs.message.domain;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -10,7 +12,9 @@ import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.util.*;
 
+@Data
 @Entity
+@EqualsAndHashCode(of = {"id"})
 @EntityListeners(AuditingEntityListener.class)
 public class Conversation {
 
@@ -42,64 +46,8 @@ public class Conversation {
     @CreatedDate
     private Instant createdDate;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<Message> getMessages() {
-        return messages;
-    }
-
-    public void setMessages(List<Message> messages) {
-        this.messages = messages;
-    }
-
     public void addMessage(Message message) {
         this.messages.add(message);
-    }
-
-    public Participant getAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(Participant admin) {
-        this.admin = admin;
-    }
-
-    public Message getLastMessage() {
-        return lastMessage;
-    }
-
-    public void setLastMessage(Message lastMessage) {
-        this.lastMessage = lastMessage;
-    }
-
-    public Set<Participant> getParticipants() {
-        return participants;
-    }
-
-    public void setParticipants(Set<Participant> participants) {
-        this.participants = participants;
     }
 
     public void addParticipant(Participant participant) {
@@ -108,42 +56,6 @@ public class Conversation {
 
     public void removeParticipant(Participant participant) {
         this.participants.remove(participant);
-    }
-
-    public Instant getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public Long getUnreadMessagesCount() {
-        return unreadMessagesCount;
-    }
-
-    public void setUnreadMessagesCount(Long unreadMessagesCount) {
-        this.unreadMessagesCount = unreadMessagesCount;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        Conversation that = (Conversation) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(type, that.type);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, type);
     }
 
     public enum Type {

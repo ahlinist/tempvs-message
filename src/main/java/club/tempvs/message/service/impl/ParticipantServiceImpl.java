@@ -6,7 +6,7 @@ import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.ObjectFactory;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -14,16 +14,11 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class ParticipantServiceImpl implements ParticipantService {
 
     private final ObjectFactory objectFactory;
     private final ParticipantRepository participantRepository;
-
-    @Autowired
-    public ParticipantServiceImpl (ObjectFactory objectFactory, ParticipantRepository participantRepository) {
-        this.objectFactory = objectFactory;
-        this.participantRepository = participantRepository;
-    }
 
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")

@@ -6,6 +6,7 @@ buildscript {
 }
 
 plugins {
+    id 'net.ltgt.apt' version '0.10'
     id 'org.liquibase.gradle' version '2.0.1'
 }
 
@@ -45,6 +46,9 @@ dependencies {
     compile "org.postgresql:postgresql:${postgresVersion}"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
     compile "org.liquibase:liquibase-core:${liquibaseVersion}"
+    //lombok
+    compileOnly 'org.projectlombok:lombok:1.18.4'
+    apt 'org.projectlombok:lombok:1.18.4'
     //testing
     integrationTestCompile "org.springframework.boot:spring-boot-starter-test"
     integrationTestRuntime 'com.h2database:h2:1.4.194'

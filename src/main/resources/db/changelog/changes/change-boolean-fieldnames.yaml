@@ -1,0 +1,30 @@
+databaseChangeLog:
+- changeSet:
+    id: 1546980596426-2
+    author: albvs (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: system
+            type: boolean
+        tableName: message
+- changeSet:
+    id: 1546980596426-3
+    author: albvs (generated)
+    changes:
+    - dropColumn:
+        columnName: is_system
+        tableName: message
+- changeSet:
+    id: 1546980596426-1
+    author: albvs (generated)
+    changes:
+    - dropUniqueConstraint:
+        constraintName: UK_163cga9b82cbl0obssg58gkvm
+        tableName: conversation_messages
+    - addUniqueConstraint:
+        columnNames: messages_id
+        constraintName: UK_163cga9b82cbl0obssg58gkvm
+        tableName: conversation_messages
+

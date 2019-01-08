@@ -1,20 +1,10 @@
 package club.tempvs.message.dto;
 
+import lombok.Data;
+
 import java.util.Set;
 
+@Data
 public class AddParticipantsDto {
-
     private Set<Long> participants;
-
-    public AddParticipantsDto() {
-
-    }
-
-    public Set<Long> getParticipants() {
-        return participants;
-    }
-
-    public void setParticipants(Set<Long> participants) {
-        this.participants = participants;
-    }
 }

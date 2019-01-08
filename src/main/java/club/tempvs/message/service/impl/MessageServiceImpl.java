@@ -10,7 +10,7 @@ import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,18 +21,12 @@ import java.util.*;
 import static java.util.stream.Collectors.*;
 
 @Service
+@RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
     private final ObjectFactory objectFactory;
     private final MessageRepository messageRepository;
     private final LocaleHelper localeHelper;
-
-    @Autowired
-    public MessageServiceImpl(ObjectFactory objectFactory, MessageRepository messageRepository, LocaleHelper localeHelper) {
-        this.objectFactory = objectFactory;
-        this.messageRepository = messageRepository;
-        this.localeHelper = localeHelper;
-    }
 
     public Message createMessage(Participant author,
                                  Set<Participant> receivers, String text, Boolean isSystem, String systemArgs, Participant subject) {
