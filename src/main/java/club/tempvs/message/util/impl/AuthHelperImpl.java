@@ -2,6 +2,7 @@ package club.tempvs.message.util.impl;
 
 import club.tempvs.message.api.UnauthorizedException;
 import club.tempvs.message.util.AuthHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
@@ -9,13 +10,15 @@ import org.springframework.util.DigestUtils;
 public class AuthHelperImpl implements AuthHelper {
 
     private static final String CHAR_ENCODING = "UTF-8";
-    private static final String TOKEN = System.getenv("TOKEN");
+
+    @Value("${authorization.token}")
+    private String token;
 
     public void authenticate(String receivedToken) {
         byte[] tokenBytes;
 
         try {
-            tokenBytes = TOKEN.getBytes(CHAR_ENCODING);
+            tokenBytes = token.getBytes(CHAR_ENCODING);
         } catch (Exception e) {
             tokenBytes = new byte[]{};
         }
