@@ -215,7 +215,7 @@ public class ConversationControllerIntegrationTest {
         List<Message> messages = conversation.getMessages();
         int messagesSize = messages.size();
         Long messageId = messages.get(0).getId();
-        Boolean isSystem = messages.get(0).getSystem();
+        Boolean isSystem = messages.get(0).getIsSystem();
 
         mvc.perform(get("/api/conversations/" + conversationId + "?caller=" + authorId)
                 .header(PROFILE_HEADER, authorId)
@@ -388,7 +388,7 @@ public class ConversationControllerIntegrationTest {
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
         Long messageId = messages.get(0).getId();
-        Boolean isSystem = messages.get(0).getSystem();
+        Boolean isSystem = messages.get(0).getIsSystem();
 
         mvc.perform(get("/api/conversations?page=0&size=10")
                 .header(PROFILE_HEADER, authorId)
