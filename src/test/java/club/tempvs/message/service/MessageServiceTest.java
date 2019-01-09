@@ -71,7 +71,7 @@ public class MessageServiceTest {
         verify(message1).setAuthor(author);
         verify(message1).setNewFor(receivers);
         verify(message1).setText(text);
-        verify(message1).setSystem(false);
+        verify(message1).setIsSystem(false);
         verify(message1).setSystemArgs(null);
         verify(message1).setSubject(subject);
         verifyNoMoreInteractions(message1, receiver1, receiver2, objectFactory);

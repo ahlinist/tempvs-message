@@ -34,7 +34,7 @@ public class MessageServiceImpl implements MessageService {
         message.setAuthor(author);
         message.setNewFor(receivers);
         message.setText(text);
-        message.setSystem(isSystem);
+        message.setIsSystem(isSystem);
         message.setSystemArgs(systemArgs);
         message.setSubject(subject);
         return message;

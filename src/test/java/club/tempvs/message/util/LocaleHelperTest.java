@@ -39,11 +39,11 @@ public class LocaleHelperTest {
 
     @Test
     public void testTranslateSystemMessageForRegularMessage() {
-        when(originalMessage.getSystem()).thenReturn(false);
+        when(originalMessage.getIsSystem()).thenReturn(false);
 
         Message result = localeHelper.translateMessageIfSystem(originalMessage);
 
-        verify(originalMessage).getSystem();
+        verify(originalMessage).getIsSystem();
         verifyNoMoreInteractions(originalMessage, messageSource);
 
         Assert.assertEquals("The original message is returned", originalMessage, result);
@@ -58,7 +58,7 @@ public class LocaleHelperTest {
         Locale locale = LocaleContextHolder.getLocale();
         String translatedMessageString = "translated message";
 
-        when(originalMessage.getSystem()).thenReturn(true);
+        when(originalMessage.getIsSystem()).thenReturn(true);
         when(originalMessage.getText()).thenReturn(code);
         when(originalMessage.getSystemArgs()).thenReturn(systemArgsString);
         when(objectFactory.getInstance(Message.class, originalMessage)).thenReturn(translatedMessage);
@@ -66,7 +66,7 @@ public class LocaleHelperTest {
 
         Message result = localeHelper.translateMessageIfSystem(originalMessage);
 
-        verify(originalMessage).getSystem();
+        verify(originalMessage).getIsSystem();
         verify(originalMessage).getText();
         verify(originalMessage).getSystemArgs();
         verify(objectFactory).getInstance(Message.class, originalMessage);

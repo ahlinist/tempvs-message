@@ -31,7 +31,7 @@ public class MessageDtoBean {
         this.subject = subject != null ? new ParticipantDto(subject) : null;
         this.createdDate = parseDate(message.getCreatedDate(), zoneId);
         this.unread = message.getNewFor().contains(self);
-        this.system = message.getSystem();
+        this.system = message.getIsSystem();
     }
 
     private String parseDate(Instant instant, String zoneId) {

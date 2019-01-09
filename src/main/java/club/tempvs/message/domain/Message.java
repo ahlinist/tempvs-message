@@ -22,7 +22,7 @@ public class Message {
     @Id
     @GeneratedValue
     private Long id;
-    private Boolean system = false;
+    private Boolean isSystem = false;
     private String systemArgs;
 
     @NotNull
@@ -47,7 +47,7 @@ public class Message {
 
     public Message(Message message) {
         this.id = message.getId();
-        this.system = message.getSystem();
+        this.isSystem = message.getIsSystem();
         this.systemArgs = message.getSystemArgs();
         this.conversation = message.getConversation();
         this.author = message.getAuthor();

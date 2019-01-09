@@ -1,12 +1,12 @@
 databaseChangeLog:
 - changeSet:
-    id: 1546987057518-1
+    id: 1547056871015-1
     author: albvs (generated)
     changes:
     - createSequence:
         sequenceName: hibernate_sequence
 - changeSet:
-    id: 1546987057518-2
+    id: 1547056871015-2
     author: albvs (generated)
     changes:
     - createTable:
@@ -35,7 +35,7 @@ databaseChangeLog:
             type: BIGINT
         tableName: conversation
 - changeSet:
-    id: 1546987057518-3
+    id: 1547056871015-3
     author: albvs (generated)
     changes:
     - createTable:
@@ -59,7 +59,7 @@ databaseChangeLog:
             type: INTEGER
         tableName: conversation_messages
 - changeSet:
-    id: 1546987057518-4
+    id: 1547056871015-4
     author: albvs (generated)
     changes:
     - createTable:
@@ -78,7 +78,7 @@ databaseChangeLog:
             type: BIGINT
         tableName: conversation_participants
 - changeSet:
-    id: 1546987057518-5
+    id: 1547056871015-5
     author: albvs (generated)
     changes:
     - createTable:
@@ -113,7 +113,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: message
 - changeSet:
-    id: 1546987057518-6
+    id: 1547056871015-6
     author: albvs (generated)
     changes:
     - createTable:
@@ -132,7 +132,7 @@ databaseChangeLog:
             type: BIGINT
         tableName: message_new_for
 - changeSet:
-    id: 1546987057518-7
+    id: 1547056871015-7
     author: albvs (generated)
     changes:
     - createTable:
@@ -151,7 +151,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         tableName: participant
 - changeSet:
-    id: 1546987057518-8
+    id: 1547056871015-8
     author: albvs (generated)
     changes:
     - addUniqueConstraint:
@@ -159,7 +159,7 @@ databaseChangeLog:
         constraintName: UK_163cga9b82cbl0obssg58gkvm
         tableName: conversation_messages
 - changeSet:
-    id: 1546987057518-9
+    id: 1547056871015-9
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -174,7 +174,7 @@ databaseChangeLog:
         referencedTableName: participant
         validate: true
 - changeSet:
-    id: 1546987057518-10
+    id: 1547056871015-10
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -189,7 +189,7 @@ databaseChangeLog:
         referencedTableName: participant
         validate: true
 - changeSet:
-    id: 1546987057518-11
+    id: 1547056871015-11
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -204,7 +204,7 @@ databaseChangeLog:
         referencedTableName: conversation
         validate: true
 - changeSet:
-    id: 1546987057518-12
+    id: 1547056871015-12
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -219,7 +219,7 @@ databaseChangeLog:
         referencedTableName: participant
         validate: true
 - changeSet:
-    id: 1546987057518-13
+    id: 1547056871015-13
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -234,7 +234,7 @@ databaseChangeLog:
         referencedTableName: message
         validate: true
 - changeSet:
-    id: 1546987057518-14
+    id: 1547056871015-14
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -249,7 +249,7 @@ databaseChangeLog:
         referencedTableName: conversation
         validate: true
 - changeSet:
-    id: 1546987057518-15
+    id: 1547056871015-15
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -264,7 +264,7 @@ databaseChangeLog:
         referencedTableName: participant
         validate: true
 - changeSet:
-    id: 1546987057518-16
+    id: 1547056871015-16
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -279,7 +279,7 @@ databaseChangeLog:
         referencedTableName: conversation
         validate: true
 - changeSet:
-    id: 1546987057518-17
+    id: 1547056871015-17
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -294,7 +294,7 @@ databaseChangeLog:
         referencedTableName: participant
         validate: true
 - changeSet:
-    id: 1546987057518-18
+    id: 1547056871015-18
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:
@@ -309,7 +309,7 @@ databaseChangeLog:
         referencedTableName: message
         validate: true
 - changeSet:
-    id: 1546987057518-19
+    id: 1547056871015-19
     author: albvs (generated)
     changes:
     - addForeignKeyConstraint:

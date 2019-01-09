@@ -31,7 +31,7 @@ public class LocaleHelperImpl implements LocaleHelper {
     }
 
     public Message translateMessageIfSystem(Message originalMessage) {
-        if (originalMessage.getSystem()) {
+        if (originalMessage.getIsSystem()) {
             String code = originalMessage.getText();
             String[] args = new String[0];
             String argsString = originalMessage.getSystemArgs();
