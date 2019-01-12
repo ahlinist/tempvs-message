@@ -27,15 +27,18 @@ logging:
         web: WARN
 authorization:
   token: ${TOKEN}
-
 eureka:
   client:
     serviceUrl:
       defaultZone: ${EUREKA_URL:http://user:password@localhost:8084}/eureka/
   instance:
-    hostname: ${DOMAIN_NAME:localhost}
-    nonSecurePort: 80
-  password: ${EUREKA_PASSWORD:password}
+    hostname: ${DOMAIN_NAME}
+    secure-port-enabled: true
+    non-secure-port-enabled: false
+    statusPageUrl: https://${eureka.instance.hostname}/info
+    healthCheckUrl: https://${eureka.instance.hostname}/health
+    homePageUrl: https://${eureka.instance.hostname}/
+  password: ${EUREKA_PASSWORD}
 security:
   user:
     password: ${eureka.password}
@@ -44,4 +47,8 @@ spring:
   profiles: local
 eureka:
   instance:
+    hostname: localhost
+    non-secure-port-enabled: true
     nonSecurePort: 8083
+    homePageUrl: http://${eureka.instance.hostname}/
+    password: password
