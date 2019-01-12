@@ -27,3 +27,21 @@ logging:
         web: WARN
 authorization:
   token: ${TOKEN}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://user:password@localhost:8084}/eureka/
+  instance:
+    hostname: ${DOMAIN_NAME:localhost}
+    nonSecurePort: 80
+  password: ${EUREKA_PASSWORD:password}
+security:
+  user:
+    password: ${eureka.password}
+---
+spring:
+  profiles: local
+eureka:
+  instance:
+    nonSecurePort: 8083
