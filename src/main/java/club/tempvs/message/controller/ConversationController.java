@@ -27,7 +27,7 @@ public class ConversationController {
     private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
-    private static final String PROFILE_HEADER = "Profile";
+    private static final String USER_INFO_HEADER = "User-Info";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String LANGUAGE_HEADER = "Accept-Language";
     private static final String TIMEZONE_HEADER = "Accept-Timezone";
@@ -51,13 +51,14 @@ public class ConversationController {
 
     @PostMapping("/conversations")
     public ResponseEntity createConversation(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long authorId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
             @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
         localeHelper.getLocale(lang);
+        Long authorId = userInfoDto.getProfileId();
 
         if (authorId == null) {
             throw new IllegalStateException("Author is not specified");
@@ -81,13 +82,13 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
-        headers.add(PROFILE_HEADER, String.valueOf(authorId));
+        headers.add(USER_INFO_HEADER, String.valueOf(authorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @GetMapping("/conversations/{conversationId}")
     public ResponseEntity getConversation(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long callerId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
             @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
@@ -100,6 +101,8 @@ public class ConversationController {
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
+
+        Long callerId = userInfoDto.getProfileId();
 
         if (callerId == null) {
             throw new IllegalStateException("'caller' parameter is missing.");
@@ -120,14 +123,14 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
-        headers.add(PROFILE_HEADER, String.valueOf(callerId));
+        headers.add(USER_INFO_HEADER, String.valueOf(callerId));
 
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @GetMapping("/conversations")
     public ResponseEntity getConversationsByParticipant(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long participantId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
             @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
@@ -139,6 +142,8 @@ public class ConversationController {
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
+
+        Long participantId = userInfoDto.getProfileId();
 
         Participant participant = participantService.getParticipant(participantId);
 
@@ -152,16 +157,17 @@ public class ConversationController {
         int conversationsCount = result.getConversations().size();
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
         headers.add(COUNT_HEADER, String.valueOf(conversationsCount));
-        headers.add(PROFILE_HEADER, String.valueOf(participantId));
+        headers.add(USER_INFO_HEADER, String.valueOf(participantId));
 
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @RequestMapping(value="/conversations", method = HEAD)
     public ResponseEntity countConversations(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long participantId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token) {
         authHelper.authenticate(token);
+        Long participantId = userInfoDto.getProfileId();
         Participant participant = participantService.getParticipant(participantId);
 
         if (participant == null) {
@@ -171,14 +177,14 @@ public class ConversationController {
         long result = conversationService.countUpdatedConversationsPerParticipant(participant);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
         headers.add(COUNT_HEADER, String.valueOf(result));
-        headers.add(PROFILE_HEADER, String.valueOf(participantId));
+        headers.add(USER_INFO_HEADER, String.valueOf(participantId));
 
         return ResponseEntity.ok().headers(headers).build();
     }
 
     @PostMapping("/conversations/{conversationId}/messages")
     public ResponseEntity addMessage(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long authorId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
             @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
@@ -195,6 +201,7 @@ public class ConversationController {
                     .body("Conversation with id " + conversationId + " doesn't exist.");
         }
 
+        Long authorId = userInfoDto.getProfileId();
         Participant author = participantService.getParticipant(authorId);
         Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
         receivers.remove(author);
@@ -204,14 +211,14 @@ public class ConversationController {
         GetConversationDto result = objectFactory.getInstance(
                 GetConversationDto.class, updatedConversation, messages, author, timeZone);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
-        headers.add(PROFILE_HEADER, String.valueOf(authorId));
+        headers.add(USER_INFO_HEADER, String.valueOf(authorId));
 
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @PostMapping("/conversations/{conversationId}/participants")
     public ResponseEntity addParticipants(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
             @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
@@ -224,6 +231,8 @@ public class ConversationController {
         if (conversation == null) {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
+
+        Long initiatorId = userInfoDto.getProfileId();
 
         if (initiatorId == null) {
             throw new IllegalStateException("Initiator is not specified");
@@ -252,13 +261,13 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
-        headers.add(PROFILE_HEADER, String.valueOf(initiatorId));
+        headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
     public ResponseEntity removeParticipant(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
             @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
@@ -272,6 +281,7 @@ public class ConversationController {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
+        Long initiatorId = userInfoDto.getProfileId();
         Participant initiator = participantService.getParticipant(initiatorId);
 
         if (initiator == null) {
@@ -288,13 +298,13 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
-        headers.add(PROFILE_HEADER, String.valueOf(initiatorId));
+        headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @PostMapping("/conversations/{conversationId}/name")
     public ResponseEntity renameConversation(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long initiatorId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
             @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
@@ -302,6 +312,7 @@ public class ConversationController {
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
         authHelper.authenticate(token);
         localeHelper.getLocale(lang);
+        Long initiatorId = userInfoDto.getProfileId();
 
         if (initiatorId == null) {
             throw new IllegalStateException("No initiator specified");
@@ -319,13 +330,13 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
-        headers.add(PROFILE_HEADER, String.valueOf(initiatorId));
+        headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
     @PostMapping("/conversations/{conversationId}/read")
     public ResponseEntity readMessages(
-            @RequestHeader(value = PROFILE_HEADER, required = false) Long participantId,
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody ReadMessagesDto readMessagesDto) {
@@ -335,6 +346,8 @@ public class ConversationController {
         if (conversation == null) {
             throw new NotFoundException("No conversation with id " + conversationId + " found.");
         }
+
+        Long participantId = userInfoDto.getProfileId();
 
         if (participantId == null) {
             throw new IllegalStateException("No participant specified");
@@ -354,7 +367,7 @@ public class ConversationController {
 
         messageService.markAsRead(conversation, participant, messages);
         HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
-        headers.add(PROFILE_HEADER, String.valueOf(participantId));
+        headers.add(USER_INFO_HEADER, String.valueOf(participantId));
         return ResponseEntity.ok().build();
     }
 

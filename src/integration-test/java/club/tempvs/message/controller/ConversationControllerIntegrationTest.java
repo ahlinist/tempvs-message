@@ -1,5 +1,11 @@
 package club.tempvs.message.controller;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static java.util.stream.Collectors.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.http.MediaType.*;
+
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -16,19 +22,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-
 import java.util.*;
 import java.util.stream.LongStream;
-
-import static java.util.stream.Collectors.*;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import static org.hamcrest.Matchers.*;
-
-import static org.springframework.http.MediaType.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -36,7 +31,7 @@ import static org.springframework.http.MediaType.*;
 @Transactional
 public class ConversationControllerIntegrationTest {
 
-    private static final String PROFILE_HEADER = "Profile";
+    private static final String USER_INFO_HEADER = "User-Info";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN = "df41895b9f26094d0b1d39b7bdd9849e"; //security_token as MD5
     private static final String CONFERENCE = Conversation.Type.CONFERENCE.toString();
@@ -74,12 +69,13 @@ public class ConversationControllerIntegrationTest {
 
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
         String createConversationJson = getCreateConversationDtoJson(receiverIds, message, name);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("participants", hasSize(4)))
@@ -109,12 +105,13 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createConversation(author, receivers, oldMessage, name);
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
         String createConversationJson = getCreateConversationDtoJson(receiverIds, newMessage, name);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("participants", hasSize(2)))
@@ -151,7 +148,7 @@ public class ConversationControllerIntegrationTest {
                 .content(createConversationJson)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().string("Author is not specified"));
+                    .andExpect(content().string("Missing request header 'User-Info' for method parameter of type UserInfoDto"));
     }
 
     @Test
@@ -166,12 +163,13 @@ public class ConversationControllerIntegrationTest {
 
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
         String createConversationJson = getCreateConversationDtoJson(receiverIds, null, name);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.text", is("Please type your message")));
@@ -186,12 +184,13 @@ public class ConversationControllerIntegrationTest {
 
         entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
         String createConversationJson = getCreateConversationDtoJson(receiverIds, message, name);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(createConversationJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants", is("Conversation may contain from 2 to 20 participants")));
@@ -216,9 +215,10 @@ public class ConversationControllerIntegrationTest {
         int messagesSize = messages.size();
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getIsSystem();
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(get("/api/conversations/" + conversationId + "?caller=" + authorId)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
@@ -249,27 +249,28 @@ public class ConversationControllerIntegrationTest {
 
         Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1")
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page size must not be less than one!"));
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0")
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page size must not be less than one!"));
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20")
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page index must not be less than zero!"));
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=50")
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string("Page size must not be larger than 40!"));
@@ -294,7 +295,7 @@ public class ConversationControllerIntegrationTest {
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20")
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().string("'caller' parameter is missing."));
+                    .andExpect(content().string("Missing request header 'User-Info' for method parameter of type UserInfoDto"));
     }
 
     @Test
@@ -314,9 +315,10 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(wrongCallerId, "name", "USER", "");
         Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
+        String userInfoValue = buildUserInfoValue(wrongCallerId);
 
         mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20")
-                .header(PROFILE_HEADER, wrongCallerId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isForbidden())
                     .andExpect(content().string("Participant " + wrongCallerId + " has no access to conversation " + conversationId));
@@ -344,9 +346,10 @@ public class ConversationControllerIntegrationTest {
 
         entityHelper.createConversation(author1, receivers1, text, name);
         entityHelper.createConversation(author2, receivers2, text, name);
+        String userInfoValue = buildUserInfoValue(callerId);
 
         mvc.perform(get("/api/conversations?page=0&size=10")
-                .header(PROFILE_HEADER, callerId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("conversations", hasSize(2)))
@@ -389,9 +392,10 @@ public class ConversationControllerIntegrationTest {
         List<Message> messages = conversation.getMessages();
         Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getIsSystem();
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(get("/api/conversations?page=0&size=10")
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("conversations", hasSize(1)))
@@ -410,34 +414,38 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testGetConversationsByParticipantForInvalidInput() throws Exception {
-        entityHelper.createParticipant(1L, "name", "USER", "");
+        Long callerId = 1L;
+        Long notExistentParticipant = 2L;
+        entityHelper.createParticipant(callerId, "name", "USER", "");
+        String userInfoValue = buildUserInfoValue(callerId);
+        String wrongUserInfoValue = buildUserInfoValue(notExistentParticipant);
 
         mvc.perform(get("/api/conversations?page=0&size=-1")
-                .header(PROFILE_HEADER, "1")
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page size must not be less than one!")));
 
         mvc.perform(get("/api/conversations?page=0&size=0")
-                .header(PROFILE_HEADER, "1")
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page size must not be less than one!")));
 
         mvc.perform(get("/api/conversations?page=-1&size=20")
-                .header(PROFILE_HEADER, "1")
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page index must not be less than zero!")));
 
         mvc.perform(get("/api/conversations?page=0&size=50")
-                .header(PROFILE_HEADER, "1")
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(content().string(equalTo("Page size must not be larger than 40!")));
 
         mvc.perform(get("/api/conversations?page=0&size=20")
-                .header(PROFILE_HEADER, "2")
+                .header(USER_INFO_HEADER, wrongUserInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
                     .andExpect(content().string(equalTo("No participant with id 2 exist!")));
@@ -463,12 +471,13 @@ public class ConversationControllerIntegrationTest {
         int initialMessagesSize = messages.size();
         Long messageId = messages.get(0).getId();
         String addMessageJson = getAddMessageDtoJson(newMessageText);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addMessageJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
@@ -497,12 +506,13 @@ public class ConversationControllerIntegrationTest {
         Long missingConversationId = 2L;
 
         String addMessageJson = getAddMessageDtoJson(newMessageText);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + missingConversationId + "/messages")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addMessageJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
@@ -530,12 +540,13 @@ public class ConversationControllerIntegrationTest {
         addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + initialConversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", not(initialConversationId.intValue())))
@@ -569,12 +580,13 @@ public class ConversationControllerIntegrationTest {
         addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + initialConversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
                     .andExpect(content().string("An existent member is being added to a conversation."));
@@ -600,12 +612,13 @@ public class ConversationControllerIntegrationTest {
         addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants",
@@ -642,12 +655,13 @@ public class ConversationControllerIntegrationTest {
         addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
@@ -683,12 +697,13 @@ public class ConversationControllerIntegrationTest {
         addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/participants")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(addParticipantJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
                     .andExpect(content().string(equalTo("No subjects found in database")));
@@ -713,10 +728,11 @@ public class ConversationControllerIntegrationTest {
         int messagesInitialSize = conversation.getMessages().size();
         String participantRemovedMessage = "removed";
         String url = "/api/conversations/" + conversationId + "/participants/" + removedParticipantId;
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(delete(url)
                 .contentType(APPLICATION_JSON_VALUE)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
@@ -742,10 +758,11 @@ public class ConversationControllerIntegrationTest {
         Long removedParticipantId = 4L;
         Long nonExistentConversationId = 444L;
         String url = "/api/conversations/" + nonExistentConversationId + "/participants/" + removedParticipantId;
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(delete(url)
                 .contentType(APPLICATION_JSON_VALUE)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(content().string(equalTo("Conversation with id '444' has not been found.")));
@@ -763,10 +780,11 @@ public class ConversationControllerIntegrationTest {
 
         Conversation conversation = entityHelper.createConversation(author, receivers, "text", "");
         String url = "/api/conversations/" + conversation.getId() + "/participants/" + removedParticipantId;
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(delete(url)
                 .contentType(APPLICATION_JSON_VALUE)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("errors.participants", is("Conversation may contain from 2 to 20 participants")));
@@ -789,10 +807,11 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createConversation(author, receivers, text, name);
         entityHelper.createConversation(author, receivers, text, name);
         entityHelper.createConversation(author, receivers, text, name);
+        String userInfoValue = buildUserInfoValue(receiverId);
 
         mvc.perform(head("/api/conversations")
-                .header("Profile", receiverId)
-                .header("Authorization", TOKEN))
+                .header(USER_INFO_HEADER, userInfoValue)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(header().string(COUNT_HEADER, String.valueOf(3)));
     }
@@ -814,16 +833,17 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         entityHelper.createConversation(author, receivers, text, name);
         entityHelper.createConversation(author, receivers, text, name);
+        String userInfoValue = buildUserInfoValue(receiverId);
 
         //removing the receiver from the first conversation
         mvc.perform(delete("/api/conversations/" + conversation.getId() + "/participants/" + receiverId)
-                .header("Profile", receiverId)
-                .header("Authorization", TOKEN));
+                .header(USER_INFO_HEADER, userInfoValue)
+                .header(AUTHORIZATION_HEADER, TOKEN));
 
         //verifying if only 2 conversations of 3 found
         mvc.perform(head("/api/conversations")
-                .header("Profile", receiverId)
-                .header("Authorization", TOKEN))
+                .header(USER_INFO_HEADER, userInfoValue)
+                .header(AUTHORIZATION_HEADER, TOKEN))
                 .andExpect(status().isOk())
                 .andExpect(header().string(COUNT_HEADER, String.valueOf(2)));
     }
@@ -848,12 +868,13 @@ public class ConversationControllerIntegrationTest {
         UpdateConversationNameDto updateConversationNameDto = new UpdateConversationNameDto();
         updateConversationNameDto.setName(newName);
         String updateConversationNameJson = mapper.writeValueAsString(updateConversationNameDto);
+        String userInfoValue = buildUserInfoValue(authorId);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/name")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(updateConversationNameJson)
-                .header(PROFILE_HEADER, authorId)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("id", is(conversationId.intValue())))
@@ -895,12 +916,13 @@ public class ConversationControllerIntegrationTest {
         ReadMessagesDto readMessagesDto = new ReadMessagesDto();
         readMessagesDto.setMessages(messagesIds);
         String readMessagesJson = mapper.writeValueAsString(readMessagesDto);
+        String userInfoValue = buildUserInfoValue(receiver1Id);
 
         mvc.perform(post("/api/conversations/" + conversationId + "/read")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(readMessagesJson)
-                .header(PROFILE_HEADER, receiver1Id)
+                .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isOk());
     }
@@ -918,5 +940,11 @@ public class ConversationControllerIntegrationTest {
         AddMessageDto addMessageDto = new AddMessageDto();
         addMessageDto.setText(text);
         return mapper.writeValueAsString(addMessageDto);
+    }
+
+    private String buildUserInfoValue(Long profileId) throws Exception {
+        UserInfoDto userInfoDto = new UserInfoDto();
+        userInfoDto.setProfileId(profileId);
+        return mapper.writeValueAsString(userInfoDto);
     }
 }
