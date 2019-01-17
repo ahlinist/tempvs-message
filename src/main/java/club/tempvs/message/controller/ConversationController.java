@@ -29,15 +29,11 @@ public class ConversationController {
     private static final String COUNT_HEADER = "X-Total-Count";
     private static final String USER_INFO_HEADER = "User-Info";
     private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String LANGUAGE_HEADER = "Accept-Language";
-    private static final String TIMEZONE_HEADER = "Accept-Timezone";
-    private static final String DEFAULT_TIMEZONE = "UTC";
     private static final String PAGE_PARAM = "page";
     private static final String SIZE_PARAM = "size";
     private static final String DEFAULT_PAGE_VALUE = "0";
     private static final String DEFAULT_SIZE_VALUE = "40";
 
-    private final ObjectFactory objectFactory;
     private final ConversationService conversationService;
     private final ParticipantService participantService;
     private final MessageService messageService;
@@ -53,11 +49,9 @@ public class ConversationController {
     public ResponseEntity createConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
-            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @RequestBody CreateConversationDto createConversationDto) {
         authHelper.authenticate(token);
-        localeHelper.getLocale(lang);
+        localeHelper.getLocale(userInfoDto.getLang());
         Long authorId = userInfoDto.getProfileId();
 
         if (authorId == null) {
@@ -80,8 +74,8 @@ public class ConversationController {
         Message message = messageService.createMessage(author, receivers, createConversationDto.getText(), false, null, null);
         Conversation conversation = conversationService.createConversation(author, receivers, createConversationDto.getName(), message);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, author, timeZone);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        GetConversationDto result = new GetConversationDto(conversation, messages, author, userInfoDto.getTimezone());
+        HttpHeaders headers = new HttpHeaders();
         headers.add(USER_INFO_HEADER, String.valueOf(authorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
@@ -90,13 +84,11 @@ public class ConversationController {
     public ResponseEntity getConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
-            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
         authHelper.authenticate(token);
-        localeHelper.getLocale(lang);
+        localeHelper.getLocale(userInfoDto.getLang());
 
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
@@ -121,10 +113,9 @@ public class ConversationController {
         }
 
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
-        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, conversation, messages, caller, timeZone);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        GetConversationDto result = new GetConversationDto(conversation, messages, caller, userInfoDto.getTimezone());
+        HttpHeaders headers = new HttpHeaders();
         headers.add(USER_INFO_HEADER, String.valueOf(callerId));
-
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -132,12 +123,10 @@ public class ConversationController {
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
-            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
         authHelper.authenticate(token);
-        Locale locale = localeHelper.getLocale(lang);
+        Locale locale = localeHelper.getLocale(userInfoDto.getLang());
 
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
@@ -152,13 +141,12 @@ public class ConversationController {
         }
 
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
-        GetConversationsDto result = objectFactory.getInstance(GetConversationsDto.class, conversations, participant, timeZone, locale);
+        GetConversationsDto result = new GetConversationsDto(conversations, participant, userInfoDto.getTimezone(), locale);
 
         int conversationsCount = result.getConversations().size();
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        HttpHeaders headers = new HttpHeaders();
         headers.add(COUNT_HEADER, String.valueOf(conversationsCount));
         headers.add(USER_INFO_HEADER, String.valueOf(participantId));
-
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -175,10 +163,9 @@ public class ConversationController {
         }
 
         long result = conversationService.countUpdatedConversationsPerParticipant(participant);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        HttpHeaders headers = new HttpHeaders();
         headers.add(COUNT_HEADER, String.valueOf(result));
         headers.add(USER_INFO_HEADER, String.valueOf(participantId));
-
         return ResponseEntity.ok().headers(headers).build();
     }
 
@@ -186,12 +173,10 @@ public class ConversationController {
     public ResponseEntity addMessage(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
-            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         authHelper.authenticate(token);
-        localeHelper.getLocale(lang);
+        localeHelper.getLocale(userInfoDto.getLang());
         String text = addMessageDto.getText();
 
         Conversation conversation = conversationService.getConversation(conversationId);
@@ -208,11 +193,9 @@ public class ConversationController {
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = objectFactory.getInstance(
-                GetConversationDto.class, updatedConversation, messages, author, timeZone);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        GetConversationDto result = new GetConversationDto(updatedConversation, messages, author, userInfoDto.getTimezone());
+        HttpHeaders headers = new HttpHeaders();
         headers.add(USER_INFO_HEADER, String.valueOf(authorId));
-
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -220,12 +203,10 @@ public class ConversationController {
     public ResponseEntity addParticipants(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
-            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
         authHelper.authenticate(token);
-        localeHelper.getLocale(lang);
+        localeHelper.getLocale(userInfoDto.getLang());
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
@@ -259,8 +240,8 @@ public class ConversationController {
 
         Conversation updatedConversation = conversationService.addParticipants(conversation, initiator, subjects);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
+        HttpHeaders headers = new HttpHeaders();
         headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
@@ -269,12 +250,10 @@ public class ConversationController {
     public ResponseEntity removeParticipant(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
-            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId) {
         authHelper.authenticate(token);
-        localeHelper.getLocale(lang);
+        localeHelper.getLocale(userInfoDto.getLang());
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
@@ -296,8 +275,8 @@ public class ConversationController {
 
         Conversation updatedConversation = conversationService.removeParticipant(conversation, initiator, subject);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
+        HttpHeaders headers = new HttpHeaders();
         headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
@@ -306,12 +285,10 @@ public class ConversationController {
     public ResponseEntity renameConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
-            @RequestHeader(value = LANGUAGE_HEADER, required = false) String lang,
-            @RequestHeader(value = TIMEZONE_HEADER, required = false, defaultValue = DEFAULT_TIMEZONE) String timeZone,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
         authHelper.authenticate(token);
-        localeHelper.getLocale(lang);
+        localeHelper.getLocale(userInfoDto.getLang());
         Long initiatorId = userInfoDto.getProfileId();
 
         if (initiatorId == null) {
@@ -328,8 +305,8 @@ public class ConversationController {
         Conversation updatedConversation = conversationService.rename(conversation, initiator, updateConversationNameDto.getName());
 
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = objectFactory.getInstance(GetConversationDto.class, updatedConversation, messages, initiator, timeZone);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
+        HttpHeaders headers = new HttpHeaders();
         headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
@@ -366,7 +343,7 @@ public class ConversationController {
         }
 
         messageService.markAsRead(conversation, participant, messages);
-        HttpHeaders headers = objectFactory.getInstance(HttpHeaders.class);
+        HttpHeaders headers = new HttpHeaders();
         headers.add(USER_INFO_HEADER, String.valueOf(participantId));
         return ResponseEntity.ok().build();
     }

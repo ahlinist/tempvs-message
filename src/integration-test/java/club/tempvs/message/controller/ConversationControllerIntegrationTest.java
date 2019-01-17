@@ -945,6 +945,8 @@ public class ConversationControllerIntegrationTest {
     private String buildUserInfoValue(Long profileId) throws Exception {
         UserInfoDto userInfoDto = new UserInfoDto();
         userInfoDto.setProfileId(profileId);
+        userInfoDto.setLang("en");
+        userInfoDto.setTimezone("UTC");
         return mapper.writeValueAsString(userInfoDto);
     }
 }

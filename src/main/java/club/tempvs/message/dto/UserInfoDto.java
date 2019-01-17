@@ -8,5 +8,7 @@ import java.util.List;
 public class UserInfoDto {
     private Long userId;
     private Long profileId;
+    private String timezone;
+    private String lang;
     private List<String> roles;
 }

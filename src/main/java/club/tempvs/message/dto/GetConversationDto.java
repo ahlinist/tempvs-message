@@ -24,7 +24,7 @@ public class GetConversationDto {
         Collections.reverse(messages);
 
         this.id = conversation.getId();
-        this.type = conversation.getType().toString();
+        this.type = String.valueOf(conversation.getType());
         this.name = conversation.getName();
         this.admin = admin != null ? new ParticipantDto(admin) : null;
         this.participants = conversation.getParticipants().stream().map(ParticipantDto::new).collect(toSet());
