@@ -9,7 +9,6 @@ import club.tempvs.message.dto.*;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
-import club.tempvs.message.util.AuthHelper;
 import club.tempvs.message.util.LocaleHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +31,6 @@ public class ConversationControllerTest {
     private static final int MAX_PAGE_SIZE = 40;
 
     private ConversationController conversationController;
-    private String token = "token";
     private String lang = "en";
     private Locale locale = Locale.ENGLISH;
 
@@ -42,9 +40,6 @@ public class ConversationControllerTest {
     private ParticipantService participantService;
     @Mock
     private MessageService messageService;
-
-    @Mock
-    private AuthHelper authHelper;
     @Mock
     private CreateConversationDto createConversationDto;
     @Mock
@@ -56,13 +51,9 @@ public class ConversationControllerTest {
     @Mock
     private GetConversationDto getConversationDto;
     @Mock
-    private GetConversationsDto getConversationsDto;
-    @Mock
     private AddMessageDto addMessageDto;
     @Mock
     private AddParticipantsDto addParticipantsDto;
-    @Mock
-    private ParticipantDto authorDto, receiverDto, participantDto;
     @Mock
     private LocaleHelper localeHelper;
     @Mock
@@ -70,20 +61,13 @@ public class ConversationControllerTest {
     @Mock
     private ReadMessagesDto readMessagesDto;
     @Mock
-    private ErrorsDto errorsDto;
-    @Mock
     private UserInfoDto userInfoDto;
 
     @Before
     public void setup() {
         LocaleContextHolder.setLocale(locale);
         conversationController = new ConversationController(conversationService, participantService,
-                messageService, authHelper, localeHelper);
-    }
-
-    @Test
-    public void testGetPong() {
-        assertEquals("getPong() method returns 'pong!' string", "pong!", conversationController.getPong());
+                messageService, localeHelper);
     }
 
     @Test
@@ -113,7 +97,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.createConversation(userInfoDto, token, createConversationDto);
+        ResponseEntity result = conversationController.createConversation(userInfoDto,createConversationDto);
 
         verify(participantService).getParticipant(authorId);
         verify(participantService).getParticipants(receiverIds);
@@ -132,7 +116,7 @@ public class ConversationControllerTest {
         when(userInfoDto.getProfileId()).thenReturn(authorId);
         when(participantService.getParticipant(authorId)).thenReturn(null);
 
-        conversationController.createConversation(userInfoDto, token, createConversationDto);
+        conversationController.createConversation(userInfoDto, createConversationDto);
     }
 
     @Test
@@ -155,7 +139,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.getConversation(userInfoDto, token, id, page, size);
+        ResponseEntity result = conversationController.getConversation(userInfoDto, id, page, size);
 
         verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);
@@ -171,7 +155,7 @@ public class ConversationControllerTest {
         int page = 0;
         int size = 21;
 
-        conversationController.getConversation(userInfoDto, token, id, page, size);
+        conversationController.getConversation(userInfoDto, id, page, size);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -187,15 +171,14 @@ public class ConversationControllerTest {
         when(conversationService.getConversation(id)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
 
-        conversationController.getConversation(userInfoDto, token, id, page, size);
+        conversationController.getConversation(userInfoDto, id, page, size);
 
-        verify(authHelper).authenticate(token);
         verify(userInfoDto).getProfileId();
         verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);
         verify(conversation).getParticipants();
-        verifyNoMoreInteractions(authHelper, message, conversation, userInfoDto,
-                participantService, conversationService, messageService, getConversationDto);
+        verifyNoMoreInteractions(message, conversation,
+                userInfoDto, participantService, conversationService, messageService, getConversationDto);
     }
 
     @Test
@@ -220,7 +203,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
 
-        ResponseEntity result = conversationController.getConversationsByParticipant(userInfoDto, token, page, size);
+        ResponseEntity result = conversationController.getConversationsByParticipant(userInfoDto, page, size);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversationsByParticipant(participant, page, size);
@@ -234,7 +217,7 @@ public class ConversationControllerTest {
         int page = 0;
         int size = 200;
 
-        conversationController.getConversationsByParticipant(userInfoDto, token, page, size);
+        conversationController.getConversationsByParticipant(userInfoDto, page, size);
     }
 
     @Test
@@ -261,7 +244,7 @@ public class ConversationControllerTest {
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.addMessage(userInfoDto, token, conversationId, addMessageDto);
+        ResponseEntity result = conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
 
         verify(participantService).getParticipant(authorId);
         verify(conversationService).getConversation(conversationId);
@@ -284,7 +267,7 @@ public class ConversationControllerTest {
         when(addMessageDto.getText()).thenReturn(text);
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        ResponseEntity result = conversationController.addMessage(userInfoDto, token, conversationId, addMessageDto);
+        ResponseEntity result = conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
 
         verify(conversationService).getConversation(conversationId);
         verifyNoMoreInteractions(participantService, conversationService, messageService);
@@ -319,7 +302,7 @@ public class ConversationControllerTest {
         when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.addParticipants(userInfoDto, token, conversationId, addParticipantsDto);
+        ResponseEntity result = conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
 
         verify(conversationService).getConversation(conversationId);
         verify(participantService).getParticipant(initiatorId);
@@ -337,7 +320,7 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.addParticipants(userInfoDto, token, conversationId, addParticipantsDto);
+        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -349,7 +332,7 @@ public class ConversationControllerTest {
         when(userInfoDto.getProfileId()).thenReturn(initiatorId);
         when(participantService.getParticipant(initiatorId)).thenReturn(null);
 
-        conversationController.addParticipants(userInfoDto, token, conversationId, addParticipantsDto);
+        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -365,7 +348,7 @@ public class ConversationControllerTest {
         when(addParticipantsDto.getParticipants()).thenReturn(subjectIds);
         when(participantService.getParticipants(subjectIds)).thenReturn(null);
 
-        conversationController.addParticipants(userInfoDto, token, conversationId, addParticipantsDto);
+        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -383,7 +366,7 @@ public class ConversationControllerTest {
         when(participantService.getParticipants(subjectIds)).thenReturn(participants);
         when(conversation.getParticipants()).thenReturn(participants);
 
-        conversationController.addParticipants(userInfoDto, token, conversationId, addParticipantsDto);
+        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
     }
 
     @Test
@@ -408,7 +391,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.removeParticipant(userInfoDto, token, conversationId, subjectId);
+        ResponseEntity result = conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
 
         verify(conversationService).getConversation(conversationId);
         verify(participantService).getParticipant(initiatorId);
@@ -427,7 +410,7 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.removeParticipant(userInfoDto, token, conversationId, subjectId);
+        conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -440,7 +423,7 @@ public class ConversationControllerTest {
         when(userInfoDto.getProfileId()).thenReturn(initiatorId);
         when(participantService.getParticipant(initiatorId)).thenReturn(null);
 
-        conversationController.removeParticipant(userInfoDto, token, conversationId, subjectId);
+        conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -454,7 +437,7 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(null);
 
-        conversationController.removeParticipant(userInfoDto, token, conversationId, subjectId);
+        conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
     }
 
     @Test
@@ -466,13 +449,12 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationService.countUpdatedConversationsPerParticipant(participant)).thenReturn(conversationsCount);
 
-        ResponseEntity result = conversationController.countConversations(userInfoDto, token);
+        ResponseEntity result = conversationController.countConversations(userInfoDto);
 
-        verify(authHelper).authenticate(token);
         verify(userInfoDto).getProfileId();
         verify(participantService).getParticipant(participantId);
         verify(conversationService).countUpdatedConversationsPerParticipant(participant);
-        verifyNoMoreInteractions(userInfoDto, participantService, participant, authHelper);
+        verifyNoMoreInteractions(userInfoDto, participantService, participant);
 
         assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
     }
@@ -484,7 +466,7 @@ public class ConversationControllerTest {
         when(userInfoDto.getProfileId()).thenReturn(participantId);
         when(participantService.getParticipant(participantId)).thenReturn(null);
 
-        conversationController.countConversations(userInfoDto, token);
+        conversationController.countConversations(userInfoDto);
     }
 
     @Test
@@ -507,7 +489,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.renameConversation(userInfoDto, token, conversationId, updateConversationNameDto);
+        ResponseEntity result = conversationController.renameConversation(userInfoDto, conversationId, updateConversationNameDto);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversation(conversationId);
@@ -532,16 +514,15 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(messageService.markAsRead(conversation, participant, messages)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.readMessages(userInfoDto, token, conversationId, readMessagesDto);
+        ResponseEntity result = conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
 
-        verify(authHelper).authenticate(token);
         verify(conversationService).getConversation(conversationId);
         verify(readMessagesDto).getMessages();
         verify(messageService).findMessagesByIds(messageIds);
         verify(userInfoDto).getProfileId();
         verify(participantService).getParticipant(participantId);
         verify(messageService).markAsRead(conversation, participant, messages);
-        verifyNoMoreInteractions(conversationService, authHelper, readMessagesDto, messageService,
+        verifyNoMoreInteractions(conversationService, readMessagesDto, messageService,
                 userInfoDto, participantService, conversation, message, participant);
 
         assertEquals("Response is ok", result, ResponseEntity.ok().build());
@@ -553,7 +534,7 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        conversationController.readMessages(userInfoDto, token, conversationId, readMessagesDto);
+        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -565,7 +546,7 @@ public class ConversationControllerTest {
         when(userInfoDto.getProfileId()).thenReturn(participantId);
         when(participantService.getParticipant(participantId)).thenReturn(null);
 
-        conversationController.readMessages(userInfoDto, token, conversationId, readMessagesDto);
+        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -581,6 +562,6 @@ public class ConversationControllerTest {
         when(readMessagesDto.getMessages()).thenReturn(messageIds);
         when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
 
-        conversationController.readMessages(userInfoDto, token, conversationId, readMessagesDto);
+        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
     }
 }

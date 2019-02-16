@@ -16,11 +16,13 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
             "WHERE :participant MEMBER OF c.participants " +
             "GROUP BY c, c.lastMessage.createdDate " +
             "ORDER BY c.lastMessage.createdDate DESC")
-    List<Object[]> findConversationsPerParticipant(Participant participant, Pageable pageable);
+    List<Object[]> findConversationsPerParticipant(@Param("participant") Participant participant, Pageable pageable);
 
     @Query("SELECT c FROM Conversation c " +
             "WHERE :author MEMBER OF c.participants AND :receiver MEMBER OF c.participants AND c.type = :type")
-    Conversation findDialogue(Conversation.Type type, Participant author, Participant receiver);
+    Conversation findDialogue(@Param("type") Conversation.Type type,
+                              @Param("author") Participant author,
+                              @Param("receiver") Participant receiver);
 
     @Query("SELECT COUNT(distinct m.conversation) FROM Message m " +
             "WHERE :participant MEMBER OF m.newFor AND :participant MEMBER OF m.conversation.participants")

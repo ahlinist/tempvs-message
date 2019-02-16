@@ -37,20 +37,12 @@ public class ConversationController {
     private final ConversationService conversationService;
     private final ParticipantService participantService;
     private final MessageService messageService;
-    private final AuthHelper authHelper;
     private final LocaleHelper localeHelper;
-
-    @GetMapping("/ping")
-    public String getPong() {
-        return "pong!";
-    }
 
     @PostMapping("/conversations")
     public ResponseEntity createConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestBody CreateConversationDto createConversationDto) {
-        authHelper.authenticate(token);
         localeHelper.getLocale(userInfoDto.getLang());
         Long authorId = userInfoDto.getProfileId();
 
@@ -83,11 +75,9 @@ public class ConversationController {
     @GetMapping("/conversations/{conversationId}")
     public ResponseEntity getConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
-        authHelper.authenticate(token);
         localeHelper.getLocale(userInfoDto.getLang());
 
         if (size > MAX_PAGE_SIZE) {
@@ -122,10 +112,8 @@ public class ConversationController {
     @GetMapping("/conversations")
     public ResponseEntity getConversationsByParticipant(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
-        authHelper.authenticate(token);
         Locale locale = localeHelper.getLocale(userInfoDto.getLang());
 
         if (size > MAX_PAGE_SIZE) {
@@ -152,9 +140,7 @@ public class ConversationController {
 
     @RequestMapping(value="/conversations", method = HEAD)
     public ResponseEntity countConversations(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token) {
-        authHelper.authenticate(token);
+            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto) {
         Long participantId = userInfoDto.getProfileId();
         Participant participant = participantService.getParticipant(participantId);
 
@@ -172,10 +158,8 @@ public class ConversationController {
     @PostMapping("/conversations/{conversationId}/messages")
     public ResponseEntity addMessage(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
-        authHelper.authenticate(token);
         localeHelper.getLocale(userInfoDto.getLang());
         String text = addMessageDto.getText();
 
@@ -202,10 +186,8 @@ public class ConversationController {
     @PostMapping("/conversations/{conversationId}/participants")
     public ResponseEntity addParticipants(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
-        authHelper.authenticate(token);
         localeHelper.getLocale(userInfoDto.getLang());
         Conversation conversation = conversationService.getConversation(conversationId);
 
@@ -249,10 +231,8 @@ public class ConversationController {
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
     public ResponseEntity removeParticipant(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId) {
-        authHelper.authenticate(token);
         localeHelper.getLocale(userInfoDto.getLang());
         Conversation conversation = conversationService.getConversation(conversationId);
 
@@ -284,10 +264,8 @@ public class ConversationController {
     @PostMapping("/conversations/{conversationId}/name")
     public ResponseEntity renameConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
-        authHelper.authenticate(token);
         localeHelper.getLocale(userInfoDto.getLang());
         Long initiatorId = userInfoDto.getProfileId();
 
@@ -314,10 +292,8 @@ public class ConversationController {
     @PostMapping("/conversations/{conversationId}/read")
     public ResponseEntity readMessages(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody ReadMessagesDto readMessagesDto) {
-        authHelper.authenticate(token);
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
