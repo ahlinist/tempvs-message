@@ -9,13 +9,11 @@ import club.tempvs.message.dto.*;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
-import club.tempvs.message.util.LocaleHelper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.*;
@@ -31,8 +29,6 @@ public class ConversationControllerTest {
     private static final int MAX_PAGE_SIZE = 40;
 
     private ConversationController conversationController;
-    private String lang = "en";
-    private Locale locale = Locale.ENGLISH;
 
     @Mock
     private ConversationService conversationService;
@@ -55,8 +51,6 @@ public class ConversationControllerTest {
     @Mock
     private AddParticipantsDto addParticipantsDto;
     @Mock
-    private LocaleHelper localeHelper;
-    @Mock
     private UpdateConversationNameDto updateConversationNameDto;
     @Mock
     private ReadMessagesDto readMessagesDto;
@@ -65,9 +59,7 @@ public class ConversationControllerTest {
 
     @Before
     public void setup() {
-        LocaleContextHolder.setLocale(locale);
-        conversationController = new ConversationController(conversationService, participantService,
-                messageService, localeHelper);
+        conversationController = new ConversationController(conversationService, participantService, messageService);
     }
 
     @Test
@@ -82,9 +74,7 @@ public class ConversationControllerTest {
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, participant));
         List<Message> messages = Arrays.asList(message, message, message);
 
-        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(userInfoDto.getProfileId()).thenReturn(authorId);
-        when(userInfoDto.getLang()).thenReturn(lang);
         when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(createConversationDto.getReceivers()).thenReturn(receiverIds);
         when(participantService.getParticipant(authorId)).thenReturn(author);
@@ -107,16 +97,6 @@ public class ConversationControllerTest {
         verifyNoMoreInteractions(participantService, messageService, conversationService);
 
         assertTrue("Result is a getConversationDto", result.getBody() instanceof GetConversationDto);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testCreateConversationMissingAuthor() {
-        Long authorId = 1L;
-
-        when(userInfoDto.getProfileId()).thenReturn(authorId);
-        when(participantService.getParticipant(authorId)).thenReturn(null);
-
-        conversationController.createConversation(userInfoDto, createConversationDto);
     }
 
     @Test
@@ -147,15 +127,6 @@ public class ConversationControllerTest {
         verifyNoMoreInteractions(participantService, conversationService, messageService);
 
         assertTrue("Result is a conversation", result.getBody() instanceof GetConversationDto);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testGetConversationForLargeAmountOfDataPerRequest() {
-        long id = 1L;
-        int page = 0;
-        int size = 21;
-
-        conversationController.getConversation(userInfoDto, id, page, size);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -192,9 +163,7 @@ public class ConversationControllerTest {
         List<ConversationDtoBean> conversationDtoBeans = new ArrayList<>();
         conversationDtoBeans.add(new ConversationDtoBean());
 
-        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(userInfoDto.getLang()).thenReturn(lang);
         when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
@@ -288,9 +257,7 @@ public class ConversationControllerTest {
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
         Set<Participant> participants = new HashSet<>(Arrays.asList(participant));
 
-        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(userInfoDto.getLang()).thenReturn(lang);
         when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(addParticipantsDto.getParticipants()).thenReturn(receiverIds);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
@@ -379,9 +346,7 @@ public class ConversationControllerTest {
         int max = 40;
         List<Message> messages = Arrays.asList(message, message);
 
-        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(userInfoDto.getLang()).thenReturn(lang);
         when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
@@ -413,33 +378,6 @@ public class ConversationControllerTest {
         conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testRemoveParticipantForNonExistentInitiator() {
-        Long conversationId = 1L;
-        Long subjectId = 2L;
-        Long initiatorId = 1L;
-
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(participantService.getParticipant(initiatorId)).thenReturn(null);
-
-        conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testRemoveParticipantForNonExistentSubject() {
-        Long conversationId = 1L;
-        Long subjectId = 2L;
-        Long initiatorId = 1L;
-
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(participantService.getParticipant(subjectId)).thenReturn(null);
-
-        conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
-    }
-
     @Test
     public void testCountConversations() {
         Long participantId = 1L;
@@ -459,16 +397,6 @@ public class ConversationControllerTest {
         assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testCountNewConversationsForMissingParticipant() {
-        Long participantId = 1L;
-
-        when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(participantService.getParticipant(participantId)).thenReturn(null);
-
-        conversationController.countConversations(userInfoDto);
-    }
-
     @Test
     public void testUpdateConversationName() {
         Long conversationId = 1L;
@@ -477,10 +405,8 @@ public class ConversationControllerTest {
         String timeZone = "UTC";
         List<Message> messages = Arrays.asList(message);
 
-        when(localeHelper.getLocale(lang)).thenReturn(locale);
         when(updateConversationNameDto.getName()).thenReturn(conversationName);
         when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(userInfoDto.getLang()).thenReturn(lang);
         when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationService.getConversation(conversationId)).thenReturn(conversation);
@@ -533,18 +459,6 @@ public class ConversationControllerTest {
         Long conversationId = 1L;
 
         when(conversationService.getConversation(conversationId)).thenReturn(null);
-
-        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testReadMessagesForMissingParticipant() {
-        Long conversationId = 1L;
-        Long participantId = 4L;
-
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(participantService.getParticipant(participantId)).thenReturn(null);
 
         conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
     }

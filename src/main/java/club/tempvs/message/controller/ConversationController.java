@@ -4,7 +4,6 @@ import club.tempvs.message.api.*;
 import club.tempvs.message.domain.*;
 import club.tempvs.message.dto.*;
 import club.tempvs.message.service.*;
-import club.tempvs.message.util.*;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.*;
@@ -36,25 +35,13 @@ public class ConversationController {
     private final ConversationService conversationService;
     private final ParticipantService participantService;
     private final MessageService messageService;
-    private final LocaleHelper localeHelper;
 
     @PostMapping("/conversations")
     public ResponseEntity createConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestBody CreateConversationDto createConversationDto) {
-        localeHelper.getLocale(userInfoDto.getLang());
         Long authorId = userInfoDto.getProfileId();
-
-        if (authorId == null) {
-            throw new IllegalStateException("Author is not specified");
-        }
-
         Participant author = participantService.getParticipant(authorId);
-
-        if (author == null) {
-            throw new IllegalStateException("Participant with id " + authorId + " does not exist in the database");
-        }
-
         Set<Participant> receivers = new HashSet<>();
         Set<Long> receiverIds = createConversationDto.getReceivers();
 
@@ -67,7 +54,6 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = new GetConversationDto(conversation, messages, author, userInfoDto.getTimezone());
         HttpHeaders headers = new HttpHeaders();
-        headers.add(USER_INFO_HEADER, String.valueOf(authorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -77,24 +63,12 @@ public class ConversationController {
             @PathVariable("conversationId") Long conversationId,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
-        localeHelper.getLocale(userInfoDto.getLang());
-
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
         Long callerId = userInfoDto.getProfileId();
-
-        if (callerId == null) {
-            throw new IllegalStateException("'caller' parameter is missing.");
-        }
-
         Participant caller = participantService.getParticipant(callerId);
-
-        if (caller == null) {
-            throw new IllegalStateException("The caller specified does not exist.");
-        }
-
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (!conversation.getParticipants().contains(caller)) {
@@ -104,7 +78,6 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
         GetConversationDto result = new GetConversationDto(conversation, messages, caller, userInfoDto.getTimezone());
         HttpHeaders headers = new HttpHeaders();
-        headers.add(USER_INFO_HEADER, String.valueOf(callerId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -113,27 +86,18 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
-        Locale locale = localeHelper.getLocale(userInfoDto.getLang());
-
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
         Long participantId = userInfoDto.getProfileId();
-
         Participant participant = participantService.getParticipant(participantId);
-
-        if (participant == null) {
-            throw new IllegalStateException("No participant with id " + participantId + " exist!");
-        }
-
         List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
-        GetConversationsDto result = new GetConversationsDto(conversations, participant, userInfoDto.getTimezone(), locale);
+        GetConversationsDto result = new GetConversationsDto(conversations, participant, userInfoDto.getTimezone());
 
         int conversationsCount = result.getConversations().size();
         HttpHeaders headers = new HttpHeaders();
         headers.add(COUNT_HEADER, String.valueOf(conversationsCount));
-        headers.add(USER_INFO_HEADER, String.valueOf(participantId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -142,15 +106,9 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto) {
         Long participantId = userInfoDto.getProfileId();
         Participant participant = participantService.getParticipant(participantId);
-
-        if (participant == null) {
-            throw new IllegalStateException("No participant with id " + participantId + " found.");
-        }
-
         long result = conversationService.countUpdatedConversationsPerParticipant(participant);
         HttpHeaders headers = new HttpHeaders();
         headers.add(COUNT_HEADER, String.valueOf(result));
-        headers.add(USER_INFO_HEADER, String.valueOf(participantId));
         return ResponseEntity.ok().headers(headers).build();
     }
 
@@ -159,9 +117,7 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
-        localeHelper.getLocale(userInfoDto.getLang());
         String text = addMessageDto.getText();
-
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
@@ -178,7 +134,6 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = new GetConversationDto(updatedConversation, messages, author, userInfoDto.getTimezone());
         HttpHeaders headers = new HttpHeaders();
-        headers.add(USER_INFO_HEADER, String.valueOf(authorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -187,7 +142,6 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
-        localeHelper.getLocale(userInfoDto.getLang());
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
@@ -195,17 +149,7 @@ public class ConversationController {
         }
 
         Long initiatorId = userInfoDto.getProfileId();
-
-        if (initiatorId == null) {
-            throw new IllegalStateException("Initiator is not specified");
-        }
-
         Participant initiator = participantService.getParticipant(initiatorId);
-
-        if (initiator == null) {
-            throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
-        }
-
         Set<Long> subjectIds = addParticipantsDto.getParticipants();
         Set<Participant> subjects = participantService.getParticipants(subjectIds);
 
@@ -223,7 +167,6 @@ public class ConversationController {
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
         HttpHeaders headers = new HttpHeaders();
-        headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -232,7 +175,6 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId) {
-        localeHelper.getLocale(userInfoDto.getLang());
         Conversation conversation = conversationService.getConversation(conversationId);
 
         if (conversation == null) {
@@ -241,22 +183,11 @@ public class ConversationController {
 
         Long initiatorId = userInfoDto.getProfileId();
         Participant initiator = participantService.getParticipant(initiatorId);
-
-        if (initiator == null) {
-            throw new IllegalStateException("Participant with id " + initiatorId + " does not exist");
-        }
-
         Participant subject = participantService.getParticipant(subjectId);
-
-        if (subject == null) {
-            throw new IllegalStateException("Participant with id " + subjectId + " does not exist");
-        }
-
         Conversation updatedConversation = conversationService.removeParticipant(conversation, initiator, subject);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
         HttpHeaders headers = new HttpHeaders();
-        headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -265,26 +196,14 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
-        localeHelper.getLocale(userInfoDto.getLang());
         Long initiatorId = userInfoDto.getProfileId();
-
-        if (initiatorId == null) {
-            throw new IllegalStateException("No initiator specified");
-        }
-
         Participant initiator = participantService.getParticipant(initiatorId);
-
-        if (initiator == null) {
-            throw new IllegalStateException("The specified initiator doesn't exist in the database");
-        }
-
         Conversation conversation = conversationService.getConversation(conversationId);
         Conversation updatedConversation = conversationService.rename(conversation, initiator, updateConversationNameDto.getName());
 
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
         HttpHeaders headers = new HttpHeaders();
-        headers.add(USER_INFO_HEADER, String.valueOf(initiatorId));
         return ResponseEntity.ok().headers(headers).body(result);
     }
 
@@ -300,17 +219,7 @@ public class ConversationController {
         }
 
         Long participantId = userInfoDto.getProfileId();
-
-        if (participantId == null) {
-            throw new IllegalStateException("No participant specified");
-        }
-
         Participant participant = participantService.getParticipant(participantId);
-
-        if (participant == null) {
-            throw new IllegalStateException("No participant with id " + participantId + " found");
-        }
-
         List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessages());
 
         if (messages.stream().anyMatch(Objects::isNull)) {
@@ -319,7 +228,6 @@ public class ConversationController {
 
         messageService.markAsRead(conversation, participant, messages);
         HttpHeaders headers = new HttpHeaders();
-        headers.add(USER_INFO_HEADER, String.valueOf(participantId));
         return ResponseEntity.ok().build();
     }
 

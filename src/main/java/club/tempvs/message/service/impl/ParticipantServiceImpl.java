@@ -1,5 +1,8 @@
 package club.tempvs.message.service.impl;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dao.ParticipantRepository;
 import club.tempvs.message.service.ParticipantService;
@@ -32,7 +35,12 @@ public class ParticipantServiceImpl implements ParticipantService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public Participant getParticipant(Long id) {
-        return participantRepository.findById(id).orElse(null);
+        if (isNull(id)) {
+            throw new IllegalStateException("Participant's id is not specified");
+        }
+
+        return participantRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("No participant with id " + id + " found in the db"));
     }
 
     @HystrixCommand(commandProperties = {
@@ -49,7 +57,7 @@ public class ParticipantServiceImpl implements ParticipantService {
     public Participant refreshParticipant(Long id, String name, String type, String period) {
         Participant participant = getParticipant(id);
 
-        if (participant != null) {
+        if (nonNull(participant)) {
             participant.setName(name);
             participant.setType(type);
             participant.setPeriod(period);

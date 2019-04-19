@@ -62,18 +62,18 @@ public class ParticipantServiceTest {
         assertEquals("A participant instance is returned", result, participant);
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
+    public void testGetParticipantForNullInput() {
+        participantService.getParticipant(null);
+    }
+
+    @Test(expected = IllegalStateException.class)
     public void testGetParticipantForNoneFound() {
         Long participantId = 1L;
 
         when(participantRepository.findById(participantId)).thenReturn(Optional.empty());
 
-        Participant result = participantService.getParticipant(participantId);
-
-        verify(participantRepository).findById(participantId);
-        verifyNoMoreInteractions(participant, objectFactory, participantRepository);
-
-        assertEquals("Null is returned", result, null);
+        participantService.getParticipant(participantId);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ParticipantServiceTest {
         assertEquals("A participant instance is returned", result, participant);
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void testRefreshParticipantForNonExistent() {
         Long participantId = 1L;
         String name = "firstName lastName";
@@ -106,17 +106,8 @@ public class ParticipantServiceTest {
         String period = "period";
 
         when(participantRepository.findById(participantId)).thenReturn(Optional.empty());
-        when(objectFactory.getInstance(Participant.class, participantId, name, type, period)).thenReturn(participant);
-        when(participantRepository.save(participant)).thenReturn(participant);
 
-        Participant result = participantService.refreshParticipant(participantId, name, type, period);
-
-        verify(participantRepository).findById(participantId);
-        verify(objectFactory).getInstance(Participant.class, participantId, name, type, period);
-        verify(participantRepository).save(participant);
-        verifyNoMoreInteractions(participant, objectFactory, participantRepository);
-
-        assertEquals("A participant instance is returned", result, participant);
+        participantService.refreshParticipant(participantId, name, type, period);
     }
 
     @Test

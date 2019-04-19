@@ -5,7 +5,6 @@ import club.tempvs.message.domain.Participant;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Locale;
 
 import static java.util.stream.Collectors.*;
 
@@ -14,8 +13,9 @@ public class GetConversationsDto {
 
     private List<ConversationDtoBean> conversations;
 
-    public GetConversationsDto(List<Conversation> conversations, Participant self, String zoneId, Locale locale) {
+    public GetConversationsDto(List<Conversation> conversations, Participant self, String zoneId) {
         this.conversations = conversations.stream()
-                .map(conversation -> new ConversationDtoBean(conversation, self, zoneId, locale)).collect(toList());
+                .map(conversation -> new ConversationDtoBean(conversation, self, zoneId))
+                .collect(toList());
     }
 }
