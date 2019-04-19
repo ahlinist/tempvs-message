@@ -1,6 +1,6 @@
 package club.tempvs.message.configuration;
 
-import club.tempvs.message.auth.AuthInterceptor;
+import club.tempvs.message.interceptor.AuthInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

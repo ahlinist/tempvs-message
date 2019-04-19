@@ -28,7 +28,6 @@ public class ConversationController {
     private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
     private static final String USER_INFO_HEADER = "User-Info";
-    private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String PAGE_PARAM = "page";
     private static final String SIZE_PARAM = "size";
     private static final String DEFAULT_PAGE_VALUE = "0";
