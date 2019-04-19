@@ -87,7 +87,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.createConversation(userInfoDto,createConversationDto);
+        GetConversationDto result = conversationController.createConversation(userInfoDto, createConversationDto);
 
         verify(participantService).getParticipant(authorId);
         verify(participantService).getParticipants(receiverIds);
@@ -96,7 +96,7 @@ public class ConversationControllerTest {
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(participantService, messageService, conversationService);
 
-        assertTrue("Result is a getConversationDto", result.getBody() instanceof GetConversationDto);
+        assertTrue("Result is a getConversationDto", result instanceof GetConversationDto);
     }
 
     @Test
@@ -119,14 +119,14 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.getConversation(userInfoDto, id, page, size);
+        GetConversationDto result = conversationController.getConversation(userInfoDto, id, page, size);
 
         verify(participantService).getParticipant(callerId);
         verify(conversationService).getConversation(id);
         verify(messageService).getMessagesFromConversation(conversation, page, size);
         verifyNoMoreInteractions(participantService, conversationService, messageService);
 
-        assertTrue("Result is a conversation", result.getBody() instanceof GetConversationDto);
+        assertTrue("Result is a conversation", result instanceof GetConversationDto);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -213,7 +213,7 @@ public class ConversationControllerTest {
         when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
+        GetConversationDto result = conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
 
         verify(participantService).getParticipant(authorId);
         verify(conversationService).getConversation(conversationId);
@@ -222,11 +222,10 @@ public class ConversationControllerTest {
         verify(messageService).getMessagesFromConversation(conversation, page, size);
         verifyNoMoreInteractions(participantService, conversationService, messageService);
 
-        assertTrue("Status code 200 is returned", result.getStatusCodeValue() == 200);
-        assertTrue("GetConversationDto object is returned as a body", result.getBody() instanceof GetConversationDto);
+        assertTrue("GetConversationDto object is returned as a body", result instanceof GetConversationDto);
     }
 
-    @Test
+    @Test(expected = NotFoundException.class)
     public void testAddMessageForMissingConversation() {
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
@@ -236,12 +235,7 @@ public class ConversationControllerTest {
         when(addMessageDto.getText()).thenReturn(text);
         when(conversationService.getConversation(conversationId)).thenReturn(null);
 
-        ResponseEntity result = conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
-
-        verify(conversationService).getConversation(conversationId);
-        verifyNoMoreInteractions(participantService, conversationService, messageService);
-
-        assertTrue("Status code 404 is returned", result.getStatusCodeValue() == 404);
+        conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
     }
 
     @Test
@@ -269,7 +263,7 @@ public class ConversationControllerTest {
         when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
+        GetConversationDto result = conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
 
         verify(conversationService).getConversation(conversationId);
         verify(participantService).getParticipant(initiatorId);
@@ -278,7 +272,7 @@ public class ConversationControllerTest {
         verify(messageService).getMessagesFromConversation(conversation, page, max);
         verifyNoMoreInteractions(conversationService, participantService, messageService);
 
-        assertTrue("GetConversationDto is returned as a result", result.getBody() instanceof GetConversationDto);
+        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
 
     @Test(expected = NotFoundException.class)
@@ -356,7 +350,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
+        GetConversationDto result = conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
 
         verify(conversationService).getConversation(conversationId);
         verify(participantService).getParticipant(initiatorId);
@@ -365,7 +359,7 @@ public class ConversationControllerTest {
         verify(messageService).getMessagesFromConversation(conversation, page, max);
         verifyNoMoreInteractions(messageService, conversationService, participantService);
 
-        assertTrue("GetConversationDto is returned as a result", result.getBody() instanceof GetConversationDto);
+        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
 
     @Test(expected = NotFoundException.class)
@@ -415,7 +409,7 @@ public class ConversationControllerTest {
         when(message.getCreatedDate()).thenReturn(Instant.now());
         when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.renameConversation(userInfoDto, conversationId, updateConversationNameDto);
+        GetConversationDto result = conversationController.renameConversation(userInfoDto, conversationId, updateConversationNameDto);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationService).getConversation(conversationId);
@@ -423,7 +417,7 @@ public class ConversationControllerTest {
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(participantService, conversationService, messageService);
 
-        assertTrue("GetConversationDto is returned as a result", result.getBody() instanceof GetConversationDto);
+        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
 
     @Test
@@ -440,7 +434,7 @@ public class ConversationControllerTest {
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(messageService.markAsRead(conversation, participant, messages)).thenReturn(messages);
 
-        ResponseEntity result = conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
+        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
 
         verify(conversationService).getConversation(conversationId);
         verify(readMessagesDto).getMessages();
@@ -450,8 +444,6 @@ public class ConversationControllerTest {
         verify(messageService).markAsRead(conversation, participant, messages);
         verifyNoMoreInteractions(conversationService, readMessagesDto, messageService,
                 userInfoDto, participantService, conversation, message, participant);
-
-        assertEquals("Response is ok", result, ResponseEntity.ok().build());
     }
 
     @Test(expected = NotFoundException.class)

@@ -465,7 +465,7 @@ public class ConversationControllerIntegrationTest {
                 .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isNotFound())
-                    .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
+                    .andExpect(content().string(equalTo("Conversation with id '2' has not been found.")));
     }
 
     @Test

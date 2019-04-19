@@ -1,5 +1,8 @@
 package club.tempvs.message.controller;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import club.tempvs.message.api.*;
 import club.tempvs.message.domain.*;
 import club.tempvs.message.dto.*;
@@ -37,7 +40,7 @@ public class ConversationController {
     private final MessageService messageService;
 
     @PostMapping("/conversations")
-    public ResponseEntity createConversation(
+    public GetConversationDto createConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestBody CreateConversationDto createConversationDto) {
         Long authorId = userInfoDto.getProfileId();
@@ -45,20 +48,18 @@ public class ConversationController {
         Set<Participant> receivers = new HashSet<>();
         Set<Long> receiverIds = createConversationDto.getReceivers();
 
-        if (receiverIds != null && !receiverIds.isEmpty()) {
+        if (nonNull(receiverIds) && !receiverIds.isEmpty()) {
             receivers = participantService.getParticipants(receiverIds);
         }
 
         Message message = messageService.createMessage(author, receivers, createConversationDto.getText(), false, null, null);
         Conversation conversation = conversationService.createConversation(author, receivers, createConversationDto.getName(), message);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = new GetConversationDto(conversation, messages, author, userInfoDto.getTimezone());
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.ok().headers(headers).body(result);
+        return new GetConversationDto(conversation, messages, author, userInfoDto.getTimezone());
     }
 
     @GetMapping("/conversations/{conversationId}")
-    public ResponseEntity getConversation(
+    public GetConversationDto getConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
@@ -76,9 +77,7 @@ public class ConversationController {
         }
 
         List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
-        GetConversationDto result = new GetConversationDto(conversation, messages, caller, userInfoDto.getTimezone());
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.ok().headers(headers).body(result);
+        return new GetConversationDto(conversation, messages, caller, userInfoDto.getTimezone());
     }
 
     @GetMapping("/conversations")
@@ -113,16 +112,15 @@ public class ConversationController {
     }
 
     @PostMapping("/conversations/{conversationId}/messages")
-    public ResponseEntity addMessage(
+    public GetConversationDto addMessage(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         String text = addMessageDto.getText();
         Conversation conversation = conversationService.getConversation(conversationId);
 
-        if (conversation == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Conversation with id " + conversationId + " doesn't exist.");
+        if (isNull(conversation)) {
+            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
         Long authorId = userInfoDto.getProfileId();
@@ -132,13 +130,11 @@ public class ConversationController {
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
         Conversation updatedConversation = conversationService.addMessage(conversation, message);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = new GetConversationDto(updatedConversation, messages, author, userInfoDto.getTimezone());
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.ok().headers(headers).body(result);
+        return new GetConversationDto(updatedConversation, messages, author, userInfoDto.getTimezone());
     }
 
     @PostMapping("/conversations/{conversationId}/participants")
-    public ResponseEntity addParticipants(
+    public GetConversationDto addParticipants(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
@@ -153,7 +149,7 @@ public class ConversationController {
         Set<Long> subjectIds = addParticipantsDto.getParticipants();
         Set<Participant> subjects = participantService.getParticipants(subjectIds);
 
-        if (subjects == null || subjects.isEmpty()) {
+        if (isNull(subjects) || subjects.isEmpty()) {
             throw new IllegalStateException("No subjects found in database");
         }
 
@@ -165,19 +161,17 @@ public class ConversationController {
 
         Conversation updatedConversation = conversationService.addParticipants(conversation, initiator, subjects);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.ok().headers(headers).body(result);
+        return new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
     }
 
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
-    public ResponseEntity removeParticipant(
+    public GetConversationDto removeParticipant(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId) {
         Conversation conversation = conversationService.getConversation(conversationId);
 
-        if (conversation == null) {
+        if (isNull(conversation)) {
             throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
         }
 
@@ -186,13 +180,11 @@ public class ConversationController {
         Participant subject = participantService.getParticipant(subjectId);
         Conversation updatedConversation = conversationService.removeParticipant(conversation, initiator, subject);
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.ok().headers(headers).body(result);
+        return new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
     }
 
     @PostMapping("/conversations/{conversationId}/name")
-    public ResponseEntity renameConversation(
+    public GetConversationDto renameConversation(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
@@ -200,21 +192,18 @@ public class ConversationController {
         Participant initiator = participantService.getParticipant(initiatorId);
         Conversation conversation = conversationService.getConversation(conversationId);
         Conversation updatedConversation = conversationService.rename(conversation, initiator, updateConversationNameDto.getName());
-
         List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        GetConversationDto result = new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.ok().headers(headers).body(result);
+        return new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
     }
 
     @PostMapping("/conversations/{conversationId}/read")
-    public ResponseEntity readMessages(
+    public void readMessages(
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody ReadMessagesDto readMessagesDto) {
         Conversation conversation = conversationService.getConversation(conversationId);
 
-        if (conversation == null) {
+        if (isNull(conversation)) {
             throw new NotFoundException("No conversation with id " + conversationId + " found.");
         }
 
@@ -227,8 +216,6 @@ public class ConversationController {
         }
 
         messageService.markAsRead(conversation, participant, messages);
-        HttpHeaders headers = new HttpHeaders();
-        return ResponseEntity.ok().build();
     }
 
     @ExceptionHandler(Exception.class)

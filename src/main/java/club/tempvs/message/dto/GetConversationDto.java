@@ -16,8 +16,8 @@ public class GetConversationDto {
     private String type;
     private String name;
     private ParticipantDto admin;
-    private Set<ParticipantDto> participants = new LinkedHashSet<>();
-    private List<MessageDtoBean> messages = new ArrayList<>();
+    private Set<ParticipantDto> participants;
+    private List<MessageDtoBean> messages;
 
     public GetConversationDto(Conversation conversation, List<Message> messages, Participant self, String zoneId) {
         Participant admin = conversation.getAdmin();
