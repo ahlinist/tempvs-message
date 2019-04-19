@@ -55,6 +55,8 @@ public class ConversationControllerTest {
     private ReadMessagesDto readMessagesDto;
     @Mock
     private UserInfoDto userInfoDto;
+    @Mock
+    private GetConversationsDto getConversationsDto;
 
     @Before
     public void setup() {
@@ -162,19 +164,11 @@ public class ConversationControllerTest {
         List<ConversationDtoBean> conversationDtoBeans = new ArrayList<>();
         conversationDtoBeans.add(new ConversationDtoBean());
 
-        when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(userInfoDto.getTimezone()).thenReturn(timeZone);
-        when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
-        when(conversation.getLastMessage()).thenReturn(message);
-        when(message.getAuthor()).thenReturn(participant);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(conversationService.getConversationsByParticipant(participant, page, size)).thenReturn(conversations);
+        when(conversationService.getConversationsAttended(page, size)).thenReturn(getConversationsDto);
 
-        ResponseEntity result = conversationController.getConversationsByParticipant(userInfoDto, page, size);
+        ResponseEntity result = conversationController.getConversationsByParticipant(page, size);
 
-        verify(participantService).getParticipant(participantId);
-        verify(conversationService).getConversationsByParticipant(participant, page, size);
+        verify(conversationService).getConversationsAttended(page, size);
         verifyNoMoreInteractions(participantService, conversationService);
 
         assertTrue("GetConversationsDto object is returned as a body", result.getBody() instanceof GetConversationsDto);
@@ -185,7 +179,7 @@ public class ConversationControllerTest {
         int page = 0;
         int size = 200;
 
-        conversationController.getConversationsByParticipant(userInfoDto, page, size);
+        conversationController.getConversationsByParticipant(page, size);
     }
 
     @Test

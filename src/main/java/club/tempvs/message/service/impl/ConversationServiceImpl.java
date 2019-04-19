@@ -6,8 +6,12 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.ErrorsDto;
+import club.tempvs.message.dto.GetConversationsDto;
+import club.tempvs.message.holder.UserHolder;
+import club.tempvs.message.model.User;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
+import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import club.tempvs.message.util.ValidationHelper;
@@ -45,6 +49,8 @@ public class ConversationServiceImpl implements ConversationService {
     private final ConversationRepository conversationRepository;
     private final LocaleHelper localeHelper;
     private final ValidationHelper validationHelper;
+    private final ParticipantService participantService;
+    private final UserHolder userHolder;
 
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
@@ -126,11 +132,14 @@ public class ConversationServiceImpl implements ConversationService {
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
-    public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
+    public GetConversationsDto getConversationsAttended(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        List<Object[]> conversationsPerParticipant = conversationRepository.findConversationsPerParticipant(participant, pageable);
-
-        return conversationsPerParticipant.stream()
+        User user = userHolder.getUser();
+        Long participantId = user.getProfileId();
+        Participant participant = participantService.getParticipant(participantId);
+        List<Object[]> conversationsPerParticipant = conversationRepository
+                .findConversationsPerParticipant(participant, pageable);
+        List<Conversation> conversations = conversationsPerParticipant.stream()
             .map(entry -> {
                 Conversation conversation = (Conversation) entry[0];
                 Long count = (Long) entry[1];
@@ -140,6 +149,8 @@ public class ConversationServiceImpl implements ConversationService {
                 conversation.setLastMessage(translatedLastMessage);
                 return conversation;
             }).collect(toList());
+
+        return new GetConversationsDto(conversations, participant, user.getTimezone());
     }
 
     @HystrixCommand(commandProperties = {

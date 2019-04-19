@@ -75,17 +75,13 @@ public class ConversationController {
 
     @GetMapping("/conversations")
     public ResponseEntity getConversationsByParticipant(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
         if (size > MAX_PAGE_SIZE) {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
-        Long participantId = userInfoDto.getProfileId();
-        Participant participant = participantService.getParticipant(participantId);
-        List<Conversation> conversations = conversationService.getConversationsByParticipant(participant, page, size);
-        GetConversationsDto result = new GetConversationsDto(conversations, participant, userInfoDto.getTimezone());
+        GetConversationsDto result = conversationService.getConversationsAttended(page, size);
 
         int conversationsCount = result.getConversations().size();
         HttpHeaders headers = new HttpHeaders();

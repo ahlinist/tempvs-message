@@ -1,11 +1,16 @@
 package club.tempvs.message.service;
 
+import static club.tempvs.message.domain.Conversation.Type.CONFERENCE;
+
 import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.ErrorsDto;
+import club.tempvs.message.dto.GetConversationsDto;
+import club.tempvs.message.holder.UserHolder;
+import club.tempvs.message.model.User;
 import club.tempvs.message.service.impl.ConversationServiceImpl;
 import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
@@ -21,6 +26,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.util.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -36,47 +42,33 @@ public class ConversationServiceTest {
 
     @Mock
     private Message message;
-
     @Mock
-    private Conversation conversation;
-
+    private Conversation conversation, newConversation;
     @Mock
-    private Conversation newConversation;
-
-    @Mock
-    private Participant author;
-
-    @Mock
-    private Participant receiver;
-
-    @Mock
-    private Participant participant;
-
-    @Mock
-    private Participant oneMoreReceiver;
-
+    private Participant participant, author, receiver, oneMoreReceiver;
     @Mock
     private ObjectFactory objectFactory;
-
     @Mock
     private MessageService messageService;
-
     @Mock
     private ConversationRepository conversationRepository;
-
     @Mock
     private LocaleHelper localeHelper;
-
     @Mock
     private ValidationHelper validationHelper;
-
     @Mock
     private ErrorsDto errorsDto;
+    @Mock
+    private ParticipantService participantService;
+    @Mock
+    private UserHolder userHolder;
+    @Mock
+    private User user;
 
     @Before
     public void setup() {
-        this.conversationService = new ConversationServiceImpl(
-                objectFactory, messageService, conversationRepository, localeHelper, validationHelper);
+        this.conversationService = new ConversationServiceImpl(objectFactory,
+                messageService, conversationRepository, localeHelper, validationHelper, participantService, userHolder);
     }
 
     @Test
@@ -263,26 +255,34 @@ public class ConversationServiceTest {
     public void testGetConversationsByParticipant() {
         int page = 0;
         int size = 40;
+        long participantId = 1l;
+        String timeZone = "UTC";
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size);
         List<Object[]> conversationsPerParticipant = new ArrayList<>();
         conversationsPerParticipant.add(new Object[]{conversation, 3L});
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(participantId);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationRepository.findConversationsPerParticipant(participant, pageable)).thenReturn(conversationsPerParticipant);
         when(conversation.getLastMessage()).thenReturn(message);
+        when(conversation.getType()).thenReturn(CONFERENCE);
+        when(message.getAuthor()).thenReturn(participant);
+        when(message.getCreatedDate()).thenReturn(Instant.now());
+        when(user.getTimezone()).thenReturn(timeZone);
         when(localeHelper.translateMessageIfSystem(message)).thenReturn(message);
 
-        List<Conversation> result = conversationService.getConversationsByParticipant(participant, page, size);
+        GetConversationsDto result = conversationService.getConversationsAttended(page, size);
 
+        verify(userHolder).getUser();
+        verify(participantService).getParticipant(participantId);
         verify(conversationRepository).findConversationsPerParticipant(participant, pageable);
-        verify(conversation).setUnreadMessagesCount(3L);
-        verify(conversation).getLastMessage();
         verify(localeHelper).translateMessageIfSystem(message);
-        verify(conversation).setLastMessage(message);
-        verifyNoMoreInteractions(participant, message, conversation, localeHelper, conversationRepository);
+        verifyNoMoreInteractions(localeHelper, conversationRepository, userHolder, participantService);
 
-        assertEquals("A list of one conversation is returned", result, conversations);
+        assertTrue("An GetConversationsDtoinstance is returned", result instanceof GetConversationsDto);
     }
 
     @Test

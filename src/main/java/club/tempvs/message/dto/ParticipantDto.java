@@ -11,13 +11,6 @@ public class ParticipantDto {
     String type;
     String period;
 
-    public ParticipantDto(Long id, String name, String type, String period) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.period = period;
-    }
-
     public ParticipantDto(Participant participant) {
         this.id = participant.getId();
         this.name = participant.getName();

@@ -3,6 +3,7 @@ package club.tempvs.message.service;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.GetConversationsDto;
 
 import java.util.List;
 import java.util.Set;
@@ -13,7 +14,7 @@ public interface ConversationService {
 
     Conversation getConversation(Long id);
 
-    List<Conversation> getConversationsByParticipant(Participant participant, int page, int size);
+    GetConversationsDto getConversationsAttended(int page, int size);
 
     Conversation addMessage(Conversation conversation, Message message);
 
