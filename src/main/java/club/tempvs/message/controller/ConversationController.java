@@ -1,7 +1,7 @@
 package club.tempvs.message.controller;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
+import static org.springframework.web.bind.annotation.RequestMethod.*;
+import static org.springframework.http.HttpStatus.*;
 
 import club.tempvs.message.api.*;
 import club.tempvs.message.domain.*;
@@ -10,14 +10,12 @@ import club.tempvs.message.service.*;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.*;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.util.*;
-
-import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @RestController
 @RequestMapping("/api")
@@ -45,13 +43,8 @@ public class ConversationController {
             @RequestBody CreateConversationDto createConversationDto) {
         Long authorId = userInfoDto.getProfileId();
         Participant author = participantService.getParticipant(authorId);
-        Set<Participant> receivers = new HashSet<>();
         Set<Long> receiverIds = createConversationDto.getReceivers();
-
-        if (nonNull(receiverIds) && !receiverIds.isEmpty()) {
-            receivers = participantService.getParticipants(receiverIds);
-        }
-
+        Set<Participant> receivers = participantService.getParticipants(receiverIds);
         Message message = messageService.createMessage(author, receivers, createConversationDto.getText(), false, null, null);
         Conversation conversation = conversationService.createConversation(author, receivers, createConversationDto.getName(), message);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
@@ -118,11 +111,6 @@ public class ConversationController {
             @RequestBody AddMessageDto addMessageDto) {
         String text = addMessageDto.getText();
         Conversation conversation = conversationService.getConversation(conversationId);
-
-        if (isNull(conversation)) {
-            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
-        }
-
         Long authorId = userInfoDto.getProfileId();
         Participant author = participantService.getParticipant(authorId);
         Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
@@ -139,20 +127,10 @@ public class ConversationController {
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
         Conversation conversation = conversationService.getConversation(conversationId);
-
-        if (conversation == null) {
-            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
-        }
-
         Long initiatorId = userInfoDto.getProfileId();
         Participant initiator = participantService.getParticipant(initiatorId);
         Set<Long> subjectIds = addParticipantsDto.getParticipants();
         Set<Participant> subjects = participantService.getParticipants(subjectIds);
-
-        if (isNull(subjects) || subjects.isEmpty()) {
-            throw new IllegalStateException("No subjects found in database");
-        }
-
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.stream().filter(subjects::contains).findAny().isPresent()) {
@@ -170,11 +148,6 @@ public class ConversationController {
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId) {
         Conversation conversation = conversationService.getConversation(conversationId);
-
-        if (isNull(conversation)) {
-            throw new NotFoundException("Conversation with id '" + conversationId + "' has not been found.");
-        }
-
         Long initiatorId = userInfoDto.getProfileId();
         Participant initiator = participantService.getParticipant(initiatorId);
         Participant subject = participantService.getParticipant(subjectId);
@@ -202,11 +175,6 @@ public class ConversationController {
             @PathVariable("conversationId") Long conversationId,
             @RequestBody ReadMessagesDto readMessagesDto) {
         Conversation conversation = conversationService.getConversation(conversationId);
-
-        if (isNull(conversation)) {
-            throw new NotFoundException("No conversation with id " + conversationId + " found.");
-        }
-
         Long participantId = userInfoDto.getProfileId();
         Participant participant = participantService.getParticipant(participantId);
         List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessages());
@@ -219,38 +187,38 @@ public class ConversationController {
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(INTERNAL_SERVER_ERROR)
     public String returnInternalError(Exception e) {
         return processException(e);
     }
 
-    @ExceptionHandler({BadRequestException.class, IllegalArgumentException.class})
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(BAD_REQUEST)
     public String returnBadRequest(Exception e) {
         return processException(e);
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String returnNotFound(NotFoundException e) {
+    @ExceptionHandler(NoSuchElementException.class)
+    @ResponseStatus(NOT_FOUND)
+    public String returnNotFound(Exception e) {
         return processException(e);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public String returnUnauthorized(UnauthorizedException e) {
+    @ResponseStatus(UNAUTHORIZED)
+    public String returnUnauthorized(Exception e) {
         return processException(e);
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public String returnForbidden(ForbiddenException e) {
+    @ResponseStatus(FORBIDDEN)
+    public String returnForbidden(Exception e) {
         return processException(e);
     }
 
     @ExceptionHandler(HystrixRuntimeException.class)
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    public String returnServiceUnavailable(HystrixRuntimeException e) {
+    @ResponseStatus(SERVICE_UNAVAILABLE)
+    public String returnServiceUnavailable(Exception e) {
         return processException(e);
     }
 

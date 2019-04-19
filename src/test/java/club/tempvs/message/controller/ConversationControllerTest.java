@@ -1,7 +1,6 @@
 package club.tempvs.message.controller;
 
 import club.tempvs.message.api.ForbiddenException;
-import club.tempvs.message.api.NotFoundException;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -225,19 +224,6 @@ public class ConversationControllerTest {
         assertTrue("GetConversationDto object is returned as a body", result instanceof GetConversationDto);
     }
 
-    @Test(expected = NotFoundException.class)
-    public void testAddMessageForMissingConversation() {
-        Long conversationId = 2L;
-        Set<Participant> participants = new HashSet<>();
-        participants.add(receiver);
-        String text = "new message text";
-
-        when(addMessageDto.getText()).thenReturn(text);
-        when(conversationService.getConversation(conversationId)).thenReturn(null);
-
-        conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
-    }
-
     @Test
     public void testAddParticipant() {
         Long conversationId = 1L;
@@ -273,43 +259,6 @@ public class ConversationControllerTest {
         verifyNoMoreInteractions(conversationService, participantService, messageService);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void testAddParticipantToNonExistentConversation() {
-        Long conversationId = 1L;
-
-        when(conversationService.getConversation(conversationId)).thenReturn(null);
-
-        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testAddParticipantForNonExistentInitiator() {
-        Long conversationId = 1L;
-        Long initiatorId = 2L;
-
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(participantService.getParticipant(initiatorId)).thenReturn(null);
-
-        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testAddParticipantForNonExistentSubject() {
-        Long conversationId = 1L;
-        Long initiatorId = 2L;
-        Long subjectId = 3L;
-        Set<Long> subjectIds = new HashSet<>(Arrays.asList(subjectId));
-
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(addParticipantsDto.getParticipants()).thenReturn(subjectIds);
-        when(participantService.getParticipants(subjectIds)).thenReturn(null);
-
-        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -360,16 +309,6 @@ public class ConversationControllerTest {
         verifyNoMoreInteractions(messageService, conversationService, participantService);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void testRemoveParticipantForNonExistentConversation() {
-        Long conversationId = 1L;
-        Long subjectId = 2L;
-
-        when(conversationService.getConversation(conversationId)).thenReturn(null);
-
-        conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
     }
 
     @Test
@@ -444,15 +383,6 @@ public class ConversationControllerTest {
         verify(messageService).markAsRead(conversation, participant, messages);
         verifyNoMoreInteractions(conversationService, readMessagesDto, messageService,
                 userInfoDto, participantService, conversation, message, participant);
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void testReadMessagesForMissingConversation() {
-        Long conversationId = 1L;
-
-        when(conversationService.getConversation(conversationId)).thenReturn(null);
-
-        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
     }
 
     @Test(expected = IllegalStateException.class)

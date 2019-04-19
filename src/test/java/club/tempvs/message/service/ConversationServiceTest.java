@@ -234,20 +234,14 @@ public class ConversationServiceTest {
         assertEquals("A conversation with given id is retrieved", result, conversation);
     }
 
-    @Test
+    @Test(expected = NoSuchElementException.class)
     public void testGetConversationNotFound() {
         long conversationId = 1L;
 
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.ofNullable(null));
 
-        Conversation result = conversationService.getConversation(conversationId);
-
-        verify(conversationRepository).findById(conversationId);
-        verifyNoMoreInteractions(conversationRepository);
-
-        assertEquals("A conversation with given id is retrieved", result, null);
+        conversationService.getConversation(conversationId);
     }
-
 
     @Test
     public void testAddMessage() {

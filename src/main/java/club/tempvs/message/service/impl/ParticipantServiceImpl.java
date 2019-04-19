@@ -2,6 +2,7 @@ package club.tempvs.message.service.impl;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.Collections.emptySet;
 
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dao.ParticipantRepository;
@@ -47,8 +48,17 @@ public class ParticipantServiceImpl implements ParticipantService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public Set<Participant> getParticipants(Set<Long> ids) {
+        if (isNull(ids) || ids.isEmpty()) {
+            return emptySet();
+        }
+
         List<Participant> participants = participantRepository.findAllById(ids);
-        return new HashSet<>(participants);
+
+        if (participants.isEmpty()) {
+            throw new IllegalStateException("No participants with given ids found in database");
+        } else {
+            return new HashSet<>(participants);
+        }
     }
 
     @HystrixCommand(commandProperties = {

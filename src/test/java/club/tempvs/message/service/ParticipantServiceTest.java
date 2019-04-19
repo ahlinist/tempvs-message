@@ -1,5 +1,7 @@
 package club.tempvs.message.service;
 
+import static java.util.Collections.emptySet;
+
 import club.tempvs.message.dao.ParticipantRepository;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.impl.ParticipantServiceImpl;
@@ -124,5 +126,32 @@ public class ParticipantServiceTest {
         verifyNoMoreInteractions(participant, participantRepository);
 
         assertEquals("A set of participants is returned", participantSet, result);
+    }
+
+    @Test
+    public void testGetParticipantsForNullInput() {
+        Set<Participant> result = participantService.getParticipants(null);
+
+        verifyZeroInteractions(participant, participantRepository);
+
+        assertEquals("An empty set is returned", emptySet(), result);
+    }
+
+    @Test
+    public void testGetParticipantsForEmptyIdsSet() {
+        Set<Participant> result = participantService.getParticipants(new HashSet<>());
+
+        verifyZeroInteractions(participant, participantRepository);
+
+        assertEquals("An empty set is returned", emptySet(), result);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetParticipantsForNoneFound() {
+        Set<Long> participantIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
+
+        when(participantRepository.findAllById(participantIds)).thenReturn(new ArrayList<>());
+
+        participantService.getParticipants(participantIds);
     }
 }

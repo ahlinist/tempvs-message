@@ -109,7 +109,8 @@ public class ConversationServiceImpl implements ConversationService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public Conversation getConversation(Long id) {
-        return conversationRepository.findById(id).orElse(null);
+        return conversationRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("No conversation with id " + id + " found."));
     }
 
     @HystrixCommand(commandProperties = {
