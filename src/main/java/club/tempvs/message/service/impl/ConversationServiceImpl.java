@@ -5,6 +5,7 @@ import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.ConversationDtoBean;
 import club.tempvs.message.dto.ErrorsDto;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.dto.GetConversationsDto;
@@ -126,10 +127,11 @@ public class ConversationServiceImpl implements ConversationService {
         Pageable pageable = PageRequest.of(page, size);
         User user = userHolder.getUser();
         Long participantId = user.getProfileId();
+        String timeZone = user.getTimezone();
         Participant participant = participantService.getParticipant(participantId);
         List<Object[]> conversationsPerParticipant = conversationRepository
                 .findConversationsPerParticipant(participant, pageable);
-        List<Conversation> conversations = conversationsPerParticipant.stream()
+        List<ConversationDtoBean> conversationDtoBeans = conversationsPerParticipant.stream()
             .map(entry -> {
                 Conversation conversation = (Conversation) entry[0];
                 Long count = (Long) entry[1];
@@ -137,10 +139,10 @@ public class ConversationServiceImpl implements ConversationService {
                 Message lastMessage = conversation.getLastMessage();
                 Message translatedLastMessage = localeHelper.translateMessageIfSystem(lastMessage);
                 conversation.setLastMessage(translatedLastMessage);
-                return conversation;
+                return new ConversationDtoBean(conversation, participant, timeZone);
             }).collect(toList());
 
-        return new GetConversationsDto(conversations, participant, user.getTimezone());
+        return new GetConversationsDto(conversationDtoBeans);
     }
 
     @HystrixCommand(commandProperties = {
