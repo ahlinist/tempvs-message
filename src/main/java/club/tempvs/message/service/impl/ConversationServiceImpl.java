@@ -63,9 +63,6 @@ public class ConversationServiceImpl implements ConversationService {
         return new GetConversationDto(conversation, messages, author, timeZone);
     }
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
     public Conversation buildConversation(Participant author, Set<Participant> receivers, String name, Message message) {
         if (receivers.size() == 1 && receivers.iterator().next().equals(author)) {
             throw new IllegalStateException("Author can't be equal the only receiver");
@@ -98,23 +95,21 @@ public class ConversationServiceImpl implements ConversationService {
             conversation.setType(Conversation.Type.DIALOGUE);
         }
 
-        return conversationRepository.save(conversation);
+        return save(conversation);
     }
 
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
+    //TODO: make private
     public Conversation getConversation(Long id) {
         return conversationRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("No conversation with id " + id + " found."));
     }
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
     public Conversation addMessage(Conversation conversation, Message message) {
         Conversation updatedConversation = messageService.addMessage(conversation, message);
-        return conversationRepository.save(updatedConversation);
+        return save(updatedConversation);
     }
 
     @HystrixCommand(commandProperties = {
@@ -142,9 +137,6 @@ public class ConversationServiceImpl implements ConversationService {
         return new GetConversationsDto(conversationDtoBeans);
     }
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
     public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
         Set<Participant> initialParticipants = conversation.getParticipants();
         validationHelper.validateParticipantsAddition(adder, added, initialParticipants);
@@ -173,7 +165,7 @@ public class ConversationServiceImpl implements ConversationService {
             messages.stream()
                     .forEach(m -> messageService.addMessage(conversation, m));
 
-            return conversationRepository.save(conversation);
+            return save(conversation);
         }
     }
 
@@ -214,7 +206,7 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation = messageService.addMessage(conversation, message);
-        conversation = conversationRepository.save(conversation);
+        conversation = save(conversation);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return new GetConversationDto(conversation, messages, remover, timeZone);
     }
@@ -256,8 +248,15 @@ public class ConversationServiceImpl implements ConversationService {
 
         conversation.setName(name);
         conversation = messageService.addMessage(conversation, message);
-        conversation = conversationRepository.save(conversation);
+        conversation = save(conversation);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return new GetConversationDto(conversation, messages, initiator, timeZone);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private Conversation save(Conversation conversation) {
+        return conversationRepository.save(conversation);
     }
 }
