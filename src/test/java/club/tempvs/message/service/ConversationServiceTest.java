@@ -447,14 +447,19 @@ public class ConversationServiceTest {
 
     @Test
     public void testCountUpdatedConversationsPerParticipant() {
+        long participantId = 1L;
         long conversationCount = 3L;
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(participantId);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationRepository.countByNewMessagesPerParticipant(participant)).thenReturn(conversationCount);
 
-        long result = conversationService.countUpdatedConversationsPerParticipant(participant);
+        long result = conversationService.countUpdatedConversationsPerParticipant();
 
+        verify(participantService).getParticipant(participantId);
         verify(conversationRepository).countByNewMessagesPerParticipant(participant);
-        verifyNoMoreInteractions(participant, conversationRepository);
+        verifyNoMoreInteractions(participantService, conversationRepository);
 
         assertEquals("3L is returned as a count of new conversations", conversationCount, result);
     }

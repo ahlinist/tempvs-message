@@ -6,7 +6,6 @@ import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.dto.GetConversationsDto;
 
-import java.util.List;
 import java.util.Set;
 
 public interface ConversationService {
@@ -27,7 +26,7 @@ public interface ConversationService {
 
     Conversation findDialogue(Participant author, Participant receiver);
 
-    long countUpdatedConversationsPerParticipant(Participant participant);
+    long countUpdatedConversationsPerParticipant();
 
     Conversation rename(Conversation conversation, Participant initiator, String name);
 }

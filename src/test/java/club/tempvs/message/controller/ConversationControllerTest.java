@@ -291,19 +291,14 @@ public class ConversationControllerTest {
 
     @Test
     public void testCountConversations() {
-        Long participantId = 1L;
         long conversationsCount = 3L;
 
-        when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(conversationService.countUpdatedConversationsPerParticipant(participant)).thenReturn(conversationsCount);
+        when(conversationService.countUpdatedConversationsPerParticipant()).thenReturn(conversationsCount);
 
-        ResponseEntity result = conversationController.countConversations(userInfoDto);
+        ResponseEntity result = conversationController.countConversations();
 
-        verify(userInfoDto).getProfileId();
-        verify(participantService).getParticipant(participantId);
-        verify(conversationService).countUpdatedConversationsPerParticipant(participant);
-        verifyNoMoreInteractions(userInfoDto, participantService, participant);
+        verify(conversationService).countUpdatedConversationsPerParticipant();
+        verifyNoMoreInteractions(participantService);
 
         assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
     }

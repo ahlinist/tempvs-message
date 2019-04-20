@@ -225,7 +225,9 @@ public class ConversationServiceImpl implements ConversationService {
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
-    public long countUpdatedConversationsPerParticipant(Participant participant) {
+    public long countUpdatedConversationsPerParticipant() {
+        Long participantId = userHolder.getUser().getProfileId();
+        Participant participant = participantService.getParticipant(participantId);
         return conversationRepository.countByNewMessagesPerParticipant(participant);
     }
 

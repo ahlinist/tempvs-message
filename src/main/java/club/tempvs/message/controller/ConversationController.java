@@ -84,11 +84,8 @@ public class ConversationController {
     }
 
     @RequestMapping(value="/conversations", method = HEAD)
-    public ResponseEntity countConversations(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto) {
-        Long participantId = userInfoDto.getProfileId();
-        Participant participant = participantService.getParticipant(participantId);
-        long result = conversationService.countUpdatedConversationsPerParticipant(participant);
+    public ResponseEntity countConversations() {
+        long result = conversationService.countUpdatedConversationsPerParticipant();
         HttpHeaders headers = new HttpHeaders();
         headers.add(COUNT_HEADER, String.valueOf(result));
         return ResponseEntity.ok().headers(headers).build();
