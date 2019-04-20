@@ -466,51 +466,58 @@ public class ConversationServiceTest {
 
     @Test
     public void testRename() {
+        Long conversationId = 1L;
+        Long participantId = 3L;
         String name = "name";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(participantId);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(receivers);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.rename(conversation, participant, name);
+        GetConversationDto result = conversationService.rename(conversationId, name);
 
+        verify(participantService).getParticipant(participantId);
+        verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null);
-        verify(conversation).getParticipants();
-        verify(conversation).setName(name);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(message).setConversation(conversation);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(participant, message, conversation, messageService, conversationRepository);
+        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verifyNoMoreInteractions(participant, messageService, conversationRepository);
 
-        assertEquals("Updated conversation is returned as a result", conversation, result);
+        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
 
     @Test
     public void testRenameForEmptyName() {
+        Long conversationId = 1L;
+        Long participantId = 3L;
         String name = "";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(participantId);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(receivers);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(messageService.createMessage(participant, receivers,
                 CONVERSATION_NAME_DROPPED, isSystem, null, null)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.rename(conversation, participant, name);
+        GetConversationDto result = conversationService.rename(conversationId, name);
 
+        verify(participantService).getParticipant(participantId);
+        verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(participant, receivers,
-                CONVERSATION_NAME_DROPPED, isSystem, null, null);
-        verify(conversation).getParticipants();
-        verify(conversation).setName(name);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(message).setConversation(conversation);
-        verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(participant, receiver, message, conversation, messageService, conversationRepository);
+                CONVERSATION_NAME_DROPPED, isSystem, null, null);        verify(conversationRepository).save(conversation);
+        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verifyNoMoreInteractions(participant, messageService, conversationRepository);
 
-        assertEquals("Updated conversation is returned as a result", conversation, result);
+        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
 }

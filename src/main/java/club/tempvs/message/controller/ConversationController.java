@@ -145,15 +145,9 @@ public class ConversationController {
 
     @PostMapping("/conversations/{conversationId}/name")
     public GetConversationDto renameConversation(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
-        Long initiatorId = userInfoDto.getProfileId();
-        Participant initiator = participantService.getParticipant(initiatorId);
-        Conversation conversation = conversationService.getConversation(conversationId);
-        Conversation updatedConversation = conversationService.rename(conversation, initiator, updateConversationNameDto.getName());
-        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
+        return conversationService.rename(conversationId, updateConversationNameDto.getName());
     }
 
     @PostMapping("/conversations/{conversationId}/read")

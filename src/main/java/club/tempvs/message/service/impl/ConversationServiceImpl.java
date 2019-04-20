@@ -231,8 +231,13 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.countByNewMessagesPerParticipant(participant);
     }
 
-    public Conversation rename(Conversation conversation, Participant initiator, String name) {
+    public GetConversationDto rename(Long conversationId, String name) {
         Boolean isSystem = Boolean.TRUE;
+        Conversation conversation = getConversation(conversationId);
+        User user = userHolder.getUser();
+        Long initiatorId = user.getProfileId();
+        String timeZone = user.getTimezone();
+        Participant initiator = participantService.getParticipant(initiatorId);
         Set<Participant> receivers = new LinkedHashSet<>(conversation.getParticipants());
         receivers.remove(initiator);
         Message message;
@@ -246,6 +251,8 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation.setName(name);
-        return addMessage(conversation, message);
+        Conversation updatedConversation = addMessage(conversation, message);
+        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return new GetConversationDto(updatedConversation, messages, initiator, timeZone);
     }
 }

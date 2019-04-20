@@ -28,5 +28,5 @@ public interface ConversationService {
 
     long countUpdatedConversationsPerParticipant();
 
-    Conversation rename(Conversation conversation, Participant initiator, String name);
+    GetConversationDto rename(Long conversationId, String name);
 }

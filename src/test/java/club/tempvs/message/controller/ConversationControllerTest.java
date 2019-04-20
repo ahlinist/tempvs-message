@@ -24,9 +24,6 @@ import java.util.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationControllerTest {
 
-    private static final int DEFAULT_PAGE_NUMBER = 0;
-    private static final int MAX_PAGE_SIZE = 40;
-
     private ConversationController conversationController;
 
     @Mock
@@ -306,28 +303,15 @@ public class ConversationControllerTest {
     @Test
     public void testUpdateConversationName() {
         Long conversationId = 1L;
-        Long participantId = 3L;
         String conversationName = "name";
-        String timeZone = "UTC";
-        List<Message> messages = Arrays.asList(message);
 
         when(updateConversationNameDto.getName()).thenReturn(conversationName);
-        when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(userInfoDto.getTimezone()).thenReturn(timeZone);
-        when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(conversationService.rename(conversation, participant, conversationName)).thenReturn(conversation);
-        when(message.getAuthor()).thenReturn(author);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
+        when(conversationService.rename(conversationId, conversationName)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.renameConversation(userInfoDto, conversationId, updateConversationNameDto);
+        GetConversationDto result = conversationController.renameConversation(conversationId, updateConversationNameDto);
 
-        verify(participantService).getParticipant(participantId);
-        verify(conversationService).getConversation(conversationId);
-        verify(conversationService).rename(conversation, participant, conversationName);
-        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        verifyNoMoreInteractions(participantService, conversationService, messageService);
+        verify(conversationService).rename(conversationId, conversationName);
+        verifyNoMoreInteractions(conversationService);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
