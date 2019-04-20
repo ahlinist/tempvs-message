@@ -8,6 +8,7 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.ErrorsDto;
+import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.dto.GetConversationsDto;
 import club.tempvs.message.holder.UserHolder;
 import club.tempvs.message.model.User;
@@ -32,11 +33,10 @@ import java.util.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ConversationServiceTest {
 
+    private static final int DEFAULT_PAGE_NUMBER = 0;
+    private static final int MAX_PAGE_SIZE = 40;
     private static final String CONVERSATION_RENAMED = "conversation.rename";
     private static final String CONVERSATION_NAME_DROPPED = "conversation.drop.name";
-    private static final String EMPTY_STRING = "";
-    private static final String USER_TYPE = "USER";
-    private static final String CLUB_TYPE = "CLUB";
 
     private ConversationService conversationService;
 
@@ -72,29 +72,61 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testCreateConversationOf2ParticipantsForExistentOne() {
+    public void testBuildConversation() {
+        Long authorId = 1L;
+        Long receiverId = 2L;
+        Long participantId = 3L;
         String text = "text";
+        String name = "name";
+        String timeZone = "UTC";
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId, participantId));
+        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, participant));
+        List<Message> messages = Arrays.asList(message, message, message);
+
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(authorId);
+        when(user.getTimezone()).thenReturn(timeZone);
+        when(participantService.getParticipant(authorId)).thenReturn(author);
+        when(participantService.getParticipants(receiverIds)).thenReturn(receivers);
+        when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
+        when(messageService.createMessage(author, receivers, text, false, null, null)).thenReturn(message);
+        when(message.getAuthor()).thenReturn(author);
+        when(message.getCreatedDate()).thenReturn(Instant.now());
+        when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+
+        GetConversationDto result = conversationService.createConversation(receiverIds, name, text);
+
+        verify(participantService).getParticipant(authorId);
+        verify(participantService).getParticipants(receiverIds);
+        verify(objectFactory).getInstance(Conversation.class);
+        verify(conversation).addParticipant(receiver);
+        verify(conversation).addParticipant(author);
+        verify(conversation, times(2)).getParticipants();
+        verify(conversation).setName(name);
+        verify(conversation).addMessage(message);
+        verify(conversation).setLastMessage(message);
+        verify(conversation).setType(Conversation.Type.DIALOGUE);
+        verify(message).setConversation(conversation);
+        verify(messageService).createMessage(author, receivers, text, false, null, null);
+        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verify(conversationRepository).save(conversation);
+        verifyNoMoreInteractions(participantService, messageService, conversationRepository);
+
+        assertTrue("An instance of GetConversationDto is returned", result instanceof GetConversationDto);
+    }
+
+    @Test
+    public void testBuildConversationOf2ParticipantsForExistentOne() {
         String conversationName = "name";
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        when(message.getText()).thenReturn(text);
-        when(receiver.getType()).thenReturn(USER_TYPE);
-        when(author.getType()).thenReturn(USER_TYPE);
-        when(receiver.getPeriod()).thenReturn(EMPTY_STRING);
-        when(author.getPeriod()).thenReturn(EMPTY_STRING);
         when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
+        Conversation result = conversationService.buildConversation(author, receivers, conversationName, message);
 
-        verify(validationHelper).getErrors();
-        verify(message).getText();
-        verify(receiver).getType();
-        verify(author).getType();
-        verify(receiver).getPeriod();
-        verify(author).getPeriod();
-        verify(validationHelper).processErrors(errorsDto);
+        verify(validationHelper).validateConversationCreation(author, receivers, message);
         verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);
@@ -110,37 +142,24 @@ public class ConversationServiceTest {
     public void testCreateConversationWhereAuthorEqualsTheOnlyReceiver() {
         Set<Participant> receivers = new HashSet<>(Arrays.asList(author));
 
-        conversationService.createConversation(author, receivers, null, message);
+        conversationService.buildConversation(author, receivers, null, message);
     }
 
     @Test
     public void testCreateConversationOf2ParticipantsForNonExistentOne() {
-        String text = "text";
         String conversationName = "name";
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        when(message.getText()).thenReturn(text);
-        when(receiver.getType()).thenReturn(USER_TYPE);
-        when(author.getType()).thenReturn(USER_TYPE);
-        when(receiver.getPeriod()).thenReturn(EMPTY_STRING);
-        when(author.getPeriod()).thenReturn(EMPTY_STRING);
         when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(null);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
+        Conversation result = conversationService.buildConversation(author, receivers, conversationName, message);
 
-        verify(validationHelper).getErrors();
-        verify(message).getText();
-        verify(receiver).getType();
-        verify(author).getType();
-        verify(receiver).getPeriod();
-        verify(author).getPeriod();
-        verify(validationHelper).processErrors(errorsDto);
+        verify(validationHelper).validateConversationCreation(author, receivers, message);
         verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
         verify(objectFactory).getInstance(Conversation.class);
         verify(conversation).addParticipant(receiver);
@@ -160,7 +179,6 @@ public class ConversationServiceTest {
 
     @Test
     public void testCreateConversationOf3Participants() {
-        String text = "text";
         String conversationName = "name";
         Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
@@ -171,29 +189,13 @@ public class ConversationServiceTest {
         participants.add(receiver);
         participants.add(oneMoreReceiver);
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        when(message.getText()).thenReturn(text);
-        when(receiver.getType()).thenReturn(USER_TYPE);
-        when(oneMoreReceiver.getType()).thenReturn(USER_TYPE);
-        when(author.getType()).thenReturn(USER_TYPE);
-        when(receiver.getPeriod()).thenReturn(EMPTY_STRING);
-        when(oneMoreReceiver.getPeriod()).thenReturn(EMPTY_STRING);
-        when(author.getPeriod()).thenReturn(EMPTY_STRING);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.createConversation(author, receivers, conversationName, message);
+        Conversation result = conversationService.buildConversation(author, receivers, conversationName, message);
 
-        verify(validationHelper).getErrors();
-        verify(message).getText();
-        verify(receiver).getType();
-        verify(oneMoreReceiver).getType();
-        verify(author).getType();
-        verify(receiver).getPeriod();
-        verify(oneMoreReceiver).getPeriod();
-        verify(author).getPeriod();
-        verify(validationHelper).processErrors(errorsDto);
+        verify(validationHelper).validateConversationCreation(author, receivers, message);
         verify(objectFactory).getInstance(Conversation.class);
         verify(conversation).addParticipant(author);
         verify(conversation).addParticipant(receiver);
@@ -296,35 +298,20 @@ public class ConversationServiceTest {
         Set<Participant> finalParticipants = new LinkedHashSet<>(initialParticipants);
         finalParticipants.add(oneMoreReceiver);
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversation.getParticipants()).thenReturn(initialParticipants);
-        when(author.getType()).thenReturn(USER_TYPE);
-        when(author.getPeriod()).thenReturn(EMPTY_STRING);
-        when(oneMoreReceiver.getType()).thenReturn(USER_TYPE);
-        when(oneMoreReceiver.getPeriod()).thenReturn(EMPTY_STRING);
-        when(receiver.getType()).thenReturn(USER_TYPE);
-        when(receiver.getPeriod()).thenReturn(EMPTY_STRING);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(newConversation);
         when(messageService.createMessage(author, receivers, text, true, null, null)).thenReturn(message);
-        when(message.getText()).thenReturn(text);
         when(newConversation.getParticipants()).thenReturn(finalParticipants);
         when(conversationRepository.save(newConversation)).thenReturn(newConversation);
 
         Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
-        verify(validationHelper, times(2)).getErrors();
+        verify(validationHelper).validateParticipantsAddition(author, participantsToAdd, initialParticipants);
+        verify(validationHelper).validateConversationCreation(author, receivers, message);
         verify(conversation).getParticipants();
-        verify(oneMoreReceiver, times(2)).getType();
-        verify(oneMoreReceiver, times(2)).getPeriod();
-        verify(receiver).getType();
-        verify(receiver).getPeriod();
-        verify(author, times(2)).getType();
-        verify(author, times(2)).getPeriod();
         verify(conversation).getType();
-        verify(validationHelper, times(2)).processErrors(errorsDto);
         verify(messageService).createMessage(author, receivers, text, true, null, null);
-        verify(message).getText();
         verify(objectFactory).getInstance(Conversation.class);
         verify(newConversation).addParticipant(receiver);
         verify(newConversation).addParticipant(oneMoreReceiver);
@@ -346,7 +333,6 @@ public class ConversationServiceTest {
     @Test
     public void testAddParticipantForConversationOf3() {
         String text = "conversation.add.participant";
-        String antiquity = "ANTIQUITY";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participantsToAdd = new LinkedHashSet<>(Arrays.asList(oneMoreReceiver));
         Set<Participant> initialParticipants = new LinkedHashSet<>(Arrays.asList(author, receiver, participant));
@@ -354,26 +340,16 @@ public class ConversationServiceTest {
         receivers.add(oneMoreReceiver);
         receivers.remove(author);
 
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
         when(conversation.getParticipants()).thenReturn(initialParticipants);
-        when(oneMoreReceiver.getType()).thenReturn(CLUB_TYPE);
-        when(oneMoreReceiver.getPeriod()).thenReturn(antiquity);
-        when(author.getType()).thenReturn(CLUB_TYPE);
-        when(author.getPeriod()).thenReturn(antiquity);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
         when(messageService.createMessage(author, receivers, text, isSystem, null, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
-        verify(validationHelper).getErrors();
+        verify(validationHelper).validateParticipantsAddition(author, participantsToAdd, initialParticipants);
         verify(conversation).getParticipants();
-        verify(oneMoreReceiver).getType();
-        verify(oneMoreReceiver).getPeriod();
-        verify(author).getType();
-        verify(author).getPeriod();
         verify(conversation).getType();
-        verify(validationHelper).processErrors(errorsDto);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
         verify(conversation).addMessage(message);
         verify(conversation).setLastMessage(message);

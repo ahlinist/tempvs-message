@@ -3,6 +3,7 @@ package club.tempvs.message.service;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.dto.GetConversationsDto;
 
 import java.util.List;
@@ -10,7 +11,9 @@ import java.util.Set;
 
 public interface ConversationService {
 
-    Conversation createConversation(Participant author, Set<Participant> receivers, String name, Message message);
+    GetConversationDto createConversation(Set<Long> receiverIds, String name, String text);
+
+    Conversation buildConversation(Participant author, Set<Participant> receivers, String name, Message message);
 
     Conversation getConversation(Long id);
 

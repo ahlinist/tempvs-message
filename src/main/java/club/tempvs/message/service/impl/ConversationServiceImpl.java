@@ -6,6 +6,7 @@ import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.ErrorsDto;
+import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.dto.GetConversationsDto;
 import club.tempvs.message.holder.UserHolder;
 import club.tempvs.message.model.User;
@@ -30,6 +31,8 @@ import static java.util.stream.Collectors.*;
 @RequiredArgsConstructor
 public class ConversationServiceImpl implements ConversationService {
 
+    private static final int DEFAULT_PAGE_NUMBER = 0;
+    private static final int MAX_PAGE_SIZE = 40;
     private static final String PARTICIPANT_ADDED_MESSAGE = "conversation.add.participant";
     private static final String PARTICIPANT_REMOVED_MESSAGE = "conversation.remove.participant";
     private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
@@ -37,12 +40,8 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String CONVERSATION_RENAMED = "conversation.rename";
     private static final String CONVERSATION_NAME_DROPPED = "conversation.drop.name";
     private static final String PARTICIPANTS_FIELD = "participants";
-    private static final String TEXT_FIELD = "text";
-    private static final String TEXT_EMPTY = "message.empty.text";
-    private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
     private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
-    private static final String TYPE_MISMATCH = "conversation.participant.type.mismatch";
-    private static final String PERIOD_MISMATCH = "conversation.participant.period.mismatch";
+
 
     private final ObjectFactory objectFactory;
     private final MessageService messageService;
@@ -52,44 +51,35 @@ public class ConversationServiceImpl implements ConversationService {
     private final ParticipantService participantService;
     private final UserHolder userHolder;
 
+    public GetConversationDto createConversation(Set<Long> receiverIds, String name, String text) {
+        User user = userHolder.getUser();
+        Long authorId = user.getProfileId();
+        String timeZone = user.getTimezone();
+        Participant author = participantService.getParticipant(authorId);
+        Set<Participant> receivers = participantService.getParticipants(receiverIds);
+        Message message = messageService.createMessage(author, receivers, text, false, null, null);
+        Conversation conversation = buildConversation(author, receivers, name, message);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return new GetConversationDto(conversation, messages, author, timeZone);
+    }
+
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
-    public Conversation createConversation(
-            Participant author, Set<Participant> receivers, String name, Message message) {
+    public Conversation buildConversation(Participant author, Set<Participant> receivers, String name, Message message) {
         if (receivers.size() == 1 && receivers.iterator().next().equals(author)) {
             throw new IllegalStateException("Author can't be equal the only receiver");
         }
 
-        ErrorsDto errorsDto = validationHelper.getErrors();
+        validationHelper.validateConversationCreation(author, receivers, message);
+
         Conversation conversation;
 
-        if (receivers == null || receivers.isEmpty() || receivers.size() > 19) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
-        }
-
-        String text = message.getText();
-
-        if (text == null || text.isEmpty()) {
-            validationHelper.addError(errorsDto, TEXT_FIELD, TEXT_EMPTY);
-        }
-
-        String type = author.getType();
-        String period = author.getPeriod();
-
-        if (receivers.stream().anyMatch(subject -> !subject.getType().equals(type))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH);
-        } else if (receivers.stream().anyMatch(subject -> !subject.getPeriod().equals(period))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH);
-        }
-
-        validationHelper.processErrors(errorsDto);
-
         if (receivers.size() == 1) {
-            conversation = this.findDialogue(author, receivers.iterator().next());
+            conversation = findDialogue(author, receivers.iterator().next());
 
             if (conversation != null) {
-                return this.addMessage(conversation, message);
+                return addMessage(conversation, message);
             }
         }
 
@@ -157,28 +147,8 @@ public class ConversationServiceImpl implements ConversationService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
-        ErrorsDto errorsDto = validationHelper.getErrors();
-
-        if (added == null || added.isEmpty()) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_EMPTY);
-        }
-
         Set<Participant> initialParticipants = conversation.getParticipants();
-
-        if (initialParticipants.size() + added.size() > 20) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
-        }
-
-        String type = adder.getType();
-        String period = adder.getPeriod();
-
-        if (added.stream().anyMatch(subject -> !subject.getType().equals(type))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH);
-        } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(period))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH);
-        }
-
-        validationHelper.processErrors(errorsDto);
+        validationHelper.validateParticipantsAddition(adder, added, initialParticipants);
 
         Message message;
         Boolean isSystem = Boolean.TRUE;
@@ -188,7 +158,7 @@ public class ConversationServiceImpl implements ConversationService {
         if (conversation.getType() == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
             receivers.addAll(added);
             message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null, null);
-            return createConversation(adder, receivers, null, message);
+            return buildConversation(adder, receivers, null, message);
         } else {
             List<Message> messages = new ArrayList<>();
 

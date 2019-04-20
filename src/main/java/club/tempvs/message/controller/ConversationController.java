@@ -38,17 +38,11 @@ public class ConversationController {
     private final MessageService messageService;
 
     @PostMapping("/conversations")
-    public GetConversationDto createConversation(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
-            @RequestBody CreateConversationDto createConversationDto) {
-        Long authorId = userInfoDto.getProfileId();
-        Participant author = participantService.getParticipant(authorId);
+    public GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
         Set<Long> receiverIds = createConversationDto.getReceivers();
-        Set<Participant> receivers = participantService.getParticipants(receiverIds);
-        Message message = messageService.createMessage(author, receivers, createConversationDto.getText(), false, null, null);
-        Conversation conversation = conversationService.createConversation(author, receivers, createConversationDto.getName(), message);
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(conversation, messages, author, userInfoDto.getTimezone());
+        String name = createConversationDto.getName();
+        String text = createConversationDto.getText();
+        return conversationService.createConversation(receiverIds, name, text);
     }
 
     @GetMapping("/conversations/{conversationId}")

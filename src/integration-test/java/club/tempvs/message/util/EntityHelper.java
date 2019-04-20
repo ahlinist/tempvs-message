@@ -28,7 +28,7 @@ public class EntityHelper {
 
     public Conversation createConversation(Participant author, Set<Participant> receivers, String text, String name) {
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
-        return conversationService.createConversation(author, receivers, name, message);
+        return conversationService.buildConversation(author, receivers, name, message);
     }
 
     public Participant createParticipant(Long id, String name, String type, String period) {

@@ -65,39 +65,23 @@ public class ConversationControllerTest {
 
     @Test
     public void testCreateConversation() {
-        Long authorId = 1L;
         Long receiverId = 2L;
         Long participantId = 3L;
         String text = "text";
         String name = "name";
-        String timeZone = "UTC";
         Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId, participantId));
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, participant));
-        List<Message> messages = Arrays.asList(message, message, message);
 
-        when(userInfoDto.getProfileId()).thenReturn(authorId);
-        when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(createConversationDto.getReceivers()).thenReturn(receiverIds);
-        when(participantService.getParticipant(authorId)).thenReturn(author);
-        when(participantService.getParticipants(receiverIds)).thenReturn(receivers);
         when(createConversationDto.getText()).thenReturn(text);
         when(createConversationDto.getName()).thenReturn(name);
-        when(messageService.createMessage(author, receivers, text, false, null, null)).thenReturn(message);
-        when(conversationService.createConversation(author, receivers, name, message)).thenReturn(conversation);
-        when(message.getAuthor()).thenReturn(author);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
+        when(conversationService.createConversation(receiverIds, name, text)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.createConversation(userInfoDto, createConversationDto);
+        GetConversationDto result = conversationController.createConversation(createConversationDto);
 
-        verify(participantService).getParticipant(authorId);
-        verify(participantService).getParticipants(receiverIds);
-        verify(messageService).createMessage(author, receivers, text, false, null, null);
-        verify(conversationService).createConversation(author, receivers, name, message);
-        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verify(conversationService).createConversation(receiverIds, name, text);
         verifyNoMoreInteractions(participantService, messageService, conversationService);
 
-        assertTrue("Result is a getConversationDto", result instanceof GetConversationDto);
+        assertEquals("GetConversationDto is returned", result,getConversationDto);
     }
 
     @Test
