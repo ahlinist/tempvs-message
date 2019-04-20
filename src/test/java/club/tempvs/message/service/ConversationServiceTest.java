@@ -2,12 +2,10 @@ package club.tempvs.message.service;
 
 import static club.tempvs.message.domain.Conversation.Type.CONFERENCE;
 
-import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
-import club.tempvs.message.dto.ErrorsDto;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.dto.GetConversationsDto;
 import club.tempvs.message.holder.UserHolder;
@@ -56,8 +54,6 @@ public class ConversationServiceTest {
     private LocaleHelper localeHelper;
     @Mock
     private ValidationHelper validationHelper;
-    @Mock
-    private ErrorsDto errorsDto;
     @Mock
     private ParticipantService participantService;
     @Mock
@@ -117,104 +113,6 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testBuildConversationOf2ParticipantsForExistentOne() {
-        String conversationName = "name";
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
-
-        when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(conversation);
-        when(conversationRepository.save(conversation)).thenReturn(conversation);
-
-        Conversation result = conversationService.buildConversation(author, receivers, conversationName, message);
-
-        verify(validationHelper).validateConversationCreation(author, receivers, message);
-        verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(message).setConversation(conversation);
-        verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, objectFactory, validationHelper, errorsDto,
-                author, receiver, message, messageService, conversationRepository);
-
-        assertEquals("Service returns a conversation instance", result, conversation);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testCreateConversationWhereAuthorEqualsTheOnlyReceiver() {
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(author));
-
-        conversationService.buildConversation(author, receivers, null, message);
-    }
-
-    @Test
-    public void testCreateConversationOf2ParticipantsForNonExistentOne() {
-        String conversationName = "name";
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
-
-        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
-
-        when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(null);
-        when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(conversationRepository.save(conversation)).thenReturn(conversation);
-
-        Conversation result = conversationService.buildConversation(author, receivers, conversationName, message);
-
-        verify(validationHelper).validateConversationCreation(author, receivers, message);
-        verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
-        verify(objectFactory).getInstance(Conversation.class);
-        verify(conversation).addParticipant(receiver);
-        verify(conversation).addParticipant(author);
-        verify(conversation).getParticipants();
-        verify(conversation).setName(conversationName);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(conversation).setType(Conversation.Type.DIALOGUE);
-        verify(message).setConversation(conversation);
-        verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, objectFactory, validationHelper,
-                author, receiver, message, messageService, conversationRepository);
-
-        assertEquals("Service returns a conversation instance", result, conversation);
-    }
-
-    @Test
-    public void testCreateConversationOf3Participants() {
-        String conversationName = "name";
-        Set<Participant> receivers = new HashSet<>();
-        receivers.add(receiver);
-        receivers.add(oneMoreReceiver);
-
-        Set<Participant> participants = new HashSet<>();
-        participants.add(author);
-        participants.add(receiver);
-        participants.add(oneMoreReceiver);
-
-        when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(conversationRepository.save(conversation)).thenReturn(conversation);
-
-        Conversation result = conversationService.buildConversation(author, receivers, conversationName, message);
-
-        verify(validationHelper).validateConversationCreation(author, receivers, message);
-        verify(objectFactory).getInstance(Conversation.class);
-        verify(conversation).addParticipant(author);
-        verify(conversation).addParticipant(receiver);
-        verify(conversation).addParticipant(oneMoreReceiver);
-        verify(conversation).getParticipants();
-        verify(conversation).setAdmin(author);
-        verify(conversation).setName(conversationName);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(conversation).setType(Conversation.Type.CONFERENCE);
-        verify(message).setConversation(conversation);
-        verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, author, objectFactory, validationHelper, errorsDto,
-                receiver, oneMoreReceiver, message, messageService, conversationRepository);
-
-        assertEquals("Service returns a conversation instance", result, conversation);
-    }
-
-    @Test
     public void testGetConversation() {
         long conversationId = 1L;
 
@@ -241,14 +139,15 @@ public class ConversationServiceTest {
     public void testAddMessage() {
         Set<Participant> receivers = new HashSet<>();
         receivers.add(receiver);
+
+        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         Conversation result = conversationService.addMessage(conversation, message);
 
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
+        verify(messageService).addMessage(conversation, message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, conversationRepository, author, receiver);
+        verifyNoMoreInteractions(messageService, conversationRepository);
 
         assertEquals("Updated conversation is returned as a successful result", result, conversation);
     }
@@ -348,89 +247,90 @@ public class ConversationServiceTest {
         Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
 
         verify(validationHelper).validateParticipantsAddition(author, participantsToAdd, initialParticipants);
-        verify(conversation).getParticipants();
-        verify(conversation).getType();
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(conversation).addParticipant(oneMoreReceiver);
+        verify(messageService).addMessage(conversation, message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(author, receiver, conversation, objectFactory, messageService, conversationRepository,
-                validationHelper, oneMoreReceiver);
+        verifyNoMoreInteractions(objectFactory, messageService, conversationRepository, validationHelper);
 
         assertEquals("Conversation is returned as a result", conversation, result);
     }
 
     @Test
     public void testRemoveParticipant() {
+        Long conversationId = 1L;
+        Long initiatorId = 3L;
+        Long subjectId = 2L;
+        String timeZone = "UTC";
         String text = "conversation.remove.participant";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(oneMoreReceiver, participant));
+        int page = 0;
+        int max = 40;
+        List<Message> messages = Arrays.asList(message, message);
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(initiatorId);
+        when(user.getTimezone()).thenReturn(timeZone);
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+        when(participantService.getParticipant(initiatorId)).thenReturn(author);
+        when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(messageService.createMessage(author, receivers, text, isSystem, null, receiver)).thenReturn(message);
+        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
+        when(message.getAuthor()).thenReturn(author);
+        when(message.getCreatedDate()).thenReturn(Instant.now());
+        when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
 
-        Conversation result = conversationService.removeParticipant(conversation, author, receiver);
+        GetConversationDto result = conversationService.removeParticipant(conversationId, subjectId);
 
-        verify(conversation).getAdmin();
-        verify(conversation).getParticipants();
-        verify(conversation).removeParticipant(receiver);
-        verify(messageService).createMessage(author, receivers, text, isSystem, null,receiver);
-        verify(conversation).addMessage(message);
-        verify(message).setConversation(conversation);
-        verify(conversation).setLastMessage(message);
+        verify(participantService).getParticipant(initiatorId);
+        verify(participantService).getParticipant(subjectId);
+        verify(conversationRepository).findById(conversationId);
+        verify(messageService).createMessage(author, receivers, text, isSystem, null, receiver);
+        verify(messageService).addMessage(conversation, message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, conversationRepository, messageService, message, receiver, author);
+        verify(messageService).getMessagesFromConversation(conversation, page, max);
+        verifyNoMoreInteractions(conversationRepository, messageService, participantService);
 
-        assertEquals("Conversation is returned as a result", conversation, result);
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testRemoveParticipantAsNonAdmin() {
-        when(conversation.getAdmin()).thenReturn(participant);
-
-        conversationService.removeParticipant(conversation, author, receiver);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveParticipantForConversationOf2() {
-        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
-
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(validationHelper.getErrors()).thenReturn(errorsDto);
-        doThrow(new IllegalArgumentException()).when(validationHelper).processErrors(errorsDto);
-
-        conversationService.removeParticipant(conversation, author, receiver);
+        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
 
     @Test
     public void testRemoveParticipantForSelfremoval() {
+        Long conversationId = 1L;
+        Long subjectId = 2L;
+        Long initiatorId = 3L;
         String text = "conversation.selfremove.participant";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, oneMoreReceiver, participant));
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(initiatorId);
+        when(participantService.getParticipant(initiatorId)).thenReturn(author);
+        when(participantService.getParticipant(subjectId)).thenReturn(author);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, receivers, text, isSystem, null, null)).thenReturn(message);
+        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        Conversation result = conversationService.removeParticipant(conversation, author, author);
+        GetConversationDto result = conversationService.removeParticipant(conversationId, subjectId);
 
-        verify(conversation).getAdmin();
-        verify(conversation).getParticipants();
-        verify(conversation).removeParticipant(author);
+        verify(participantService).getParticipant(initiatorId);
+        verify(participantService).getParticipant(subjectId);
+        verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, null);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(message).setConversation(conversation);
+        verify(messageService).addMessage(conversation, message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(conversation, message, messageService, conversationRepository, author, receiver);
+        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verifyNoMoreInteractions(participantService, messageService, conversationRepository);
 
-        assertEquals("Conversation is returned as a result", conversation, result);
+        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
 
     @Test
@@ -478,6 +378,7 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(receivers);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null)).thenReturn(message);
+        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         GetConversationDto result = conversationService.rename(conversationId, name);
@@ -485,9 +386,10 @@ public class ConversationServiceTest {
         verify(participantService).getParticipant(participantId);
         verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null);
+        verify(messageService).addMessage(conversation, message);
         verify(conversationRepository).save(conversation);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        verifyNoMoreInteractions(participant, messageService, conversationRepository);
+        verifyNoMoreInteractions(participantService, messageService, conversationRepository);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
@@ -507,6 +409,7 @@ public class ConversationServiceTest {
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(messageService.createMessage(participant, receivers,
                 CONVERSATION_NAME_DROPPED, isSystem, null, null)).thenReturn(message);
+        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         GetConversationDto result = conversationService.rename(conversationId, name);
@@ -515,8 +418,9 @@ public class ConversationServiceTest {
         verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(participant, receivers,
                 CONVERSATION_NAME_DROPPED, isSystem, null, null);        verify(conversationRepository).save(conversation);
+        verify(messageService).addMessage(conversation, message);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        verifyNoMoreInteractions(participant, messageService, conversationRepository);
+        verifyNoMoreInteractions(messageService, conversationRepository, participantService);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }

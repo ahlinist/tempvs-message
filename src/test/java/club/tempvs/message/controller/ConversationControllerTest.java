@@ -257,30 +257,13 @@ public class ConversationControllerTest {
     @Test
     public void testRemoveParticipant() {
         Long conversationId = 1L;
-        Long initiatorId = 2L;
         Long subjectId = 3L;
-        String timeZone = "UTC";
-        int page = 0;
-        int max = 40;
-        List<Message> messages = Arrays.asList(message, message);
 
-        when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(userInfoDto.getTimezone()).thenReturn(timeZone);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(participantService.getParticipant(subjectId)).thenReturn(receiver);
-        when(conversationService.removeParticipant(conversation, author, receiver)).thenReturn(conversation);
-        when(message.getAuthor()).thenReturn(author);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
+        when(conversationService.removeParticipant(conversationId, subjectId)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.removeParticipant(userInfoDto, conversationId, subjectId);
+        GetConversationDto result = conversationController.removeParticipant(conversationId, subjectId);
 
-        verify(conversationService).getConversation(conversationId);
-        verify(participantService).getParticipant(initiatorId);
-        verify(participantService).getParticipant(subjectId);
-        verify(conversationService).removeParticipant(conversation, author, receiver);
-        verify(messageService).getMessagesFromConversation(conversation, page, max);
+        verify(conversationService).removeParticipant(conversationId, subjectId);
         verifyNoMoreInteractions(messageService, conversationService, participantService);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);

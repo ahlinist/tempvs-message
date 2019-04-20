@@ -131,16 +131,9 @@ public class ConversationController {
 
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")
     public GetConversationDto removeParticipant(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @PathVariable("subjectId") Long subjectId) {
-        Conversation conversation = conversationService.getConversation(conversationId);
-        Long initiatorId = userInfoDto.getProfileId();
-        Participant initiator = participantService.getParticipant(initiatorId);
-        Participant subject = participantService.getParticipant(subjectId);
-        Conversation updatedConversation = conversationService.removeParticipant(conversation, initiator, subject);
-        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
+        return conversationService.removeParticipant(conversationId, subjectId);
     }
 
     @PostMapping("/conversations/{conversationId}/name")

@@ -40,6 +40,13 @@ public class MessageServiceImpl implements MessageService {
         return message;
     }
 
+    public Conversation addMessage(Conversation conversation, Message message) {
+        conversation.addMessage(message);
+        conversation.setLastMessage(message);
+        message.setConversation(conversation);
+        return conversation;
+    }
+
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })

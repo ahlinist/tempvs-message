@@ -3,9 +3,9 @@ package club.tempvs.message.util;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
-import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
 import club.tempvs.message.service.ParticipantService;
+import club.tempvs.message.service.impl.ConversationServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,12 +15,12 @@ import java.util.Set;
 public class EntityHelper {
 
     private ParticipantService participantService;
-    private ConversationService conversationService;
+    private ConversationServiceImpl conversationService;
     private MessageService messageService;
 
     @Autowired
     public EntityHelper(ParticipantService participantService,
-                        ConversationService conversationService, MessageService messageService) {
+                        ConversationServiceImpl conversationService, MessageService messageService) {
         this.participantService = participantService;
         this.conversationService = conversationService;
         this.messageService = messageService;

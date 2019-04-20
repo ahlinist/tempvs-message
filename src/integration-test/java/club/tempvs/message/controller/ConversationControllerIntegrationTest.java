@@ -707,6 +707,8 @@ public class ConversationControllerIntegrationTest {
         Long authorId = 1L;
         Long removedParticipantId = 4L;
         Long nonExistentConversationId = 444L;
+        entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY");
+        entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY");
         String url = "/api/conversations/" + nonExistentConversationId + "/participants/" + removedParticipantId;
         String userInfoValue = buildUserInfoValue(authorId);
 

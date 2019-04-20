@@ -43,7 +43,6 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String PARTICIPANTS_FIELD = "participants";
     private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
 
-
     private final ObjectFactory objectFactory;
     private final MessageService messageService;
     private final ConversationRepository conversationRepository;
@@ -114,10 +113,8 @@ public class ConversationServiceImpl implements ConversationService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public Conversation addMessage(Conversation conversation, Message message) {
-        conversation.addMessage(message);
-        conversation.setLastMessage(message);
-        message.setConversation(conversation);
-        return conversationRepository.save(conversation);
+        Conversation updatedConversation = messageService.addMessage(conversation, message);
+        return conversationRepository.save(updatedConversation);
     }
 
     @HystrixCommand(commandProperties = {
@@ -173,16 +170,20 @@ public class ConversationServiceImpl implements ConversationService {
 
             conversation.setLastMessage(messages.get(messages.size() - 1));
 
-            messages.stream().forEach(m -> {
-                conversation.addMessage(m);
-                m.setConversation(conversation);
-            });
+            messages.stream()
+                    .forEach(m -> messageService.addMessage(conversation, m));
 
             return conversationRepository.save(conversation);
         }
     }
 
-    public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {
+    public GetConversationDto removeParticipant(Long conversationId, Long removedId) {
+        User user = userHolder.getUser();
+        Long removerId = user.getProfileId();
+        String timeZone = user.getTimezone();
+        Participant remover = participantService.getParticipant(removerId);
+        Participant removed = participantService.getParticipant(removedId);
+        Conversation conversation = getConversation(conversationId);
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.size() <= 2) {
@@ -212,7 +213,10 @@ public class ConversationServiceImpl implements ConversationService {
             message = messageService.createMessage(remover, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, null, removed);
         }
 
-        return addMessage(conversation, message);
+        conversation = messageService.addMessage(conversation, message);
+        conversation = conversationRepository.save(conversation);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return new GetConversationDto(conversation, messages, remover, timeZone);
     }
 
     @HystrixCommand(commandProperties = {
@@ -251,8 +255,9 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation.setName(name);
-        Conversation updatedConversation = addMessage(conversation, message);
-        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(updatedConversation, messages, initiator, timeZone);
+        conversation = messageService.addMessage(conversation, message);
+        conversation = conversationRepository.save(conversation);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return new GetConversationDto(conversation, messages, initiator, timeZone);
     }
 }

@@ -12,15 +12,13 @@ public interface ConversationService {
 
     GetConversationDto createConversation(Set<Long> receiverIds, String name, String text);
 
-    Conversation buildConversation(Participant author, Set<Participant> receivers, String name, Message message);
-
     Conversation getConversation(Long id);
 
     GetConversationsDto getConversationsAttended(int page, int size);
 
     Conversation addMessage(Conversation conversation, Message message);
 
-    Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed);
+    GetConversationDto removeParticipant(Long conversationId, Long removedId);
 
     Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added);
 

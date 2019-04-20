@@ -27,23 +27,11 @@ public class MessageServiceTest {
     private MessageService messageService;
 
     @Mock
-    private Message message1;
+    private Message message, message1, message2;
     @Mock
-    private Message message2;
+    private Participant participant, author, receiver1, receiver2, subject;
     @Mock
-    private Participant participant;
-    @Mock
-    private Participant author;
-    @Mock
-    private Participant receiver1;
-    @Mock
-    private Participant receiver2;
-    @Mock
-    private Participant subject;
-    @Mock
-    private Conversation conversation1;
-    @Mock
-    private Conversation conversation2;
+    private Conversation conversation, conversation1, conversation2;
     @Mock
     private ObjectFactory objectFactory;
     @Mock
@@ -77,6 +65,18 @@ public class MessageServiceTest {
         verifyNoMoreInteractions(message1, receiver1, receiver2, objectFactory);
 
         assertEquals("An instance of Message is returned as a result", result, message1);
+    }
+
+    @Test
+    public void testAddMessage() {
+        Conversation result = messageService.addMessage(conversation, message);
+
+        verify(conversation).setLastMessage(message);
+        verify(conversation).addMessage(message);
+        verify(message).setConversation(conversation);
+        verifyNoMoreInteractions(message, conversation);
+
+        assertEquals("Conversation object is returned", conversation, result);
     }
 
     @Test
