@@ -2,6 +2,7 @@ package club.tempvs.message.service;
 
 import static club.tempvs.message.domain.Conversation.Type.CONFERENCE;
 
+import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -115,15 +116,51 @@ public class ConversationServiceTest {
     @Test
     public void testGetConversation() {
         long conversationId = 1L;
+        int page = 0;
+        int size = 40;
+        long participantId = 2L;
+        String timeZone = "UTC";
+        Set<Participant> participants = new HashSet<>(Arrays.asList(participant, receiver));
+        List<Message> messages = Arrays.asList(message, message, message);
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(participantId);
+        when(user.getTimezone()).thenReturn(timeZone);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(conversation.getParticipants()).thenReturn(participants);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+        when(message.getAuthor()).thenReturn(author);
+        when(message.getCreatedDate()).thenReturn(Instant.now());
+        when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
+
+        GetConversationDto result = conversationService.getConversation(conversationId, page, size);
+
+        verify(participantService).getParticipant(participantId);
+        verify(conversationRepository).findById(conversationId);
+        verify(messageService).getMessagesFromConversation(conversation, page, size);
+        verifyNoMoreInteractions(conversationRepository, participantService, messageService);
+
+        assertTrue("GetConversationDto is returned", result instanceof GetConversationDto);
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testGetConversationForWrongCaller() {
+        long conversationId = 1L;
+        int page = 0;
+        int size = 40;
+        long participantId = 2L;
+        String timeZone = "UTC";
+        Set<Participant> participants = new HashSet<>(Arrays.asList(receiver, oneMoreReceiver));
+        List<Message> messages = Arrays.asList(message, message, message);
+
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(participantId);
+        when(user.getTimezone()).thenReturn(timeZone);
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
 
-        Conversation result = conversationService.getConversation(conversationId);
-
-        verify(conversationRepository).findById(conversationId);
-        verifyNoMoreInteractions(conversationRepository, conversation);
-
-        assertEquals("A conversation with given id is retrieved", result, conversation);
+        conversationService.getConversation(conversationId, page, size);
     }
 
     @Test(expected = NoSuchElementException.class)
@@ -132,7 +169,7 @@ public class ConversationServiceTest {
 
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.ofNullable(null));
 
-        conversationService.getConversation(conversationId);
+        conversationService.findOne(conversationId);
     }
 
     @Test

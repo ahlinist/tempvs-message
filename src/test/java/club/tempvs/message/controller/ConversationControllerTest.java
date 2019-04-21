@@ -1,6 +1,5 @@
 package club.tempvs.message.controller;
 
-import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -86,71 +85,37 @@ public class ConversationControllerTest {
         long id = 1L;
         int page = 0;
         int size = 40;
-        Long callerId = 5L;
-        String timeZone = "UTC";
-        List<Message> messages = Arrays.asList(message, message, message);
-        Set<Participant> participants = new HashSet<>(Arrays.asList(participant, receiver));
 
-        when(userInfoDto.getProfileId()).thenReturn(callerId);
-        when(userInfoDto.getTimezone()).thenReturn(timeZone);
-        when(participantService.getParticipant(callerId)).thenReturn(participant);
-        when(conversationService.getConversation(id)).thenReturn(conversation);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
-        when(message.getAuthor()).thenReturn(author);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
+        when(conversationService.getConversation(id, page, size)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.getConversation(userInfoDto, id, page, size);
+        GetConversationDto result = conversationController.getConversation(id, page, size);
 
-        verify(participantService).getParticipant(callerId);
-        verify(conversationService).getConversation(id);
-        verify(messageService).getMessagesFromConversation(conversation, page, size);
-        verifyNoMoreInteractions(participantService, conversationService, messageService);
+        verify(conversationService).getConversation(id, page, size);
+        verifyNoMoreInteractions(conversationService);
 
         assertTrue("Result is a conversation", result instanceof GetConversationDto);
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void testGetConversationWithWrongCaller() {
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetConversationForWrongPaging() {
         long id = 1L;
         int page = 0;
-        int size = 40;
-        Long callerId = 5L;
-        Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
+        int size = 41;
 
-        when(userInfoDto.getProfileId()).thenReturn(callerId);
-        when(participantService.getParticipant(callerId)).thenReturn(participant);
-        when(conversationService.getConversation(id)).thenReturn(conversation);
-        when(conversation.getParticipants()).thenReturn(participants);
-
-        conversationController.getConversation(userInfoDto, id, page, size);
-
-        verify(userInfoDto).getProfileId();
-        verify(participantService).getParticipant(callerId);
-        verify(conversationService).getConversation(id);
-        verify(conversation).getParticipants();
-        verifyNoMoreInteractions(message, conversation,
-                userInfoDto, participantService, conversationService, messageService, getConversationDto);
+        conversationController.getConversation(id, page, size);
     }
 
     @Test
     public void testGetConversationsByParticipant() {
-        Long participantId = 1L;
         int page = 0;
         int size = 40;
-        String timeZone = "UTC";
-        List<Conversation> conversations = new ArrayList<>();
-        conversations.add(conversation);
-        List<ConversationDtoBean> conversationDtoBeans = new ArrayList<>();
-        conversationDtoBeans.add(new ConversationDtoBean());
 
         when(conversationService.getConversationsAttended(page, size)).thenReturn(getConversationsDto);
 
         ResponseEntity result = conversationController.getConversationsByParticipant(page, size);
 
         verify(conversationService).getConversationsAttended(page, size);
-        verifyNoMoreInteractions(participantService, conversationService);
+        verifyNoMoreInteractions(conversationService);
 
         assertTrue("GetConversationsDto object is returned as a body", result.getBody() instanceof GetConversationsDto);
     }
@@ -179,7 +144,7 @@ public class ConversationControllerTest {
         when(userInfoDto.getProfileId()).thenReturn(authorId);
         when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(participantService.getParticipant(authorId)).thenReturn(author);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(conversationService.findOne(conversationId)).thenReturn(conversation);
         when(conversation.getParticipants()).thenReturn(participants);
         when(message.getAuthor()).thenReturn(author);
         when(message.getCreatedDate()).thenReturn(Instant.now());
@@ -190,7 +155,7 @@ public class ConversationControllerTest {
         GetConversationDto result = conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
 
         verify(participantService).getParticipant(authorId);
-        verify(conversationService).getConversation(conversationId);
+        verify(conversationService).findOne(conversationId);
         verify(messageService).createMessage(author, participants, text, false, null, null);
         verify(conversationService).addMessage(conversation, message);
         verify(messageService).getMessagesFromConversation(conversation, page, size);
@@ -215,7 +180,7 @@ public class ConversationControllerTest {
         when(userInfoDto.getProfileId()).thenReturn(initiatorId);
         when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(addParticipantsDto.getParticipants()).thenReturn(receiverIds);
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(conversationService.findOne(conversationId)).thenReturn(conversation);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipants(receiverIds)).thenReturn(receivers);
         when(conversation.getParticipants()).thenReturn(participants);
@@ -226,7 +191,7 @@ public class ConversationControllerTest {
 
         GetConversationDto result = conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
 
-        verify(conversationService).getConversation(conversationId);
+        verify(conversationService).findOne(conversationId);
         verify(participantService).getParticipant(initiatorId);
         verify(participantService).getParticipants(receiverIds);
         verify(conversationService).addParticipants(conversation, author, receivers);
@@ -244,7 +209,7 @@ public class ConversationControllerTest {
         Set<Long> subjectIds = new HashSet<>(Arrays.asList(subjectId));
         Set<Participant> participants = new HashSet<>(Arrays.asList(receiver));
 
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(conversationService.findOne(conversationId)).thenReturn(conversation);
         when(userInfoDto.getProfileId()).thenReturn(initiatorId);
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(addParticipantsDto.getParticipants()).thenReturn(subjectIds);
@@ -306,7 +271,7 @@ public class ConversationControllerTest {
         List<Long> messageIds = Arrays.asList(2L, 3L);
         List<Message> messages = Arrays.asList(message, message);
 
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(conversationService.findOne(conversationId)).thenReturn(conversation);
         when(readMessagesDto.getMessages()).thenReturn(messageIds);
         when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
         when(userInfoDto.getProfileId()).thenReturn(participantId);
@@ -315,7 +280,7 @@ public class ConversationControllerTest {
 
         conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
 
-        verify(conversationService).getConversation(conversationId);
+        verify(conversationService).findOne(conversationId);
         verify(readMessagesDto).getMessages();
         verify(messageService).findMessagesByIds(messageIds);
         verify(userInfoDto).getProfileId();
@@ -332,7 +297,7 @@ public class ConversationControllerTest {
         List<Long> messageIds = Arrays.asList(2L, 3L);
         List<Message> messages = Arrays.asList(message, null);
 
-        when(conversationService.getConversation(conversationId)).thenReturn(conversation);
+        when(conversationService.findOne(conversationId)).thenReturn(conversation);
         when(userInfoDto.getProfileId()).thenReturn(participantId);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(readMessagesDto.getMessages()).thenReturn(messageIds);

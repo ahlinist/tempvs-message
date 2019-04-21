@@ -12,7 +12,9 @@ public interface ConversationService {
 
     GetConversationDto createConversation(Set<Long> receiverIds, String name, String text);
 
-    Conversation getConversation(Long id);
+    GetConversationDto getConversation(Long id, int page, int size);
+
+    Conversation findOne(Long id);
 
     GetConversationsDto getConversationsAttended(int page, int size);
 

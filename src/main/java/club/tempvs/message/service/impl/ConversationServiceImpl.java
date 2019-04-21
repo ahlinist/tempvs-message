@@ -51,6 +51,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final ParticipantService participantService;
     private final UserHolder userHolder;
 
+    @Override
     public GetConversationDto createConversation(Set<Long> receiverIds, String name, String text) {
         User user = userHolder.getUser();
         Long authorId = user.getProfileId();
@@ -61,6 +62,22 @@ public class ConversationServiceImpl implements ConversationService {
         Conversation conversation = buildConversation(author, receivers, name, message);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return new GetConversationDto(conversation, messages, author, timeZone);
+    }
+
+    @Override
+    public GetConversationDto getConversation(Long id, int page, int size) {
+        User user = userHolder.getUser();
+        Long callerId = user.getProfileId();
+        String timeZone = user.getTimezone();
+        Participant caller = participantService.getParticipant(callerId);
+        Conversation conversation = findOne(id);
+
+        if (!conversation.getParticipants().contains(caller)) {
+            throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + id);
+        }
+
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
+        return new GetConversationDto(conversation, messages, caller, timeZone);
     }
 
     public Conversation buildConversation(Participant author, Set<Participant> receivers, String name, Message message) {
@@ -102,16 +119,18 @@ public class ConversationServiceImpl implements ConversationService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     //TODO: make private
-    public Conversation getConversation(Long id) {
+    public Conversation findOne(Long id) {
         return conversationRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("No conversation with id " + id + " found."));
     }
 
+    @Override
     public Conversation addMessage(Conversation conversation, Message message) {
         Conversation updatedConversation = messageService.addMessage(conversation, message);
         return save(updatedConversation);
     }
 
+    @Override
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
@@ -137,6 +156,7 @@ public class ConversationServiceImpl implements ConversationService {
         return new GetConversationsDto(conversationDtoBeans);
     }
 
+    @Override
     public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
         Set<Participant> initialParticipants = conversation.getParticipants();
         validationHelper.validateParticipantsAddition(adder, added, initialParticipants);
@@ -169,13 +189,14 @@ public class ConversationServiceImpl implements ConversationService {
         }
     }
 
+    @Override
     public GetConversationDto removeParticipant(Long conversationId, Long removedId) {
         User user = userHolder.getUser();
         Long removerId = user.getProfileId();
         String timeZone = user.getTimezone();
         Participant remover = participantService.getParticipant(removerId);
         Participant removed = participantService.getParticipant(removedId);
-        Conversation conversation = getConversation(conversationId);
+        Conversation conversation = findOne(conversationId);
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.size() <= 2) {
@@ -211,6 +232,7 @@ public class ConversationServiceImpl implements ConversationService {
         return new GetConversationDto(conversation, messages, remover, timeZone);
     }
 
+    @Override
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
@@ -218,6 +240,7 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver);
     }
 
+    @Override
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
@@ -227,9 +250,10 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.countByNewMessagesPerParticipant(participant);
     }
 
+    @Override
     public GetConversationDto rename(Long conversationId, String name) {
         Boolean isSystem = Boolean.TRUE;
-        Conversation conversation = getConversation(conversationId);
+        Conversation conversation = findOne(conversationId);
         User user = userHolder.getUser();
         Long initiatorId = user.getProfileId();
         String timeZone = user.getTimezone();

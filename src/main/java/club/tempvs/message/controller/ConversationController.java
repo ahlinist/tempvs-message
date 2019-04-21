@@ -47,7 +47,6 @@ public class ConversationController {
 
     @GetMapping("/conversations/{conversationId}")
     public GetConversationDto getConversation(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestParam(value = PAGE_PARAM, required = false, defaultValue = DEFAULT_PAGE_VALUE) int page,
             @RequestParam(value = SIZE_PARAM, required = false, defaultValue = DEFAULT_SIZE_VALUE) int size) {
@@ -55,16 +54,7 @@ public class ConversationController {
             throw new IllegalArgumentException("Page size must not be larger than " + MAX_PAGE_SIZE + "!");
         }
 
-        Long callerId = userInfoDto.getProfileId();
-        Participant caller = participantService.getParticipant(callerId);
-        Conversation conversation = conversationService.getConversation(conversationId);
-
-        if (!conversation.getParticipants().contains(caller)) {
-            throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + conversationId);
-        }
-
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
-        return new GetConversationDto(conversation, messages, caller, userInfoDto.getTimezone());
+        return conversationService.getConversation(conversationId, page, size);
     }
 
     @GetMapping("/conversations")
@@ -97,7 +87,7 @@ public class ConversationController {
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         String text = addMessageDto.getText();
-        Conversation conversation = conversationService.getConversation(conversationId);
+        Conversation conversation = conversationService.findOne(conversationId);
         Long authorId = userInfoDto.getProfileId();
         Participant author = participantService.getParticipant(authorId);
         Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
@@ -113,7 +103,7 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
-        Conversation conversation = conversationService.getConversation(conversationId);
+        Conversation conversation = conversationService.findOne(conversationId);
         Long initiatorId = userInfoDto.getProfileId();
         Participant initiator = participantService.getParticipant(initiatorId);
         Set<Long> subjectIds = addParticipantsDto.getParticipants();
@@ -148,7 +138,7 @@ public class ConversationController {
             @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody ReadMessagesDto readMessagesDto) {
-        Conversation conversation = conversationService.getConversation(conversationId);
+        Conversation conversation = conversationService.findOne(conversationId);
         Long participantId = userInfoDto.getProfileId();
         Participant participant = participantService.getParticipant(participantId);
         List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessages());
