@@ -1,5 +1,6 @@
 package club.tempvs.message.util;
 
+import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -15,20 +16,23 @@ import java.util.Set;
 public class EntityHelper {
 
     private ParticipantService participantService;
-    private ConversationServiceImpl conversationService;
     private MessageService messageService;
+    private ConversationServiceImpl conversationService;
+    private ConversationRepository conversationRepository;
 
     @Autowired
-    public EntityHelper(ParticipantService participantService,
-                        ConversationServiceImpl conversationService, MessageService messageService) {
+    public EntityHelper(ParticipantService participantService, MessageService messageService,
+                        ConversationServiceImpl conversationService, ConversationRepository conversationRepository) {
         this.participantService = participantService;
         this.conversationService = conversationService;
+        this.conversationRepository = conversationRepository;
         this.messageService = messageService;
     }
 
     public Conversation createConversation(Participant author, Set<Participant> receivers, String text, String name) {
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
-        return conversationService.buildConversation(author, receivers, name, message);
+        Conversation conversation = conversationService.buildConversation(author, receivers, name, message);
+        return conversationRepository.save(conversation);
     }
 
     public Participant createParticipant(Long id, String name, String type, String period) {

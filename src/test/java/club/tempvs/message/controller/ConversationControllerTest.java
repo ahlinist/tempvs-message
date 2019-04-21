@@ -130,38 +130,20 @@ public class ConversationControllerTest {
 
     @Test
     public void testAddMessage() {
-        Long authorId = 1L;
         Long conversationId = 2L;
         Set<Participant> participants = new HashSet<>();
         participants.add(receiver);
         String text = "new message text";
-        String timeZone = "UTC";
-        int page = 0;
-        int size = 40;
-        List<Message> messages = Arrays.asList(message, message, message);
 
         when(addMessageDto.getText()).thenReturn(text);
-        when(userInfoDto.getProfileId()).thenReturn(authorId);
-        when(userInfoDto.getTimezone()).thenReturn(timeZone);
-        when(participantService.getParticipant(authorId)).thenReturn(author);
-        when(conversationService.findOne(conversationId)).thenReturn(conversation);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(message.getAuthor()).thenReturn(author);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(messageService.createMessage(author, participants, text, false, null, null)).thenReturn(message);
-        when(conversationService.addMessage(conversation, message)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation, page, size)).thenReturn(messages);
+        when(conversationService.addMessage(conversationId, text)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.addMessage(userInfoDto, conversationId, addMessageDto);
+        GetConversationDto result = conversationController.addMessage(conversationId, addMessageDto);
 
-        verify(participantService).getParticipant(authorId);
-        verify(conversationService).findOne(conversationId);
-        verify(messageService).createMessage(author, participants, text, false, null, null);
-        verify(conversationService).addMessage(conversation, message);
-        verify(messageService).getMessagesFromConversation(conversation, page, size);
-        verifyNoMoreInteractions(participantService, conversationService, messageService);
+        verify(conversationService).addMessage(conversationId, text);
+        verifyNoMoreInteractions(conversationService);
 
-        assertTrue("GetConversationDto object is returned as a body", result instanceof GetConversationDto);
+        assertEquals("GetConversationDto is returned", getConversationDto, result);
     }
 
     @Test

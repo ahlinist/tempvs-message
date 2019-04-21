@@ -83,19 +83,10 @@ public class ConversationController {
 
     @PostMapping("/conversations/{conversationId}/messages")
     public GetConversationDto addMessage(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddMessageDto addMessageDto) {
         String text = addMessageDto.getText();
-        Conversation conversation = conversationService.findOne(conversationId);
-        Long authorId = userInfoDto.getProfileId();
-        Participant author = participantService.getParticipant(authorId);
-        Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
-        receivers.remove(author);
-        Message message = messageService.createMessage(author, receivers, text, false, null, null);
-        Conversation updatedConversation = conversationService.addMessage(conversation, message);
-        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(updatedConversation, messages, author, userInfoDto.getTimezone());
+        return conversationService.addMessage(conversationId, text);
     }
 
     @PostMapping("/conversations/{conversationId}/participants")

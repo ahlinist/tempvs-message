@@ -60,6 +60,7 @@ public class ConversationServiceImpl implements ConversationService {
         Set<Participant> receivers = participantService.getParticipants(receiverIds);
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
         Conversation conversation = buildConversation(author, receivers, name, message);
+        conversation = save(conversation);
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return new GetConversationDto(conversation, messages, author, timeZone);
     }
@@ -93,7 +94,7 @@ public class ConversationServiceImpl implements ConversationService {
             conversation = findDialogue(author, receivers.iterator().next());
 
             if (conversation != null) {
-                return addMessage(conversation, message);
+                return messageService.addMessage(conversation, message);
             }
         }
 
@@ -112,7 +113,7 @@ public class ConversationServiceImpl implements ConversationService {
             conversation.setType(Conversation.Type.DIALOGUE);
         }
 
-        return save(conversation);
+        return conversation;
     }
 
     @HystrixCommand(commandProperties = {
@@ -125,9 +126,19 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     @Override
-    public Conversation addMessage(Conversation conversation, Message message) {
-        Conversation updatedConversation = messageService.addMessage(conversation, message);
-        return save(updatedConversation);
+    public GetConversationDto addMessage(Long conversationId, String text) {
+        User user = userHolder.getUser();
+        Long authorId = user.getProfileId();
+        String timeZone = user.getTimezone();
+        Conversation conversation = findOne(conversationId);
+        Participant author = participantService.getParticipant(authorId);
+        Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
+        receivers.remove(author);
+        Message message = messageService.createMessage(author, receivers, text, false, null, null);
+        conversation = messageService.addMessage(conversation, message);
+        conversation = save(conversation);
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return new GetConversationDto(conversation, messages, author, timeZone);
     }
 
     @Override
@@ -169,7 +180,7 @@ public class ConversationServiceImpl implements ConversationService {
         if (conversation.getType() == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
             receivers.addAll(added);
             message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null, null);
-            return buildConversation(adder, receivers, null, message);
+            return save(buildConversation(adder, receivers, null, message));
         } else {
             List<Message> messages = new ArrayList<>();
 

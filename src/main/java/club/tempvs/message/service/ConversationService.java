@@ -18,7 +18,7 @@ public interface ConversationService {
 
     GetConversationsDto getConversationsAttended(int page, int size);
 
-    Conversation addMessage(Conversation conversation, Message message);
+    GetConversationDto addMessage(Long conversationId, String text);
 
     GetConversationDto removeParticipant(Long conversationId, Long removedId);
 
