@@ -91,23 +91,11 @@ public class ConversationController {
 
     @PostMapping("/conversations/{conversationId}/participants")
     public GetConversationDto addParticipants(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
-        Conversation conversation = conversationService.findOne(conversationId);
-        Long initiatorId = userInfoDto.getProfileId();
-        Participant initiator = participantService.getParticipant(initiatorId);
         Set<Long> subjectIds = addParticipantsDto.getParticipants();
-        Set<Participant> subjects = participantService.getParticipants(subjectIds);
-        Set<Participant> participants = conversation.getParticipants();
 
-        if (participants.stream().filter(subjects::contains).findAny().isPresent()) {
-            throw new IllegalStateException("An existent member is being added to a conversation.");
-        }
-
-        Conversation updatedConversation = conversationService.addParticipants(conversation, initiator, subjects);
-        List<Message> messages = messageService.getMessagesFromConversation(updatedConversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(updatedConversation, messages, initiator, userInfoDto.getTimezone());
+        return conversationService.addParticipants(conversationId, subjectIds);
     }
 
     @DeleteMapping("/conversations/{conversationId}/participants/{subjectId}")

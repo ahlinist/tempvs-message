@@ -22,7 +22,7 @@ public interface ConversationService {
 
     GetConversationDto removeParticipant(Long conversationId, Long removedId);
 
-    Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added);
+    GetConversationDto addParticipants(Long conversationId, Set<Long> subjectIds);
 
     Conversation findDialogue(Participant author, Participant receiver);
 

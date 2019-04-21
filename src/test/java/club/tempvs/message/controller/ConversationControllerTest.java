@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.time.Instant;
 import java.util.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -36,7 +35,7 @@ public class ConversationControllerTest {
     @Mock
     private Message message;
     @Mock
-    private Participant author, receiver, participant;
+    private Participant participant;
     @Mock
     private Conversation conversation;
     @Mock
@@ -131,8 +130,6 @@ public class ConversationControllerTest {
     @Test
     public void testAddMessage() {
         Long conversationId = 2L;
-        Set<Participant> participants = new HashSet<>();
-        participants.add(receiver);
         String text = "new message text";
 
         when(addMessageDto.getText()).thenReturn(text);
@@ -149,56 +146,17 @@ public class ConversationControllerTest {
     @Test
     public void testAddParticipant() {
         Long conversationId = 1L;
-        Long initiatorId = 2L;
-        Long receiverId = 3L;
-        int page = 0;
-        int max = 40;
-        String timeZone = "UTC";
-        List<Message> messages = Arrays.asList(message, message);
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
-        Set<Participant> participants = new HashSet<>(Arrays.asList(participant));
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(3L));
 
-        when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(userInfoDto.getTimezone()).thenReturn(timeZone);
         when(addParticipantsDto.getParticipants()).thenReturn(receiverIds);
-        when(conversationService.findOne(conversationId)).thenReturn(conversation);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(participantService.getParticipants(receiverIds)).thenReturn(receivers);
-        when(conversation.getParticipants()).thenReturn(participants);
-        when(message.getAuthor()).thenReturn(author);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(conversationService.addParticipants(conversation, author, receivers)).thenReturn(conversation);
-        when(messageService.getMessagesFromConversation(conversation, page, max)).thenReturn(messages);
+        when(conversationService.addParticipants(conversationId, receiverIds)).thenReturn(getConversationDto);
 
-        GetConversationDto result = conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
+        GetConversationDto result = conversationController.addParticipants(conversationId, addParticipantsDto);
 
-        verify(conversationService).findOne(conversationId);
-        verify(participantService).getParticipant(initiatorId);
-        verify(participantService).getParticipants(receiverIds);
-        verify(conversationService).addParticipants(conversation, author, receivers);
-        verify(messageService).getMessagesFromConversation(conversation, page, max);
-        verifyNoMoreInteractions(conversationService, participantService, messageService);
+        verify(conversationService).addParticipants(conversationId, receiverIds);
+        verifyNoMoreInteractions(conversationService);
 
-        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testAddParticipantsForExistingMember() {
-        Long conversationId = 1L;
-        Long initiatorId = 2L;
-        Long subjectId = 3L;
-        Set<Long> subjectIds = new HashSet<>(Arrays.asList(subjectId));
-        Set<Participant> participants = new HashSet<>(Arrays.asList(receiver));
-
-        when(conversationService.findOne(conversationId)).thenReturn(conversation);
-        when(userInfoDto.getProfileId()).thenReturn(initiatorId);
-        when(participantService.getParticipant(initiatorId)).thenReturn(author);
-        when(addParticipantsDto.getParticipants()).thenReturn(subjectIds);
-        when(participantService.getParticipants(subjectIds)).thenReturn(participants);
-        when(conversation.getParticipants()).thenReturn(participants);
-
-        conversationController.addParticipants(userInfoDto, conversationId, addParticipantsDto);
+        assertEquals("GetConversationDto is returned as a result", getConversationDto,result);
     }
 
     @Test

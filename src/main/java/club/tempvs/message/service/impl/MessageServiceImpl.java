@@ -52,8 +52,7 @@ public class MessageServiceImpl implements MessageService {
     })
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
-        List<Message> messages = messageRepository.findByConversation(conversation, pageable);
-        return messages.stream()
+        return messageRepository.findByConversation(conversation, pageable).stream()
                 .map(localeHelper::translateMessageIfSystem)
                 .collect(toList());
     }

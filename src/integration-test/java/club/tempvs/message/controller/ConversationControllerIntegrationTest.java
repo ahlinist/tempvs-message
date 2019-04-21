@@ -207,48 +207,6 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testGetConversationForInvalidPaging() throws Exception {
-        Long authorId = 1L;
-        String text = "text";
-        String name = "name";
-
-        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
-        ));
-
-        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
-        Long conversationId = conversation.getId();
-        String userInfoValue = buildUserInfoValue(authorId);
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page size must not be less than one!"));
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page size must not be less than one!"));
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page index must not be less than zero!"));
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=50")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page size must not be larger than 40!"));
-    }
-
-    @Test
     public void testGetConversationForWrongCaller() throws Exception {
         Long authorId = 1L;
         Long wrongCallerId = 5L;

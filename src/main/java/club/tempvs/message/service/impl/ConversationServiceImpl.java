@@ -53,23 +53,17 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public GetConversationDto createConversation(Set<Long> receiverIds, String name, String text) {
-        User user = userHolder.getUser();
-        Long authorId = user.getProfileId();
-        String timeZone = user.getTimezone();
+        Long authorId = userHolder.getUser().getProfileId();
         Participant author = participantService.getParticipant(authorId);
         Set<Participant> receivers = participantService.getParticipants(receiverIds);
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
         Conversation conversation = buildConversation(author, receivers, name, message);
-        conversation = save(conversation);
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(conversation, messages, author, timeZone);
+        return prepareGetConversationDto(save(conversation), author);
     }
 
     @Override
     public GetConversationDto getConversation(Long id, int page, int size) {
-        User user = userHolder.getUser();
-        Long callerId = user.getProfileId();
-        String timeZone = user.getTimezone();
+        Long callerId = userHolder.getUser().getProfileId();
         Participant caller = participantService.getParticipant(callerId);
         Conversation conversation = findOne(id);
 
@@ -77,8 +71,7 @@ public class ConversationServiceImpl implements ConversationService {
             throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + id);
         }
 
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, page, size);
-        return new GetConversationDto(conversation, messages, caller, timeZone);
+        return prepareGetConversationDto(conversation, caller);
     }
 
     public Conversation buildConversation(Participant author, Set<Participant> receivers, String name, Message message) {
@@ -127,18 +120,14 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public GetConversationDto addMessage(Long conversationId, String text) {
-        User user = userHolder.getUser();
-        Long authorId = user.getProfileId();
-        String timeZone = user.getTimezone();
+        Long authorId = userHolder.getUser().getProfileId();
         Conversation conversation = findOne(conversationId);
         Participant author = participantService.getParticipant(authorId);
         Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
         receivers.remove(author);
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
         conversation = messageService.addMessage(conversation, message);
-        conversation = save(conversation);
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(conversation, messages, author, timeZone);
+        return prepareGetConversationDto(save(conversation), author);
     }
 
     @Override
@@ -168,35 +157,43 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     @Override
-    public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
-        Set<Participant> initialParticipants = conversation.getParticipants();
-        validationHelper.validateParticipantsAddition(adder, added, initialParticipants);
+    public GetConversationDto addParticipants(Long conversationId, Set<Long> subjectIds) {
+        User user = userHolder.getUser();
+        Long initiatorId = user.getProfileId();
+        Conversation conversation = findOne(conversationId);
+        Participant initiator = participantService.getParticipant(initiatorId);
+        Set<Participant> subjects = participantService.getParticipants(subjectIds);
+        Set<Participant> participants = conversation.getParticipants();
+
+        if (participants.stream().filter(subjects::contains).findAny().isPresent()) {
+            throw new IllegalStateException("An existent member is being added to a conversation.");
+        }
+
+        validationHelper.validateParticipantsAddition(initiator, subjects, participants);
 
         Message message;
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
-        receivers.remove(adder);
+        Set<Participant> receivers = new LinkedHashSet<>(participants);
+        receivers.remove(initiator);
 
-        if (conversation.getType() == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
-            receivers.addAll(added);
-            message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null, null);
-            return save(buildConversation(adder, receivers, null, message));
+        if (conversation.getType() == Conversation.Type.DIALOGUE && participants.size() == 2) {
+            receivers.addAll(subjects);
+            message = messageService.createMessage(initiator, receivers, CONFERENCE_CREATED, isSystem, null, null);
+            Conversation updatedConversation = buildConversation(initiator, receivers, null, message);
+            return prepareGetConversationDto(save(updatedConversation), initiator);
         } else {
             List<Message> messages = new ArrayList<>();
 
-            for (Participant participant : added) {
+            for (Participant participant : subjects) {
                 receivers.add(participant);
                 conversation.addParticipant(participant);
-                message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, participant);
+                message = messageService.createMessage(initiator, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, participant);
                 messages.add(message);
             }
 
             conversation.setLastMessage(messages.get(messages.size() - 1));
-
-            messages.stream()
-                    .forEach(m -> messageService.addMessage(conversation, m));
-
-            return save(conversation);
+            messages.stream().forEach(m -> messageService.addMessage(conversation, m));
+            return prepareGetConversationDto(save(conversation), initiator);
         }
     }
 
@@ -238,9 +235,7 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation = messageService.addMessage(conversation, message);
-        conversation = save(conversation);
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(conversation, messages, remover, timeZone);
+        return prepareGetConversationDto(save(conversation), remover);
     }
 
     @Override
@@ -265,9 +260,7 @@ public class ConversationServiceImpl implements ConversationService {
     public GetConversationDto rename(Long conversationId, String name) {
         Boolean isSystem = Boolean.TRUE;
         Conversation conversation = findOne(conversationId);
-        User user = userHolder.getUser();
-        Long initiatorId = user.getProfileId();
-        String timeZone = user.getTimezone();
+        Long initiatorId = userHolder.getUser().getProfileId();
         Participant initiator = participantService.getParticipant(initiatorId);
         Set<Participant> receivers = new LinkedHashSet<>(conversation.getParticipants());
         receivers.remove(initiator);
@@ -283,9 +276,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         conversation.setName(name);
         conversation = messageService.addMessage(conversation, message);
-        conversation = save(conversation);
-        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
-        return new GetConversationDto(conversation, messages, initiator, timeZone);
+        return prepareGetConversationDto(save(conversation), initiator);
     }
 
     @HystrixCommand(commandProperties = {
@@ -293,5 +284,14 @@ public class ConversationServiceImpl implements ConversationService {
     })
     private Conversation save(Conversation conversation) {
         return conversationRepository.save(conversation);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private GetConversationDto prepareGetConversationDto(Conversation conversation, Participant initiator) {
+        String timeZone = userHolder.getUser().getTimezone();
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return new GetConversationDto(conversation, messages, initiator, timeZone);
     }
 }

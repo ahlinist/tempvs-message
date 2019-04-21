@@ -42,7 +42,7 @@ public class ConversationServiceTest {
     @Mock
     private Message message;
     @Mock
-    private Conversation conversation, newConversation;
+    private Conversation conversation;
     @Mock
     private Participant participant, author, receiver, oneMoreReceiver;
     @Mock
@@ -149,12 +149,10 @@ public class ConversationServiceTest {
         int page = 0;
         int size = 40;
         long participantId = 2L;
-        String timeZone = "UTC";
         Set<Participant> participants = new HashSet<>(Arrays.asList(receiver, oneMoreReceiver));
 
         when(userHolder.getUser()).thenReturn(user);
         when(user.getProfileId()).thenReturn(participantId);
-        when(user.getTimezone()).thenReturn(timeZone);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
@@ -212,7 +210,6 @@ public class ConversationServiceTest {
         int page = 0;
         int size = 40;
         long participantId = 1l;
-        String timeZone = "UTC";
         List<Conversation> conversations = new ArrayList<>();
         conversations.add(conversation);
         Pageable pageable = PageRequest.of(page, size);
@@ -227,7 +224,7 @@ public class ConversationServiceTest {
         when(conversation.getType()).thenReturn(CONFERENCE);
         when(message.getAuthor()).thenReturn(participant);
         when(message.getCreatedDate()).thenReturn(Instant.now());
-        when(user.getTimezone()).thenReturn(timeZone);
+        when(user.getTimezone()).thenReturn("UTC");
         when(localeHelper.translateMessageIfSystem(message)).thenReturn(message);
 
         GetConversationsDto result = conversationService.getConversationsAttended(page, size);
@@ -243,49 +240,51 @@ public class ConversationServiceTest {
 
     @Test
     public void testAddParticipantToConversationOf2() {
+        long conversationId = 1l;
+        long authorId = 2l;
+        Set<Long> addedIds = new HashSet<>(Arrays.asList(3L));
         String text = "conversation.conference.created";
         Set<Participant> participantsToAdd = new LinkedHashSet<>(Arrays.asList(oneMoreReceiver));
         Set<Participant> initialParticipants = new LinkedHashSet<>(Arrays.asList(author, receiver));
-        Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
-        receivers.add(oneMoreReceiver);
-        receivers.remove(author);
-        Set<Participant> finalParticipants = new LinkedHashSet<>(initialParticipants);
-        finalParticipants.add(oneMoreReceiver);
+        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver, oneMoreReceiver));
+        List<Message> messages = Arrays.asList(message, message, message);
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(authorId);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+        when(participantService.getParticipant(authorId)).thenReturn(author);
+        when(participantService.getParticipants(addedIds)).thenReturn(participantsToAdd);
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(conversation.getType()).thenReturn(Conversation.Type.DIALOGUE);
-        when(objectFactory.getInstance(Conversation.class)).thenReturn(newConversation);
+        when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
         when(messageService.createMessage(author, receivers, text, true, null, null)).thenReturn(message);
-        when(newConversation.getParticipants()).thenReturn(finalParticipants);
-        when(conversationRepository.save(newConversation)).thenReturn(newConversation);
+        when(conversationRepository.save(conversation)).thenReturn(conversation);
+        when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
+        when(message.getAuthor()).thenReturn(participant);
+        when(message.getCreatedDate()).thenReturn(Instant.now());
+        when(user.getTimezone()).thenReturn("UTC");
 
-        Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
+        GetConversationDto result = conversationService.addParticipants(conversationId, addedIds);
 
+        verify(conversationRepository).findById(conversationId);
+        verify(participantService).getParticipant(authorId);
+        verify(participantService).getParticipants(addedIds);
         verify(validationHelper).validateParticipantsAddition(author, participantsToAdd, initialParticipants);
         verify(validationHelper).validateConversationCreation(author, receivers, message);
-        verify(conversation).getParticipants();
-        verify(conversation).getType();
         verify(messageService).createMessage(author, receivers, text, true, null, null);
         verify(objectFactory).getInstance(Conversation.class);
-        verify(newConversation).addParticipant(receiver);
-        verify(newConversation).addParticipant(oneMoreReceiver);
-        verify(newConversation).addParticipant(author);
-        verify(newConversation).setName(null);
-        verify(newConversation).addMessage(message);
-        verify(newConversation).setLastMessage(message);
-        verify(message).setConversation(newConversation);
-        verify(newConversation).getParticipants();
-        verify(newConversation).setAdmin(author);
-        verify(newConversation).setType(Conversation.Type.CONFERENCE);
-        verify(conversationRepository).save(newConversation);
-        verifyNoMoreInteractions(author, conversation, validationHelper, oneMoreReceiver,
-                newConversation, objectFactory, messageService, conversationRepository);
+        verify(conversationRepository).save(conversation);
+        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verifyNoMoreInteractions(participantService, messageService, conversationRepository, validationHelper);
 
-        assertEquals("New conversation is returned as a result", newConversation, result);
+        assertTrue("GetConversationDto is returned", result instanceof GetConversationDto);
     }
 
     @Test
     public void testAddParticipantForConversationOf3() {
+        long conversationId = 1l;
+        long authorId = 2l;
+        Set<Long> addedIds = new HashSet<>(Arrays.asList(2L, 3L));
         String text = "conversation.add.participant";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participantsToAdd = new LinkedHashSet<>(Arrays.asList(oneMoreReceiver));
@@ -293,21 +292,35 @@ public class ConversationServiceTest {
         Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
         receivers.add(oneMoreReceiver);
         receivers.remove(author);
+        List<Message> messages = Arrays.asList(message, message, message);
 
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(authorId);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+        when(participantService.getParticipant(authorId)).thenReturn(author);
+        when(participantService.getParticipants(addedIds)).thenReturn(participantsToAdd);
         when(conversation.getParticipants()).thenReturn(initialParticipants);
         when(conversation.getType()).thenReturn(Conversation.Type.CONFERENCE);
         when(messageService.createMessage(author, receivers, text, isSystem, null, oneMoreReceiver)).thenReturn(message);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
+        when(messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE)).thenReturn(messages);
+        when(message.getAuthor()).thenReturn(participant);
+        when(message.getCreatedDate()).thenReturn(Instant.now());
+        when(user.getTimezone()).thenReturn("UTC");
 
-        Conversation result = conversationService.addParticipants(conversation, author, participantsToAdd);
+        GetConversationDto result = conversationService.addParticipants(conversationId, addedIds);
 
+        verify(conversationRepository).findById(conversationId);
+        verify(participantService).getParticipant(authorId);
+        verify(participantService).getParticipants(addedIds);
         verify(validationHelper).validateParticipantsAddition(author, participantsToAdd, initialParticipants);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
         verify(messageService).addMessage(conversation, message);
         verify(conversationRepository).save(conversation);
-        verifyNoMoreInteractions(objectFactory, messageService, conversationRepository, validationHelper);
+        verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        verifyNoMoreInteractions(participantService, messageService, conversationRepository, validationHelper);
 
-        assertEquals("Conversation is returned as a result", conversation, result);
+        assertTrue("GetConversationDto is returned", result instanceof GetConversationDto);
     }
 
     @Test
