@@ -240,46 +240,41 @@ public class ConversationControllerIntegrationTest {
         String text = "text";
         String name = "name";
 
+        Participant caller = entityHelper.createParticipant(callerId, "name", "CLUB", "ANTIQUITY");
         Participant author1 = entityHelper.createParticipant(authorId1, "name", "CLUB", "ANTIQUITY");
         Participant author2 = entityHelper.createParticipant(authorId2, "name", "CLUB", "ANTIQUITY");
 
-        Set<Participant> receivers1 = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(authorId2, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(callerId, "name", "CLUB", "ANTIQUITY")
-        ));
-
-        Set<Participant> receivers2 = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(callerId, "name", "CLUB", "ANTIQUITY")
-        ));
+        Set<Participant> receivers1 = new HashSet<>(Arrays.asList(author2, caller));
+        Set<Participant> receivers2 = new HashSet<>(Arrays.asList(caller));
 
         entityHelper.createConversation(author1, receivers1, text, name);
         entityHelper.createConversation(author2, receivers2, text, name);
         String userInfoValue = buildUserInfoValue(callerId);
 
         mvc.perform(get("/api/conversations?page=0&size=10")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("conversations", hasSize(2)))
-                    .andExpect(jsonPath("conversations[0].name", is(name)))
-                    .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
-                    .andExpect(jsonPath("conversations[0].lastMessage.author.id", is(authorId2.intValue())))
-                    .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
-                    .andExpect(jsonPath("conversations[0].lastMessage.unread", is(true)))
-                    .andExpect(jsonPath("conversations[0].lastMessage.system", is(false)))
-                    .andExpect(jsonPath("conversations[0].type", is(DIALOGUE)))
-                    .andExpect(jsonPath("conversations[0].conversant", is("name")))
-                    .andExpect(jsonPath("conversations[0].unreadMessagesCount", is(1)))
-                    .andExpect(jsonPath("conversations[1].name", is(name)))
-                    .andExpect(jsonPath("conversations[1].lastMessage.text", is(text)))
-                    .andExpect(jsonPath("conversations[1].lastMessage.author.id", is(authorId1.intValue())))
-                    .andExpect(jsonPath("conversations[1].lastMessage.subject", isEmptyOrNullString()))
-                    .andExpect(jsonPath("conversations[1].lastMessage.unread", is(true)))
-                    .andExpect(jsonPath("conversations[1].lastMessage.system", is(false)))
-                    .andExpect(jsonPath("conversations[1].type", is(CONFERENCE)))
-                    .andExpect(jsonPath("conversations[1].conversant", is("name, name")))
-                    .andExpect(jsonPath("conversations[1].unreadMessagesCount", is(1)))
-                    .andExpect(header().string(COUNT_HEADER, String.valueOf(2)));
+            .header(USER_INFO_HEADER, userInfoValue)
+            .header(AUTHORIZATION_HEADER, TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("conversations", hasSize(2)))
+                .andExpect(jsonPath("conversations[0].name", is(name)))
+                .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
+                .andExpect(jsonPath("conversations[0].lastMessage.author.id", is(authorId2.intValue())))
+                .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
+                .andExpect(jsonPath("conversations[0].lastMessage.unread", is(true)))
+                .andExpect(jsonPath("conversations[0].lastMessage.system", is(false)))
+                .andExpect(jsonPath("conversations[0].type", is(DIALOGUE)))
+                .andExpect(jsonPath("conversations[0].conversant", is("name")))
+                .andExpect(jsonPath("conversations[0].unreadMessagesCount", is(1)))
+                .andExpect(jsonPath("conversations[1].name", is(name)))
+                .andExpect(jsonPath("conversations[1].lastMessage.text", is(text)))
+                .andExpect(jsonPath("conversations[1].lastMessage.author.id", is(authorId1.intValue())))
+                .andExpect(jsonPath("conversations[1].lastMessage.subject", isEmptyOrNullString()))
+                .andExpect(jsonPath("conversations[1].lastMessage.unread", is(true)))
+                .andExpect(jsonPath("conversations[1].lastMessage.system", is(false)))
+                .andExpect(jsonPath("conversations[1].type", is(CONFERENCE)))
+                .andExpect(jsonPath("conversations[1].conversant", is("name, name")))
+                .andExpect(jsonPath("conversations[1].unreadMessagesCount", is(1)))
+                .andExpect(header().string(COUNT_HEADER, String.valueOf(2)));
     }
 
     @Test

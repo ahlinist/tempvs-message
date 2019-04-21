@@ -27,7 +27,11 @@ public class GetConversationDto {
         this.type = String.valueOf(conversation.getType());
         this.name = conversation.getName();
         this.admin = admin != null ? new ParticipantDto(admin) : null;
-        this.participants = conversation.getParticipants().stream().map(ParticipantDto::new).collect(toSet());
-        this.messages = messages.stream().map(message -> new MessageDtoBean(message, self, zoneId)).collect(toList());
+        this.participants = conversation.getParticipants().stream()
+                .map(ParticipantDto::new)
+                .collect(toSet());
+        this.messages = messages.stream()
+                .map(message -> new MessageDtoBean(message, self, conversation, zoneId))
+                .collect(toList());
     }
 }

@@ -1,5 +1,8 @@
 package club.tempvs.message.service.impl;
 
+import static java.util.stream.Collectors.*;
+import static club.tempvs.message.domain.Conversation.Type.*;
+
 import club.tempvs.message.api.ForbiddenException;
 import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
@@ -24,9 +27,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
-
-import static java.util.stream.Collectors.*;
 
 @Service
 @RequiredArgsConstructor
@@ -87,7 +89,7 @@ public class ConversationServiceImpl implements ConversationService {
             conversation = findDialogue(author, receivers.iterator().next());
 
             if (conversation != null) {
-                return messageService.addMessage(conversation, message);
+                return messageService.addMessage(conversation, message, author);
             }
         }
 
@@ -95,15 +97,17 @@ public class ConversationServiceImpl implements ConversationService {
         receivers.stream().forEach(conversation::addParticipant);
         conversation.addParticipant(author);
         conversation.setName(name);
-        conversation.addMessage(message);
-        conversation.setLastMessage(message);
-        message.setConversation(conversation);
+        messageService.addMessage(conversation, message, author);
+
+        Map<Participant, Instant> lastReadOn = conversation.getLastReadOn();
+        receivers.stream()
+                .forEach(receiver -> lastReadOn.put(receiver, Instant.EPOCH));
 
         if (conversation.getParticipants().size() > 2) {
             conversation.setAdmin(author);
-            conversation.setType(Conversation.Type.CONFERENCE);
+            conversation.setType(CONFERENCE);
         } else {
-            conversation.setType(Conversation.Type.DIALOGUE);
+            conversation.setType(DIALOGUE);
         }
 
         return conversation;
@@ -117,7 +121,7 @@ public class ConversationServiceImpl implements ConversationService {
         Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
         receivers.remove(author);
         Message message = messageService.createMessage(author, receivers, text, false, null, null);
-        conversation = messageService.addMessage(conversation, message);
+        conversation = messageService.addMessage(conversation, message, author);
         return prepareGetConversationDto(save(conversation), author);
     }
 
@@ -183,7 +187,8 @@ public class ConversationServiceImpl implements ConversationService {
             }
 
             conversation.setLastMessage(messages.get(messages.size() - 1));
-            messages.stream().forEach(m -> messageService.addMessage(conversation, m));
+            messages.stream()
+                    .forEach(m -> messageService.addMessage(conversation, m, initiator));
             return prepareGetConversationDto(save(conversation), initiator);
         }
     }
@@ -192,7 +197,7 @@ public class ConversationServiceImpl implements ConversationService {
     public GetConversationDto removeParticipant(Long conversationId, Long removedId) {
         User user = userHolder.getUser();
         Long removerId = user.getProfileId();
-        Participant remover = participantService.getParticipant(removerId);
+        Participant initiator = participantService.getParticipant(removerId);
         Participant removed = participantService.getParticipant(removedId);
         Conversation conversation = findOne(conversationId);
         Set<Participant> participants = conversation.getParticipants();
@@ -205,7 +210,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         Participant admin = conversation.getAdmin();
 
-        if ((admin == null || !admin.equals(remover)) && !remover.equals(removed)) {
+        if ((admin == null || !admin.equals(initiator)) && !initiator.equals(removed)) {
             throw new ForbiddenException("Only admin user can remove participants from a conversation");
         }
 
@@ -213,19 +218,19 @@ public class ConversationServiceImpl implements ConversationService {
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new LinkedHashSet<>(participants);
         receivers.remove(removed);
-        receivers.remove(remover);
+        receivers.remove(initiator);
 
         Message message;
 
-        if (removed.equals(remover)) {
-            message = messageService.createMessage(remover, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem, null, null);
+        if (removed.equals(initiator)) {
+            message = messageService.createMessage(initiator, receivers, PARTICIPANT_SELFREMOVED_MESSAGE, isSystem, null, null);
 
         } else {
-            message = messageService.createMessage(remover, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, null, removed);
+            message = messageService.createMessage(initiator, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, null, removed);
         }
 
-        conversation = messageService.addMessage(conversation, message);
-        return prepareGetConversationDto(save(conversation), remover);
+        conversation = messageService.addMessage(conversation, message, initiator);
+        return prepareGetConversationDto(save(conversation), initiator);
     }
 
     @Override
@@ -257,7 +262,7 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation.setName(name);
-        conversation = messageService.addMessage(conversation, message);
+        conversation = messageService.addMessage(conversation, message, initiator);
         return prepareGetConversationDto(save(conversation), initiator);
     }
 
@@ -267,7 +272,27 @@ public class ConversationServiceImpl implements ConversationService {
         Conversation conversation = findOne(conversationId);
         Participant participant = participantService.getParticipant(participantId);
         List<Message> messages = messageService.findMessagesByIds(messageIds);
-        messageService.markAsRead(conversation, participant, messages);
+
+        if (messages.isEmpty()) {
+            throw new IllegalStateException("Empty messages list.");
+        }
+
+        if (!messages.stream().map(Message::getConversation).allMatch(conversation::equals)) {
+            throw new ForbiddenException("Messages belong to different conversations.");
+        }
+
+        if (!conversation.getParticipants().contains(participant)) {
+            throw new ForbiddenException("The conversation should contain the given participant.");
+        }
+
+        Instant lastMessageCreatedDate = messages.stream()
+                .map(Message::getCreatedDate)
+                .max(Instant::compareTo)
+                .get();
+
+        conversation.getLastReadOn()
+                .put(participant, lastMessageCreatedDate);
+        save(conversation);
     }
 
     @HystrixCommand(commandProperties = {

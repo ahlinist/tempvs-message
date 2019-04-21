@@ -1,0 +1,79 @@
+databaseChangeLog:
+- changeSet:
+    id: 1555868240647-2
+    author: albvs (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              primaryKey: true
+            name: conversation_id
+            type: BIGINT
+        - column:
+            name: last_read_on
+            type: TIMESTAMP WITHOUT TIME ZONE
+        - column:
+            constraints:
+              primaryKey: true
+            name: last_read_on_key
+            type: BIGINT
+        tableName: conversation_last_read_on
+- changeSet:
+    id: 1555868240647-3
+    author: albvs (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: last_read_on_key
+        baseTableName: conversation_last_read_on
+        constraintName: FK3wev7ubj8v1rs1slr6mp8elga
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: participant
+        validate: true
+- changeSet:
+    id: 1555868240647-4
+    author: albvs (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: conversation_id
+        baseTableName: conversation_last_read_on
+        constraintName: FK7aocvr9enyuwdyprve4dt39x9
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: conversation
+        validate: true
+- changeSet:
+    id: 1555868240647-5
+    author: albvs (generated)
+    changes:
+    - dropForeignKeyConstraint:
+        baseTableName: message_new_for
+        constraintName: FKbx2078jgnc8qpnyie2hs8lxxk
+- changeSet:
+    id: 1555868240647-6
+    author: albvs (generated)
+    changes:
+    - dropForeignKeyConstraint:
+        baseTableName: message_new_for
+        constraintName: FKlhq9pc1151mumxii25g12uxvk
+- changeSet:
+    id: 1555868240647-7
+    author: albvs (generated)
+    changes:
+    - dropTable:
+        tableName: message_new_for
+- changeSet:
+    id: 1555868240647-1
+    author: albvs (generated)
+    changes:
+    - dropUniqueConstraint:
+        constraintName: UK_163cga9b82cbl0obssg58gkvm
+        tableName: conversation_messages
+    - addUniqueConstraint:
+        columnNames: messages_id
+        constraintName: UK_163cga9b82cbl0obssg58gkvm
+        tableName: conversation_messages
+

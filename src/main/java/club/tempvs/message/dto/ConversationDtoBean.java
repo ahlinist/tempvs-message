@@ -25,7 +25,7 @@ public class ConversationDtoBean {
         this.id = conversation.getId();
         this.name = conversation.getName();
         this.type = conversation.getType().toString();
-        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self, zoneId);
+        this.lastMessage = new MessageDtoBean(conversation.getLastMessage(), self, conversation, zoneId);
         this.conversant = conversation.getParticipants().stream().filter(participant -> !participant.equals(self))
                 .map(Participant::getName).collect(Collectors.joining(", "));
         this.unreadMessagesCount = conversation.getUnreadMessagesCount();
