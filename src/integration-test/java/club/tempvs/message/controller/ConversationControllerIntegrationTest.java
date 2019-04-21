@@ -124,27 +124,6 @@ public class ConversationControllerIntegrationTest {
     }
 
     @Test
-    public void testCreateConversationWithNoCaller() throws Exception {
-        String message = "myMessage";
-        String name = "conversation name";
-
-        entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY");
-        entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY");
-        entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY");
-
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(1L, 2L, 3L));
-        String createConversationJson = getCreateConversationDtoJson(receiverIds, message, name);
-
-        mvc.perform(post("/api/conversations")
-                .accept(APPLICATION_JSON_VALUE)
-                .contentType(APPLICATION_JSON_VALUE)
-                .content(createConversationJson)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isInternalServerError())
-                    .andExpect(content().string("Missing request header 'User-Info' for method parameter of type UserInfoDto"));
-    }
-
-    @Test
     public void testCreateConversationWithNoMessage() throws Exception {
         Long authorId = 4L;
         String name = "conversation name";
@@ -225,70 +204,6 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[0].unread", is(false)))
                     .andExpect(jsonPath("messages[0].system", is(isSystem)))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
-    }
-
-    @Test
-    public void testGetConversationForInvalidPaging() throws Exception {
-        Long authorId = 1L;
-        String text = "text";
-        String name = "name";
-
-        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
-        ));
-
-        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
-        Long conversationId = conversation.getId();
-        String userInfoValue = buildUserInfoValue(authorId);
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=-1")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page size must not be less than one!"));
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=0")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page size must not be less than one!"));
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=-1&size=20")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page index must not be less than zero!"));
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=50")
-                .header(USER_INFO_HEADER, userInfoValue)
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(content().string("Page size must not be larger than 40!"));
-    }
-
-    @Test
-    public void testGetConversationForNoCallerSpecified() throws Exception {
-        Long authorId = 1L;
-        String text = "text";
-        String name = "name";
-
-        Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
-                entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(2L, "name", "CLUB", "ANTIQUITY"),
-                entityHelper.createParticipant(3L, "name", "CLUB", "ANTIQUITY")
-        ));
-
-        Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
-        Long conversationId = conversation.getId();
-
-        mvc.perform(get("/api/conversations/" + conversationId + "?page=0&size=20")
-                .header(AUTHORIZATION_HEADER, TOKEN))
-                    .andExpect(status().isInternalServerError())
-                    .andExpect(content().string("Missing request header 'User-Info' for method parameter of type UserInfoDto"));
     }
 
     @Test
@@ -441,7 +356,7 @@ public class ConversationControllerIntegrationTest {
                 .header(USER_INFO_HEADER, wrongUserInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().string(equalTo("No participant with id 2 exist!")));
+                    .andExpect(content().string(equalTo("No participant with id 2 found in the db")));
     }
 
     @Test
@@ -508,7 +423,7 @@ public class ConversationControllerIntegrationTest {
                 .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isNotFound())
-                    .andExpect(content().string(equalTo("Conversation with id 2 doesn't exist.")));
+                    .andExpect(content().string(equalTo("No conversation with id 2 found.")));
     }
 
     @Test
@@ -699,7 +614,7 @@ public class ConversationControllerIntegrationTest {
                 .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(content().string(equalTo("No subjects found in database")));
+                    .andExpect(content().string(equalTo("No participants with given ids found in database")));
     }
 
     @Test
@@ -750,6 +665,8 @@ public class ConversationControllerIntegrationTest {
         Long authorId = 1L;
         Long removedParticipantId = 4L;
         Long nonExistentConversationId = 444L;
+        entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY");
+        entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY");
         String url = "/api/conversations/" + nonExistentConversationId + "/participants/" + removedParticipantId;
         String userInfoValue = buildUserInfoValue(authorId);
 
@@ -758,7 +675,7 @@ public class ConversationControllerIntegrationTest {
                 .header(USER_INFO_HEADER, userInfoValue)
                 .header(AUTHORIZATION_HEADER, TOKEN))
                     .andExpect(status().isNotFound())
-                    .andExpect(content().string(equalTo("Conversation with id '444' has not been found.")));
+                    .andExpect(content().string(equalTo("No conversation with id 444 found.")));
     }
 
     @Test

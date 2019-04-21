@@ -21,7 +21,7 @@ public class ConversationDtoBean {
     private String conversant;
     private Long unreadMessagesCount;
 
-    public ConversationDtoBean(Conversation conversation, Participant self, String zoneId, Locale locale) {
+    public ConversationDtoBean(Conversation conversation, Participant self, String zoneId) {
         this.id = conversation.getId();
         this.name = conversation.getName();
         this.type = conversation.getType().toString();

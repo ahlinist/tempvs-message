@@ -5,9 +5,15 @@ import club.tempvs.message.dao.ConversationRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
+import club.tempvs.message.dto.ConversationDtoBean;
 import club.tempvs.message.dto.ErrorsDto;
+import club.tempvs.message.dto.GetConversationDto;
+import club.tempvs.message.dto.GetConversationsDto;
+import club.tempvs.message.holder.UserHolder;
+import club.tempvs.message.model.User;
 import club.tempvs.message.service.ConversationService;
 import club.tempvs.message.service.MessageService;
+import club.tempvs.message.service.ParticipantService;
 import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
 import club.tempvs.message.util.ValidationHelper;
@@ -26,6 +32,8 @@ import static java.util.stream.Collectors.*;
 @RequiredArgsConstructor
 public class ConversationServiceImpl implements ConversationService {
 
+    private static final int DEFAULT_PAGE_NUMBER = 0;
+    private static final int MAX_PAGE_SIZE = 40;
     private static final String PARTICIPANT_ADDED_MESSAGE = "conversation.add.participant";
     private static final String PARTICIPANT_REMOVED_MESSAGE = "conversation.remove.participant";
     private static final String PARTICIPANT_SELFREMOVED_MESSAGE = "conversation.selfremove.participant";
@@ -33,57 +41,53 @@ public class ConversationServiceImpl implements ConversationService {
     private static final String CONVERSATION_RENAMED = "conversation.rename";
     private static final String CONVERSATION_NAME_DROPPED = "conversation.drop.name";
     private static final String PARTICIPANTS_FIELD = "participants";
-    private static final String TEXT_FIELD = "text";
-    private static final String TEXT_EMPTY = "message.empty.text";
-    private static final String PARTICIPANTS_EMPTY = "conversation.participant.empty";
     private static final String PARTICIPANTS_WRONG_SIZE = "conversation.participant.wrong.size";
-    private static final String TYPE_MISMATCH = "conversation.participant.type.mismatch";
-    private static final String PERIOD_MISMATCH = "conversation.participant.period.mismatch";
 
     private final ObjectFactory objectFactory;
     private final MessageService messageService;
     private final ConversationRepository conversationRepository;
     private final LocaleHelper localeHelper;
     private final ValidationHelper validationHelper;
+    private final ParticipantService participantService;
+    private final UserHolder userHolder;
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    public Conversation createConversation(
-            Participant author, Set<Participant> receivers, String name, Message message) {
+    @Override
+    public GetConversationDto createConversation(Set<Long> receiverIds, String name, String text) {
+        Long authorId = userHolder.getUser().getProfileId();
+        Participant author = participantService.getParticipant(authorId);
+        Set<Participant> receivers = participantService.getParticipants(receiverIds);
+        Message message = messageService.createMessage(author, receivers, text, false, null, null);
+        Conversation conversation = buildConversation(author, receivers, name, message);
+        return prepareGetConversationDto(save(conversation), author);
+    }
+
+    @Override
+    public GetConversationDto getConversation(Long id, int page, int size) {
+        Long callerId = userHolder.getUser().getProfileId();
+        Participant caller = participantService.getParticipant(callerId);
+        Conversation conversation = findOne(id);
+
+        if (!conversation.getParticipants().contains(caller)) {
+            throw new ForbiddenException("Participant " + callerId + " has no access to conversation " + id);
+        }
+
+        return prepareGetConversationDto(conversation, caller);
+    }
+
+    public Conversation buildConversation(Participant author, Set<Participant> receivers, String name, Message message) {
         if (receivers.size() == 1 && receivers.iterator().next().equals(author)) {
             throw new IllegalStateException("Author can't be equal the only receiver");
         }
 
-        ErrorsDto errorsDto = validationHelper.getErrors();
+        validationHelper.validateConversationCreation(author, receivers, message);
+
         Conversation conversation;
 
-        if (receivers == null || receivers.isEmpty() || receivers.size() > 19) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
-        }
-
-        String text = message.getText();
-
-        if (text == null || text.isEmpty()) {
-            validationHelper.addError(errorsDto, TEXT_FIELD, TEXT_EMPTY);
-        }
-
-        String type = author.getType();
-        String period = author.getPeriod();
-
-        if (receivers.stream().anyMatch(subject -> !subject.getType().equals(type))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH);
-        } else if (receivers.stream().anyMatch(subject -> !subject.getPeriod().equals(period))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH);
-        }
-
-        validationHelper.processErrors(errorsDto);
-
         if (receivers.size() == 1) {
-            conversation = this.findDialogue(author, receivers.iterator().next());
+            conversation = findDialogue(author, receivers.iterator().next());
 
             if (conversation != null) {
-                return this.addMessage(conversation, message);
+                return messageService.addMessage(conversation, message);
             }
         }
 
@@ -102,34 +106,34 @@ public class ConversationServiceImpl implements ConversationService {
             conversation.setType(Conversation.Type.DIALOGUE);
         }
 
-        return conversationRepository.save(conversation);
+        return conversation;
     }
 
+    @Override
+    public GetConversationDto addMessage(Long conversationId, String text) {
+        Long authorId = userHolder.getUser().getProfileId();
+        Conversation conversation = findOne(conversationId);
+        Participant author = participantService.getParticipant(authorId);
+        Set<Participant> receivers = new HashSet<>(conversation.getParticipants());
+        receivers.remove(author);
+        Message message = messageService.createMessage(author, receivers, text, false, null, null);
+        conversation = messageService.addMessage(conversation, message);
+        return prepareGetConversationDto(save(conversation), author);
+    }
+
+    @Override
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
-    public Conversation getConversation(Long id) {
-        return conversationRepository.findById(id).orElse(null);
-    }
-
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    public Conversation addMessage(Conversation conversation, Message message) {
-        conversation.addMessage(message);
-        conversation.setLastMessage(message);
-        message.setConversation(conversation);
-        return conversationRepository.save(conversation);
-    }
-
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    public List<Conversation> getConversationsByParticipant(Participant participant, int page, int size) {
+    public GetConversationsDto getConversationsAttended(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        List<Object[]> conversationsPerParticipant = conversationRepository.findConversationsPerParticipant(participant, pageable);
-
-        return conversationsPerParticipant.stream()
+        User user = userHolder.getUser();
+        Long participantId = user.getProfileId();
+        String timeZone = user.getTimezone();
+        Participant participant = participantService.getParticipant(participantId);
+        List<Object[]> conversationsPerParticipant = conversationRepository
+                .findConversationsPerParticipant(participant, pageable);
+        List<ConversationDtoBean> conversationDtoBeans = conversationsPerParticipant.stream()
             .map(entry -> {
                 Conversation conversation = (Conversation) entry[0];
                 Long count = (Long) entry[1];
@@ -137,68 +141,60 @@ public class ConversationServiceImpl implements ConversationService {
                 Message lastMessage = conversation.getLastMessage();
                 Message translatedLastMessage = localeHelper.translateMessageIfSystem(lastMessage);
                 conversation.setLastMessage(translatedLastMessage);
-                return conversation;
+                return new ConversationDtoBean(conversation, participant, timeZone);
             }).collect(toList());
+
+        return new GetConversationsDto(conversationDtoBeans);
     }
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    public Conversation addParticipants(Conversation conversation, Participant adder, Set<Participant> added) {
-        ErrorsDto errorsDto = validationHelper.getErrors();
+    @Override
+    public GetConversationDto addParticipants(Long conversationId, Set<Long> subjectIds) {
+        User user = userHolder.getUser();
+        Long initiatorId = user.getProfileId();
+        Conversation conversation = findOne(conversationId);
+        Participant initiator = participantService.getParticipant(initiatorId);
+        Set<Participant> subjects = participantService.getParticipants(subjectIds);
+        Set<Participant> participants = conversation.getParticipants();
 
-        if (added == null || added.isEmpty()) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_EMPTY);
+        if (participants.stream().filter(subjects::contains).findAny().isPresent()) {
+            throw new IllegalStateException("An existent member is being added to a conversation.");
         }
 
-        Set<Participant> initialParticipants = conversation.getParticipants();
-
-        if (initialParticipants.size() + added.size() > 20) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PARTICIPANTS_WRONG_SIZE);
-        }
-
-        String type = adder.getType();
-        String period = adder.getPeriod();
-
-        if (added.stream().anyMatch(subject -> !subject.getType().equals(type))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, TYPE_MISMATCH);
-        } else if (added.stream().anyMatch(subject -> !subject.getPeriod().equals(period))) {
-            validationHelper.addError(errorsDto, PARTICIPANTS_FIELD, PERIOD_MISMATCH);
-        }
-
-        validationHelper.processErrors(errorsDto);
+        validationHelper.validateParticipantsAddition(initiator, subjects, participants);
 
         Message message;
         Boolean isSystem = Boolean.TRUE;
-        Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
-        receivers.remove(adder);
+        Set<Participant> receivers = new LinkedHashSet<>(participants);
+        receivers.remove(initiator);
 
-        if (conversation.getType() == Conversation.Type.DIALOGUE && initialParticipants.size() == 2) {
-            receivers.addAll(added);
-            message = messageService.createMessage(adder, receivers, CONFERENCE_CREATED, isSystem, null, null);
-            return createConversation(adder, receivers, null, message);
+        if (conversation.getType() == Conversation.Type.DIALOGUE && participants.size() == 2) {
+            receivers.addAll(subjects);
+            message = messageService.createMessage(initiator, receivers, CONFERENCE_CREATED, isSystem, null, null);
+            Conversation updatedConversation = buildConversation(initiator, receivers, null, message);
+            return prepareGetConversationDto(save(updatedConversation), initiator);
         } else {
             List<Message> messages = new ArrayList<>();
 
-            for (Participant participant : added) {
+            for (Participant participant : subjects) {
                 receivers.add(participant);
                 conversation.addParticipant(participant);
-                message = messageService.createMessage(adder, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, participant);
+                message = messageService.createMessage(initiator, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, participant);
                 messages.add(message);
             }
 
             conversation.setLastMessage(messages.get(messages.size() - 1));
-
-            messages.stream().forEach(m -> {
-                conversation.addMessage(m);
-                m.setConversation(conversation);
-            });
-
-            return conversationRepository.save(conversation);
+            messages.stream().forEach(m -> messageService.addMessage(conversation, m));
+            return prepareGetConversationDto(save(conversation), initiator);
         }
     }
 
-    public Conversation removeParticipant(Conversation conversation, Participant remover, Participant removed) {
+    @Override
+    public GetConversationDto removeParticipant(Long conversationId, Long removedId) {
+        User user = userHolder.getUser();
+        Long removerId = user.getProfileId();
+        Participant remover = participantService.getParticipant(removerId);
+        Participant removed = participantService.getParticipant(removedId);
+        Conversation conversation = findOne(conversationId);
         Set<Participant> participants = conversation.getParticipants();
 
         if (participants.size() <= 2) {
@@ -228,25 +224,26 @@ public class ConversationServiceImpl implements ConversationService {
             message = messageService.createMessage(remover, receivers, PARTICIPANT_REMOVED_MESSAGE, isSystem, null, removed);
         }
 
-        return addMessage(conversation, message);
+        conversation = messageService.addMessage(conversation, message);
+        return prepareGetConversationDto(save(conversation), remover);
     }
 
+    @Override
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
-    public Conversation findDialogue(Participant author, Participant receiver) {
-        return conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver);
-    }
-
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    public long countUpdatedConversationsPerParticipant(Participant participant) {
+    public long countUpdatedConversationsPerParticipant() {
+        Long participantId = userHolder.getUser().getProfileId();
+        Participant participant = participantService.getParticipant(participantId);
         return conversationRepository.countByNewMessagesPerParticipant(participant);
     }
 
-    public Conversation rename(Conversation conversation, Participant initiator, String name) {
+    @Override
+    public GetConversationDto rename(Long conversationId, String name) {
         Boolean isSystem = Boolean.TRUE;
+        Conversation conversation = findOne(conversationId);
+        Long initiatorId = userHolder.getUser().getProfileId();
+        Participant initiator = participantService.getParticipant(initiatorId);
         Set<Participant> receivers = new LinkedHashSet<>(conversation.getParticipants());
         receivers.remove(initiator);
         Message message;
@@ -260,6 +257,47 @@ public class ConversationServiceImpl implements ConversationService {
         }
 
         conversation.setName(name);
-        return addMessage(conversation, message);
+        conversation = messageService.addMessage(conversation, message);
+        return prepareGetConversationDto(save(conversation), initiator);
+    }
+
+    @Override
+    public void markMessagesAsRead(Long conversationId, List<Long> messageIds) {
+        Long participantId = userHolder.getUser().getProfileId();
+        Conversation conversation = findOne(conversationId);
+        Participant participant = participantService.getParticipant(participantId);
+        List<Message> messages = messageService.findMessagesByIds(messageIds);
+        messageService.markAsRead(conversation, participant, messages);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private Conversation findOne(Long id) {
+        return conversationRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("No conversation with id " + id + " found."));
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private Conversation findDialogue(Participant author, Participant receiver) {
+        return conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private Conversation save(Conversation conversation) {
+        return conversationRepository.save(conversation);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private GetConversationDto prepareGetConversationDto(Conversation conversation, Participant initiator) {
+        String timeZone = userHolder.getUser().getTimezone();
+        List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
+        return new GetConversationDto(conversation, messages, initiator, timeZone);
     }
 }

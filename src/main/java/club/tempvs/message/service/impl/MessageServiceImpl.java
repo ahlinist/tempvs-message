@@ -40,13 +40,19 @@ public class MessageServiceImpl implements MessageService {
         return message;
     }
 
+    public Conversation addMessage(Conversation conversation, Message message) {
+        conversation.addMessage(message);
+        conversation.setLastMessage(message);
+        message.setConversation(conversation);
+        return conversation;
+    }
+
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public List<Message> getMessagesFromConversation(Conversation conversation, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdDate");
-        List<Message> messages = messageRepository.findByConversation(conversation, pageable);
-        return messages.stream()
+        return messageRepository.findByConversation(conversation, pageable).stream()
                 .map(localeHelper::translateMessageIfSystem)
                 .collect(toList());
     }

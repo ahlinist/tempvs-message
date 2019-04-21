@@ -1,4 +1,4 @@
-package club.tempvs.message.auth;
+package club.tempvs.message.interceptor;
 
 import club.tempvs.message.api.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Value;

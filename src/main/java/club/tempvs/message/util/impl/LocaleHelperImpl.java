@@ -8,27 +8,12 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
-
 @Component
 @RequiredArgsConstructor
 public class LocaleHelperImpl implements LocaleHelper {
 
     private final MessageSource messageSource;
     private final ObjectFactory objectFactory;
-
-    public Locale getLocale(String lang) {
-        Locale locale;
-
-        try {
-            locale = new Locale(lang);
-            LocaleContextHolder.setLocale(locale);
-        } catch (Exception e) {
-            locale = Locale.ENGLISH;
-        }
-
-        return locale;
-    }
 
     public Message translateMessageIfSystem(Message originalMessage) {
         if (originalMessage.getIsSystem()) {

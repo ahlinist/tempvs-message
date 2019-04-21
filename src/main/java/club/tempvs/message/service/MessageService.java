@@ -8,9 +8,15 @@ import java.util.List;
 import java.util.Set;
 
 public interface MessageService {
+
     Message createMessage(Participant author, Set<Participant> receivers,
                           String text, Boolean isSystem, String systemArgs, Participant subject);
+
+    Conversation addMessage(Conversation conversation, Message message);
+
     List<Message> getMessagesFromConversation(Conversation conversation, int page, int size);
+
     List<Message> markAsRead(Conversation conversation, Participant participant, List<Message> messages);
+
     List<Message> findMessagesByIds(List<Long> ids);
 }
