@@ -1,12 +1,7 @@
 package club.tempvs.message.controller;
 
-import club.tempvs.message.domain.Conversation;
-import club.tempvs.message.domain.Message;
-import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.*;
 import club.tempvs.message.service.ConversationService;
-import club.tempvs.message.service.MessageService;
-import club.tempvs.message.service.ParticipantService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,17 +22,7 @@ public class ConversationControllerTest {
     @Mock
     private ConversationService conversationService;
     @Mock
-    private ParticipantService participantService;
-    @Mock
-    private MessageService messageService;
-    @Mock
     private CreateConversationDto createConversationDto;
-    @Mock
-    private Message message;
-    @Mock
-    private Participant participant;
-    @Mock
-    private Conversation conversation;
     @Mock
     private GetConversationDto getConversationDto;
     @Mock
@@ -49,13 +34,11 @@ public class ConversationControllerTest {
     @Mock
     private ReadMessagesDto readMessagesDto;
     @Mock
-    private UserInfoDto userInfoDto;
-    @Mock
     private GetConversationsDto getConversationsDto;
 
     @Before
     public void setup() {
-        conversationController = new ConversationController(conversationService, participantService, messageService);
+        conversationController = new ConversationController(conversationService);
     }
 
     @Test
@@ -74,7 +57,7 @@ public class ConversationControllerTest {
         GetConversationDto result = conversationController.createConversation(createConversationDto);
 
         verify(conversationService).createConversation(receiverIds, name, text);
-        verifyNoMoreInteractions(participantService, messageService, conversationService);
+        verifyNoMoreInteractions(conversationService);
 
         assertEquals("GetConversationDto is returned", result,getConversationDto);
     }
@@ -169,7 +152,7 @@ public class ConversationControllerTest {
         GetConversationDto result = conversationController.removeParticipant(conversationId, subjectId);
 
         verify(conversationService).removeParticipant(conversationId, subjectId);
-        verifyNoMoreInteractions(messageService, conversationService, participantService);
+        verifyNoMoreInteractions(conversationService);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
     }
@@ -183,7 +166,7 @@ public class ConversationControllerTest {
         ResponseEntity result = conversationController.countConversations();
 
         verify(conversationService).countUpdatedConversationsPerParticipant();
-        verifyNoMoreInteractions(participantService);
+        verifyNoMoreInteractions(conversationService);
 
         assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
     }
@@ -207,42 +190,13 @@ public class ConversationControllerTest {
     @Test
     public void testReadMessages() {
         Long conversationId = 1L;
-        Long participantId = 4L;
         List<Long> messageIds = Arrays.asList(2L, 3L);
-        List<Message> messages = Arrays.asList(message, message);
 
-        when(conversationService.findOne(conversationId)).thenReturn(conversation);
         when(readMessagesDto.getMessages()).thenReturn(messageIds);
-        when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
-        when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(messageService.markAsRead(conversation, participant, messages)).thenReturn(messages);
 
-        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
+        conversationController.readMessages(conversationId, readMessagesDto);
 
-        verify(conversationService).findOne(conversationId);
-        verify(readMessagesDto).getMessages();
-        verify(messageService).findMessagesByIds(messageIds);
-        verify(userInfoDto).getProfileId();
-        verify(participantService).getParticipant(participantId);
-        verify(messageService).markAsRead(conversation, participant, messages);
-        verifyNoMoreInteractions(conversationService, readMessagesDto, messageService,
-                userInfoDto, participantService, conversation, message, participant);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testReadMessagesForMissingMessages() {
-        Long conversationId = 1L;
-        Long participantId = 4L;
-        List<Long> messageIds = Arrays.asList(2L, 3L);
-        List<Message> messages = Arrays.asList(message, null);
-
-        when(conversationService.findOne(conversationId)).thenReturn(conversation);
-        when(userInfoDto.getProfileId()).thenReturn(participantId);
-        when(participantService.getParticipant(participantId)).thenReturn(participant);
-        when(readMessagesDto.getMessages()).thenReturn(messageIds);
-        when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
-
-        conversationController.readMessages(userInfoDto, conversationId, readMessagesDto);
+        verify(conversationService).markMessagesAsRead(conversationId, messageIds);
+        verifyNoMoreInteractions(conversationService);
     }
 }

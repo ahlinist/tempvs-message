@@ -109,15 +109,6 @@ public class ConversationServiceImpl implements ConversationService {
         return conversation;
     }
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    //TODO: make private
-    public Conversation findOne(Long id) {
-        return conversationRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("No conversation with id " + id + " found."));
-    }
-
     @Override
     public GetConversationDto addMessage(Long conversationId, String text) {
         Long authorId = userHolder.getUser().getProfileId();
@@ -201,7 +192,6 @@ public class ConversationServiceImpl implements ConversationService {
     public GetConversationDto removeParticipant(Long conversationId, Long removedId) {
         User user = userHolder.getUser();
         Long removerId = user.getProfileId();
-        String timeZone = user.getTimezone();
         Participant remover = participantService.getParticipant(removerId);
         Participant removed = participantService.getParticipant(removedId);
         Conversation conversation = findOne(conversationId);
@@ -242,14 +232,6 @@ public class ConversationServiceImpl implements ConversationService {
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
-    public Conversation findDialogue(Participant author, Participant receiver) {
-        return conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver);
-    }
-
-    @Override
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
     public long countUpdatedConversationsPerParticipant() {
         Long participantId = userHolder.getUser().getProfileId();
         Participant participant = participantService.getParticipant(participantId);
@@ -277,6 +259,30 @@ public class ConversationServiceImpl implements ConversationService {
         conversation.setName(name);
         conversation = messageService.addMessage(conversation, message);
         return prepareGetConversationDto(save(conversation), initiator);
+    }
+
+    @Override
+    public void markMessagesAsRead(Long conversationId, List<Long> messageIds) {
+        Long participantId = userHolder.getUser().getProfileId();
+        Conversation conversation = findOne(conversationId);
+        Participant participant = participantService.getParticipant(participantId);
+        List<Message> messages = messageService.findMessagesByIds(messageIds);
+        messageService.markAsRead(conversation, participant, messages);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private Conversation findOne(Long id) {
+        return conversationRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("No conversation with id " + id + " found."));
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private Conversation findDialogue(Participant author, Participant receiver) {
+        return conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver);
     }
 
     @HystrixCommand(commandProperties = {

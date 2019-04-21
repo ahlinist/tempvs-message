@@ -1,11 +1,9 @@
 package club.tempvs.message.service;
 
-import club.tempvs.message.domain.Conversation;
-import club.tempvs.message.domain.Message;
-import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dto.GetConversationDto;
 import club.tempvs.message.dto.GetConversationsDto;
 
+import java.util.List;
 import java.util.Set;
 
 public interface ConversationService {
@@ -13,8 +11,6 @@ public interface ConversationService {
     GetConversationDto createConversation(Set<Long> receiverIds, String name, String text);
 
     GetConversationDto getConversation(Long id, int page, int size);
-
-    Conversation findOne(Long id);
 
     GetConversationsDto getConversationsAttended(int page, int size);
 
@@ -24,9 +20,9 @@ public interface ConversationService {
 
     GetConversationDto addParticipants(Long conversationId, Set<Long> subjectIds);
 
-    Conversation findDialogue(Participant author, Participant receiver);
-
     long countUpdatedConversationsPerParticipant();
 
     GetConversationDto rename(Long conversationId, String name);
+
+    void markMessagesAsRead(Long conversationId, List<Long> messageIds);
 }

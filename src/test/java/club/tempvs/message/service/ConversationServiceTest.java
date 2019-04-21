@@ -71,18 +71,15 @@ public class ConversationServiceTest {
     @Test
     public void testBuildConversation() {
         Long authorId = 1L;
-        Long receiverId = 2L;
-        Long participantId = 3L;
         String text = "text";
         String name = "name";
-        String timeZone = "UTC";
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId, participantId));
+        Set<Long> receiverIds = new HashSet<>(Arrays.asList(2L, 3L));
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver, participant));
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(userHolder.getUser()).thenReturn(user);
         when(user.getProfileId()).thenReturn(authorId);
-        when(user.getTimezone()).thenReturn(timeZone);
+        when(user.getTimezone()).thenReturn("UTC");
         when(participantService.getParticipant(authorId)).thenReturn(author);
         when(participantService.getParticipants(receiverIds)).thenReturn(receivers);
         when(objectFactory.getInstance(Conversation.class)).thenReturn(conversation);
@@ -119,13 +116,12 @@ public class ConversationServiceTest {
         int page = 0;
         int size = 40;
         long participantId = 2L;
-        String timeZone = "UTC";
         Set<Participant> participants = new HashSet<>(Arrays.asList(participant, receiver));
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(userHolder.getUser()).thenReturn(user);
         when(user.getProfileId()).thenReturn(participantId);
-        when(user.getTimezone()).thenReturn(timeZone);
+        when(user.getTimezone()).thenReturn("UTC");
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
@@ -160,28 +156,18 @@ public class ConversationServiceTest {
         conversationService.getConversation(conversationId, page, size);
     }
 
-    @Test(expected = NoSuchElementException.class)
-    public void testGetConversationNotFound() {
-        long conversationId = 1L;
-
-        when(conversationRepository.findById(conversationId)).thenReturn(Optional.ofNullable(null));
-
-        conversationService.findOne(conversationId);
-    }
-
     @Test
     public void testAddMessage() {
         long conversationId = 1l;
         String text = "text";
         long participantId = 2l;
-        String timeZone = "UTC";
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver));
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(userHolder.getUser()).thenReturn(user);
         when(user.getProfileId()).thenReturn(participantId);
-        when(user.getTimezone()).thenReturn(timeZone);
+        when(user.getTimezone()).thenReturn("UTC");
         when(participantService.getParticipant(participantId)).thenReturn(author);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(conversation.getParticipants()).thenReturn(participants);
@@ -289,9 +275,7 @@ public class ConversationServiceTest {
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participantsToAdd = new LinkedHashSet<>(Arrays.asList(oneMoreReceiver));
         Set<Participant> initialParticipants = new LinkedHashSet<>(Arrays.asList(author, receiver, participant));
-        Set<Participant> receivers = new LinkedHashSet<>(initialParticipants);
-        receivers.add(oneMoreReceiver);
-        receivers.remove(author);
+        Set<Participant> receivers = new LinkedHashSet<>(Arrays.asList(receiver, participant, oneMoreReceiver));
         List<Message> messages = Arrays.asList(message, message, message);
 
         when(userHolder.getUser()).thenReturn(user);
@@ -328,7 +312,6 @@ public class ConversationServiceTest {
         Long conversationId = 1L;
         Long initiatorId = 3L;
         Long subjectId = 2L;
-        String timeZone = "UTC";
         String text = "conversation.remove.participant";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> participants = new HashSet<>(Arrays.asList(author, receiver, oneMoreReceiver, participant));
@@ -339,7 +322,7 @@ public class ConversationServiceTest {
 
         when(userHolder.getUser()).thenReturn(user);
         when(user.getProfileId()).thenReturn(initiatorId);
-        when(user.getTimezone()).thenReturn(timeZone);
+        when(user.getTimezone()).thenReturn("UTC");
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
@@ -402,18 +385,6 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testFindConversation() {
-        when(conversationRepository.findDialogue(Conversation.Type.DIALOGUE, author, receiver)).thenReturn(conversation);
-
-        Conversation result = conversationService.findDialogue(author, receiver);
-
-        verify(conversationRepository).findDialogue(Conversation.Type.DIALOGUE, author, receiver);
-        verifyNoMoreInteractions(conversationRepository, conversation, author, receiver);
-
-        assertEquals("Conversation is returned as a result", conversation, result);
-    }
-
-    @Test
     public void testCountUpdatedConversationsPerParticipant() {
         long participantId = 1L;
         long conversationCount = 3L;
@@ -466,7 +437,6 @@ public class ConversationServiceTest {
     public void testRenameForEmptyName() {
         Long conversationId = 1L;
         Long participantId = 3L;
-        String name = "";
         Boolean isSystem = Boolean.TRUE;
         Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
 
@@ -480,7 +450,7 @@ public class ConversationServiceTest {
         when(messageService.addMessage(conversation, message)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
-        GetConversationDto result = conversationService.rename(conversationId, name);
+        GetConversationDto result = conversationService.rename(conversationId, "");
 
         verify(participantService).getParticipant(participantId);
         verify(conversationRepository).findById(conversationId);
@@ -491,5 +461,27 @@ public class ConversationServiceTest {
         verifyNoMoreInteractions(messageService, conversationRepository, participantService);
 
         assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
+    }
+
+    @Test
+    public void testMarkMessagesAsRead() {
+        long conversationId = 1l;
+        long participantId = 2l;
+        List<Long> messageIds = Arrays.asList(2L, 3L);
+        List<Message> messages = Arrays.asList(message, message);
+
+        when(userHolder.getUser()).thenReturn(user);
+        when(user.getProfileId()).thenReturn(participantId);
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
+        when(participantService.getParticipant(participantId)).thenReturn(participant);
+        when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
+
+        conversationService.markMessagesAsRead(conversationId, messageIds);
+
+        verify(participantService).getParticipant(participantId);
+        verify(conversationRepository).findById(conversationId);
+        verify(messageService).findMessagesByIds(messageIds);
+        verify(messageService).markAsRead(conversation, participant, messages);
+        verifyNoMoreInteractions(messageService, participantService, conversationRepository);
     }
 }

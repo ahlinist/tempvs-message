@@ -4,7 +4,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 import static org.springframework.http.HttpStatus.*;
 
 import club.tempvs.message.api.*;
-import club.tempvs.message.domain.*;
 import club.tempvs.message.dto.*;
 import club.tempvs.message.service.*;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
@@ -24,18 +23,14 @@ public class ConversationController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConversationController.class);
 
-    private static final int DEFAULT_PAGE_NUMBER = 0;
     private static final int MAX_PAGE_SIZE = 40;
     private static final String COUNT_HEADER = "X-Total-Count";
-    private static final String USER_INFO_HEADER = "User-Info";
     private static final String PAGE_PARAM = "page";
     private static final String SIZE_PARAM = "size";
     private static final String DEFAULT_PAGE_VALUE = "0";
     private static final String DEFAULT_SIZE_VALUE = "40";
 
     private final ConversationService conversationService;
-    private final ParticipantService participantService;
-    private final MessageService messageService;
 
     @PostMapping("/conversations")
     public GetConversationDto createConversation(@RequestBody CreateConversationDto createConversationDto) {
@@ -66,7 +61,6 @@ public class ConversationController {
         }
 
         GetConversationsDto result = conversationService.getConversationsAttended(page, size);
-
         int conversationsCount = result.getConversations().size();
         HttpHeaders headers = new HttpHeaders();
         headers.add(COUNT_HEADER, String.valueOf(conversationsCount));
@@ -94,7 +88,6 @@ public class ConversationController {
             @PathVariable("conversationId") Long conversationId,
             @RequestBody AddParticipantsDto addParticipantsDto) {
         Set<Long> subjectIds = addParticipantsDto.getParticipants();
-
         return conversationService.addParticipants(conversationId, subjectIds);
     }
 
@@ -114,19 +107,10 @@ public class ConversationController {
 
     @PostMapping("/conversations/{conversationId}/read")
     public void readMessages(
-            @RequestHeader(value = USER_INFO_HEADER) UserInfoDto userInfoDto,
             @PathVariable("conversationId") Long conversationId,
             @RequestBody ReadMessagesDto readMessagesDto) {
-        Conversation conversation = conversationService.findOne(conversationId);
-        Long participantId = userInfoDto.getProfileId();
-        Participant participant = participantService.getParticipant(participantId);
-        List<Message> messages = messageService.findMessagesByIds(readMessagesDto.getMessages());
-
-        if (messages.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalStateException("Some of the messages specified were not found.");
-        }
-
-        messageService.markAsRead(conversation, participant, messages);
+        List<Long> messageIds = readMessagesDto.getMessages();
+        conversationService.markMessagesAsRead(conversationId, messageIds);
     }
 
     @ExceptionHandler(Exception.class)
