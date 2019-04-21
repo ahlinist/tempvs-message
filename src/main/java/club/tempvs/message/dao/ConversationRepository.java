@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
 
-    @Query("SELECT c, (SELECT COUNT(m) FROM Message m WHERE m.conversation = c AND :participant MEMBER OF m.newFor) " +
+    @Query("SELECT c, (SELECT COUNT(m) FROM Message m WHERE (m.conversation = c) AND (c.lastReadOn[:participant] < m.createdDate)) " +
             "FROM Conversation c " +
             "WHERE :participant MEMBER OF c.participants " +
             "GROUP BY c, c.lastMessage.createdDate " +
@@ -25,6 +25,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
                               @Param("receiver") Participant receiver);
 
     @Query("SELECT COUNT(distinct m.conversation) FROM Message m " +
-            "WHERE :participant MEMBER OF m.newFor AND :participant MEMBER OF m.conversation.participants")
+            "WHERE (m.conversation.lastReadOn[:participant] < m.createdDate) " +
+            "AND (:participant MEMBER OF m.conversation.participants)")
     long countByNewMessagesPerParticipant(@Param("participant") Participant participant);
 }

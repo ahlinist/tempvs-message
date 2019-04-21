@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
 
 import static java.util.stream.Collectors.*;
@@ -32,7 +33,6 @@ public class MessageServiceImpl implements MessageService {
                                  Set<Participant> receivers, String text, Boolean isSystem, String systemArgs, Participant subject) {
         Message message = objectFactory.getInstance(Message.class);
         message.setAuthor(author);
-        message.setNewFor(receivers);
         message.setText(text);
         message.setIsSystem(isSystem);
         message.setSystemArgs(systemArgs);
@@ -40,10 +40,13 @@ public class MessageServiceImpl implements MessageService {
         return message;
     }
 
-    public Conversation addMessage(Conversation conversation, Message message) {
+    public Conversation addMessage(Conversation conversation, Message message, Participant author) {
         conversation.addMessage(message);
         conversation.setLastMessage(message);
         message.setConversation(conversation);
+        Instant createdDate = message.getCreatedDate();
+        conversation.getLastReadOn()
+                .put(author, createdDate);
         return conversation;
     }
 
@@ -55,26 +58,6 @@ public class MessageServiceImpl implements MessageService {
         return messageRepository.findByConversation(conversation, pageable).stream()
                 .map(localeHelper::translateMessageIfSystem)
                 .collect(toList());
-    }
-
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    public List<Message> markAsRead(Conversation conversation, Participant participant, List<Message> messages) {
-        if (messages.isEmpty()) {
-            throw new IllegalStateException("Empty messages list.");
-        }
-
-        if (!messages.stream().map(Message::getConversation).allMatch(conversation::equals)) {
-            throw new ForbiddenException("Messages belong to different conversations.");
-        }
-
-        if (!conversation.getParticipants().contains(participant)) {
-            throw new ForbiddenException("The conversation should contain the given participant.");
-        }
-
-        messages.stream().forEach(message -> message.getNewFor().remove(participant));
-        return messageRepository.saveAll(messages);
     }
 
     @HystrixCommand(commandProperties = {

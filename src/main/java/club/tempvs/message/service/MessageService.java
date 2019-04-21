@@ -12,11 +12,9 @@ public interface MessageService {
     Message createMessage(Participant author, Set<Participant> receivers,
                           String text, Boolean isSystem, String systemArgs, Participant subject);
 
-    Conversation addMessage(Conversation conversation, Message message);
+    Conversation addMessage(Conversation conversation, Message message, Participant author);
 
     List<Message> getMessagesFromConversation(Conversation conversation, int page, int size);
-
-    List<Message> markAsRead(Conversation conversation, Participant participant, List<Message> messages);
 
     List<Message> findMessagesByIds(List<Long> ids);
 }

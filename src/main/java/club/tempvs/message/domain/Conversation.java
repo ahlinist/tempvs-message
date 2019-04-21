@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.FetchType.EAGER;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
@@ -28,23 +30,26 @@ public class Conversation {
 
     @NotEmpty
     @OrderColumn
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = ALL)
     private List<Message> messages = new ArrayList<>();
 
     @OneToOne
     private Participant admin;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = ALL)
     private Message lastMessage;
 
     @Size(min = 2, max = 20)
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = EAGER)
     private Set<Participant> participants = new LinkedHashSet<>();
 
-    private transient Long unreadMessagesCount;
+    @ElementCollection(fetch = EAGER)
+    private Map<Participant, Instant> lastReadOn = new HashMap<>();
 
     @CreatedDate
     private Instant createdDate;
+
+    private transient Long unreadMessagesCount;
 
     public void addMessage(Message message) {
         this.messages.add(message);

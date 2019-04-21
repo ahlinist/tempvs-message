@@ -1,5 +1,6 @@
 package club.tempvs.message.dto;
 
+import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
 import lombok.Data;
@@ -22,15 +23,16 @@ public class MessageDtoBean {
     private Boolean unread;
     private Boolean system;
 
-    public MessageDtoBean(Message message, Participant self, String zoneId) {
+    public MessageDtoBean(Message message, Participant participant, Conversation conversation, String zoneId) {
         Participant subject = message.getSubject();
+        Instant lastReadOn = conversation.getLastReadOn().getOrDefault(participant, Instant.MIN);
 
         this.id = message.getId();
         this.text = message.getText();
         this.author = new ParticipantDto(message.getAuthor());
         this.subject = subject != null ? new ParticipantDto(subject) : null;
         this.createdDate = parseDate(message.getCreatedDate(), zoneId);
-        this.unread = message.getNewFor().contains(self);
+        this.unread = message.getCreatedDate().isAfter(lastReadOn);
         this.system = message.getIsSystem();
     }
 

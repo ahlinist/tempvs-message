@@ -69,7 +69,7 @@ public class ConversationServiceTest {
     }
 
     @Test
-    public void testBuildConversation() {
+    public void testCreateConversation() {
         Long authorId = 1L;
         String text = "text";
         String name = "name";
@@ -94,15 +94,8 @@ public class ConversationServiceTest {
         verify(participantService).getParticipant(authorId);
         verify(participantService).getParticipants(receiverIds);
         verify(objectFactory).getInstance(Conversation.class);
-        verify(conversation).addParticipant(receiver);
-        verify(conversation).addParticipant(author);
-        verify(conversation, times(2)).getParticipants();
-        verify(conversation).setName(name);
-        verify(conversation).addMessage(message);
-        verify(conversation).setLastMessage(message);
-        verify(conversation).setType(Conversation.Type.DIALOGUE);
-        verify(message).setConversation(conversation);
         verify(messageService).createMessage(author, receivers, text, false, null, null);
+        verify(messageService).addMessage(conversation, message, author);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(participantService, messageService, conversationRepository);
@@ -172,7 +165,7 @@ public class ConversationServiceTest {
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, receivers, text, false, null, null)).thenReturn(message);
-        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
+        when(messageService.addMessage(conversation, message, author)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
         when(message.getAuthor()).thenReturn(author);
         when(message.getCreatedDate()).thenReturn(Instant.now());
@@ -183,7 +176,7 @@ public class ConversationServiceTest {
         verify(conversationRepository).findById(conversationId);
         verify(participantService).getParticipant(participantId);
         verify(messageService).createMessage(author, receivers, text, false, null, null);
-        verify(messageService).addMessage(conversation, message);
+        verify(messageService).addMessage(conversation, message, author);
         verify(conversationRepository).save(conversation);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(messageService, participantService, conversationRepository);
@@ -259,6 +252,7 @@ public class ConversationServiceTest {
         verify(validationHelper).validateConversationCreation(author, receivers, message);
         verify(messageService).createMessage(author, receivers, text, true, null, null);
         verify(objectFactory).getInstance(Conversation.class);
+        verify(messageService).addMessage(conversation, message, author);
         verify(conversationRepository).save(conversation);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(participantService, messageService, conversationRepository, validationHelper);
@@ -299,7 +293,7 @@ public class ConversationServiceTest {
         verify(participantService).getParticipants(addedIds);
         verify(validationHelper).validateParticipantsAddition(author, participantsToAdd, initialParticipants);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, oneMoreReceiver);
-        verify(messageService).addMessage(conversation, message);
+        verify(messageService).addMessage(conversation, message, author);
         verify(conversationRepository).save(conversation);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(participantService, messageService, conversationRepository, validationHelper);
@@ -329,7 +323,7 @@ public class ConversationServiceTest {
         when(participantService.getParticipant(initiatorId)).thenReturn(author);
         when(participantService.getParticipant(subjectId)).thenReturn(receiver);
         when(messageService.createMessage(author, receivers, text, isSystem, null, receiver)).thenReturn(message);
-        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
+        when(messageService.addMessage(conversation, message, author)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
         when(message.getAuthor()).thenReturn(author);
         when(message.getCreatedDate()).thenReturn(Instant.now());
@@ -341,7 +335,7 @@ public class ConversationServiceTest {
         verify(participantService).getParticipant(subjectId);
         verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, receiver);
-        verify(messageService).addMessage(conversation, message);
+        verify(messageService).addMessage(conversation, message, author);
         verify(conversationRepository).save(conversation);
         verify(messageService).getMessagesFromConversation(conversation, page, max);
         verifyNoMoreInteractions(conversationRepository, messageService, participantService);
@@ -367,7 +361,7 @@ public class ConversationServiceTest {
         when(conversation.getAdmin()).thenReturn(author);
         when(conversation.getParticipants()).thenReturn(participants);
         when(messageService.createMessage(author, receivers, text, isSystem, null, null)).thenReturn(message);
-        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
+        when(messageService.addMessage(conversation, message, author)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         GetConversationDto result = conversationService.removeParticipant(conversationId, subjectId);
@@ -376,7 +370,7 @@ public class ConversationServiceTest {
         verify(participantService).getParticipant(subjectId);
         verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(author, receivers, text, isSystem, null, null);
-        verify(messageService).addMessage(conversation, message);
+        verify(messageService).addMessage(conversation, message, author);
         verify(conversationRepository).save(conversation);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(participantService, messageService, conversationRepository);
@@ -417,7 +411,7 @@ public class ConversationServiceTest {
         when(conversation.getParticipants()).thenReturn(receivers);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(messageService.createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null)).thenReturn(message);
-        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
+        when(messageService.addMessage(conversation, message, participant)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         GetConversationDto result = conversationService.rename(conversationId, name);
@@ -425,7 +419,7 @@ public class ConversationServiceTest {
         verify(participantService).getParticipant(participantId);
         verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(participant, receivers, CONVERSATION_RENAMED, isSystem, name, null);
-        verify(messageService).addMessage(conversation, message);
+        verify(messageService).addMessage(conversation, message, participant);
         verify(conversationRepository).save(conversation);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(participantService, messageService, conversationRepository);
@@ -447,7 +441,7 @@ public class ConversationServiceTest {
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(messageService.createMessage(participant, receivers,
                 CONVERSATION_NAME_DROPPED, isSystem, null, null)).thenReturn(message);
-        when(messageService.addMessage(conversation, message)).thenReturn(conversation);
+        when(messageService.addMessage(conversation, message, participant)).thenReturn(conversation);
         when(conversationRepository.save(conversation)).thenReturn(conversation);
 
         GetConversationDto result = conversationService.rename(conversationId, "");
@@ -456,7 +450,7 @@ public class ConversationServiceTest {
         verify(conversationRepository).findById(conversationId);
         verify(messageService).createMessage(participant, receivers,
                 CONVERSATION_NAME_DROPPED, isSystem, null, null);        verify(conversationRepository).save(conversation);
-        verify(messageService).addMessage(conversation, message);
+        verify(messageService).addMessage(conversation, message, participant);
         verify(messageService).getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         verifyNoMoreInteractions(messageService, conversationRepository, participantService);
 
@@ -469,19 +463,23 @@ public class ConversationServiceTest {
         long participantId = 2l;
         List<Long> messageIds = Arrays.asList(2L, 3L);
         List<Message> messages = Arrays.asList(message, message);
+        Set<Participant> participants = new HashSet<>(Arrays.asList(participant, receiver));
 
         when(userHolder.getUser()).thenReturn(user);
         when(user.getProfileId()).thenReturn(participantId);
         when(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation));
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(messageService.findMessagesByIds(messageIds)).thenReturn(messages);
+        when(message.getConversation()).thenReturn(conversation);
+        when(message.getCreatedDate()).thenReturn(Instant.now());
+        when(conversation.getParticipants()).thenReturn(participants);
 
         conversationService.markMessagesAsRead(conversationId, messageIds);
 
         verify(participantService).getParticipant(participantId);
         verify(conversationRepository).findById(conversationId);
         verify(messageService).findMessagesByIds(messageIds);
-        verify(messageService).markAsRead(conversation, participant, messages);
+        verify(conversationRepository).save(conversation);
         verifyNoMoreInteractions(messageService, participantService, conversationRepository);
     }
 }
