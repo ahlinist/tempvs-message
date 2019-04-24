@@ -1,0 +1,87 @@
+databaseChangeLog:
+- changeSet:
+    id: 1556050891126-2
+    author: albvs (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: last_message_author_name
+            type: varchar(255)
+        tableName: conversation
+- changeSet:
+    id: 1556050891126-3
+    author: albvs (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: last_message_created_date
+            type: timestamp
+        tableName: conversation
+- changeSet:
+    id: 1556050891126-4
+    author: albvs (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: last_message_subject_name
+            type: varchar(255)
+        tableName: conversation
+- changeSet:
+    id: 1556050891126-5
+    author: albvs (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: last_message_system
+            type: boolean
+        tableName: conversation
+- changeSet:
+    id: 1556050891126-6
+    author: albvs (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: last_message_system_args
+            type: varchar(255)
+        tableName: conversation
+- changeSet:
+    id: 1556050891126-7
+    author: albvs (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: last_message_text
+            type: varchar(255)
+        tableName: conversation
+- changeSet:
+    id: 1556050891126-8
+    author: albvs (generated)
+    changes:
+    - dropForeignKeyConstraint:
+        baseTableName: conversation
+        constraintName: FKsm3966podppo987o2etdjci1r
+- changeSet:
+    id: 1556050891126-9
+    author: albvs (generated)
+    changes:
+    - dropColumn:
+        columnName: last_message_id
+        tableName: conversation
+- changeSet:
+    id: 1556050891126-1
+    author: albvs (generated)
+    changes:
+    - dropUniqueConstraint:
+        constraintName: UK_163cga9b82cbl0obssg58gkvm
+        tableName: conversation_messages
+    - addUniqueConstraint:
+        columnNames: messages_id
+        constraintName: UK_163cga9b82cbl0obssg58gkvm
+        tableName: conversation_messages
+

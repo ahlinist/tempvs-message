@@ -142,9 +142,8 @@ public class ConversationServiceImpl implements ConversationService {
                 Conversation conversation = (Conversation) entry[0];
                 Long count = (Long) entry[1];
                 conversation.setUnreadMessagesCount(count);
-                Message lastMessage = conversation.getLastMessage();
-                Message translatedLastMessage = localeHelper.translateMessageIfSystem(lastMessage);
-                conversation.setLastMessage(translatedLastMessage);
+                String translatedLastMessage = localeHelper.translateMessageIfSystem(conversation);
+                conversation.setLastMessageText(translatedLastMessage);
                 return new ConversationDtoBean(conversation, participant, timeZone);
             }).collect(toList());
 
@@ -184,11 +183,9 @@ public class ConversationServiceImpl implements ConversationService {
                 conversation.addParticipant(participant);
                 message = messageService.createMessage(initiator, receivers, PARTICIPANT_ADDED_MESSAGE, isSystem, null, participant);
                 messages.add(message);
+                messageService.addMessage(conversation, message, initiator);
             }
 
-            conversation.setLastMessage(messages.get(messages.size() - 1));
-            messages.stream()
-                    .forEach(m -> messageService.addMessage(conversation, m, initiator));
             return prepareGetConversationDto(save(conversation), initiator);
         }
     }

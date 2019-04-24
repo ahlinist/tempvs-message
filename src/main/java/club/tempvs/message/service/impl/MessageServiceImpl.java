@@ -1,6 +1,7 @@
 package club.tempvs.message.service.impl;
 
-import club.tempvs.message.api.ForbiddenException;
+import static java.util.Objects.nonNull;
+
 import club.tempvs.message.dao.MessageRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -41,10 +42,20 @@ public class MessageServiceImpl implements MessageService {
     }
 
     public Conversation addMessage(Conversation conversation, Message message, Participant author) {
-        conversation.addMessage(message);
-        conversation.setLastMessage(message);
-        message.setConversation(conversation);
         Instant createdDate = message.getCreatedDate();
+        Participant subject = message.getSubject();
+
+        if (nonNull(subject)) {
+            conversation.setLastMessageSubjectName(subject.getName());
+        }
+
+        conversation.addMessage(message);
+        conversation.setLastMessageText(message.getText());
+        conversation.setLastMessageAuthorName(message.getAuthor().getName());
+        conversation.setLastMessageCreatedDate(createdDate);
+        conversation.setLastMessageSystem(message.getIsSystem());
+        conversation.setLastMessageSystemArgs(message.getSystemArgs());
+        message.setConversation(conversation);
         conversation.getLastReadOn()
                 .put(author, createdDate);
         return conversation;

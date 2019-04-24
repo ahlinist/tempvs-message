@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/base.yaml
   - include:
       file: db/changelog/changes/add-last-read-on.yaml
+  - include:
+      file: db/changelog/changes/decompose-last-msg.yaml

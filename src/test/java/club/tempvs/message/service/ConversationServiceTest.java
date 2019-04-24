@@ -199,19 +199,16 @@ public class ConversationServiceTest {
         when(user.getProfileId()).thenReturn(participantId);
         when(participantService.getParticipant(participantId)).thenReturn(participant);
         when(conversationRepository.findConversationsPerParticipant(participant, pageable)).thenReturn(conversationsPerParticipant);
-        when(conversation.getLastMessage()).thenReturn(message);
+        when(conversation.getLastMessageCreatedDate()).thenReturn(Instant.now());
         when(conversation.getType()).thenReturn(CONFERENCE);
-        when(message.getAuthor()).thenReturn(participant);
-        when(message.getCreatedDate()).thenReturn(Instant.now());
         when(user.getTimezone()).thenReturn("UTC");
-        when(localeHelper.translateMessageIfSystem(message)).thenReturn(message);
 
         GetConversationsDto result = conversationService.getConversationsAttended(page, size);
 
         verify(userHolder).getUser();
         verify(participantService).getParticipant(participantId);
         verify(conversationRepository).findConversationsPerParticipant(participant, pageable);
-        verify(localeHelper).translateMessageIfSystem(message);
+        verify(localeHelper).translateMessageIfSystem(conversation);
         verifyNoMoreInteractions(localeHelper, conversationRepository, userHolder, participantService);
 
         assertTrue("An GetConversationsDtoinstance is returned", result instanceof GetConversationsDto);

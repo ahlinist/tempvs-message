@@ -17,4 +17,8 @@ public class ParticipantDto {
         this.type = participant.getType();
         this.period = participant.getPeriod();
     }
+
+    public ParticipantDto(String name) {
+        this.name = name;
+    }
 }

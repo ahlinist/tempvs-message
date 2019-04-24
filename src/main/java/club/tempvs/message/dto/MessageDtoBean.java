@@ -1,5 +1,7 @@
 package club.tempvs.message.dto;
 
+import static java.util.Objects.nonNull;
+
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
 import club.tempvs.message.domain.Participant;
@@ -34,6 +36,18 @@ public class MessageDtoBean {
         this.createdDate = parseDate(message.getCreatedDate(), zoneId);
         this.unread = message.getCreatedDate().isAfter(lastReadOn);
         this.system = message.getIsSystem();
+    }
+
+    public MessageDtoBean(Participant participant, Conversation conversation, String zoneId) {
+        String subjectName = conversation.getLastMessageSubjectName();
+        Instant lastReadOn = conversation.getLastReadOn().getOrDefault(participant, Instant.MIN);
+
+        this.text = conversation.getLastMessageText();
+        this.author = new ParticipantDto(conversation.getLastMessageAuthorName());
+        this.subject = nonNull(subject) ? new ParticipantDto(subjectName) : null;
+        this.createdDate = parseDate(conversation.getLastMessageCreatedDate(), zoneId);
+        this.unread = conversation.getLastMessageCreatedDate().isAfter(lastReadOn);
+        this.system = conversation.getLastMessageSystem();
     }
 
     private String parseDate(Instant instant, String zoneId) {

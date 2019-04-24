@@ -1,5 +1,8 @@
 package club.tempvs.message.service;
 
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
 import club.tempvs.message.dao.MessageRepository;
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -7,12 +10,10 @@ import club.tempvs.message.domain.Participant;
 import club.tempvs.message.service.impl.MessageServiceImpl;
 import club.tempvs.message.util.LocaleHelper;
 import club.tempvs.message.util.ObjectFactory;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import static org.mockito.Mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -65,13 +66,26 @@ public class MessageServiceTest {
 
     @Test
     public void testAddMessage() {
+        when(message.getAuthor()).thenReturn(author);
+        when(message.getSubject()).thenReturn(subject);
+
         Conversation result = messageService.addMessage(conversation, message, author);
 
-        verify(conversation).setLastMessage(message);
         verify(conversation).addMessage(message);
+        verify(conversation).setLastMessageText(any());
+        verify(conversation).setLastMessageAuthorName(any());
+        verify(conversation).setLastMessageSubjectName(any());
+        verify(conversation).setLastMessageCreatedDate(any());
+        verify(conversation).setLastMessageSystem(any());
+        verify(conversation).setLastMessageSystemArgs(any());
         verify(conversation).getLastReadOn();
         verify(message).setConversation(conversation);
         verify(message).getCreatedDate();
+        verify(message).getText();
+        verify(message).getAuthor();
+        verify(message).getSubject();
+        verify(message).getIsSystem();
+        verify(message).getSystemArgs();
         verifyNoMoreInteractions(message, conversation);
 
         assertEquals("Conversation object is returned", conversation, result);

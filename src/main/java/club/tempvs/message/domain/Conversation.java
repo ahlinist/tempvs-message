@@ -36,14 +36,19 @@ public class Conversation {
     @OneToOne
     private Participant admin;
 
-    @OneToOne(cascade = ALL)
-    private Message lastMessage;
+    private String lastMessageText;
+    private String lastMessageAuthorName;
+    private String lastMessageSubjectName;
+    private Instant lastMessageCreatedDate;
+    private Boolean lastMessageSystem;
+    private String lastMessageSystemArgs;
 
     @Size(min = 2, max = 20)
     @ManyToMany(fetch = EAGER)
     private Set<Participant> participants = new LinkedHashSet<>();
 
-    @ElementCollection(fetch = EAGER)
+    //TODO: replace with separate table + separate query
+    @ElementCollection
     private Map<Participant, Instant> lastReadOn = new HashMap<>();
 
     @CreatedDate

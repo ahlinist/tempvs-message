@@ -11,11 +11,12 @@ import java.util.List;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
 
+    //TODO: replace :participant with :participantId
     @Query("SELECT c, (SELECT COUNT(m) FROM Message m WHERE (m.conversation = c) AND (c.lastReadOn[:participant] < m.createdDate)) " +
             "FROM Conversation c " +
             "WHERE :participant MEMBER OF c.participants " +
-            "GROUP BY c, c.lastMessage.createdDate " +
-            "ORDER BY c.lastMessage.createdDate DESC")
+            "GROUP BY c, c.lastMessageCreatedDate " +
+            "ORDER BY c.lastMessageCreatedDate DESC")
     List<Object[]> findConversationsPerParticipant(@Param("participant") Participant participant, Pageable pageable);
 
     @Query("SELECT c FROM Conversation c " +

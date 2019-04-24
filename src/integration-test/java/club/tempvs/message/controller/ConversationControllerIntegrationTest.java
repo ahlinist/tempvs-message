@@ -234,15 +234,13 @@ public class ConversationControllerIntegrationTest {
 
     @Test
     public void testGetConversationsByParticipant() throws Exception {
-        Long authorId1 = 10L;
-        Long authorId2 = 15L;
         Long callerId = 3L;
         String text = "text";
         String name = "name";
 
         Participant caller = entityHelper.createParticipant(callerId, "name", "CLUB", "ANTIQUITY");
-        Participant author1 = entityHelper.createParticipant(authorId1, "name", "CLUB", "ANTIQUITY");
-        Participant author2 = entityHelper.createParticipant(authorId2, "name", "CLUB", "ANTIQUITY");
+        Participant author1 = entityHelper.createParticipant(10L, "name", "CLUB", "ANTIQUITY");
+        Participant author2 = entityHelper.createParticipant(15L, "name", "CLUB", "ANTIQUITY");
 
         Set<Participant> receivers1 = new HashSet<>(Arrays.asList(author2, caller));
         Set<Participant> receivers2 = new HashSet<>(Arrays.asList(caller));
@@ -258,7 +256,6 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("conversations", hasSize(2)))
                 .andExpect(jsonPath("conversations[0].name", is(name)))
                 .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
-                .andExpect(jsonPath("conversations[0].lastMessage.author.id", is(authorId2.intValue())))
                 .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
                 .andExpect(jsonPath("conversations[0].lastMessage.unread", is(true)))
                 .andExpect(jsonPath("conversations[0].lastMessage.system", is(false)))
@@ -267,7 +264,6 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("conversations[0].unreadMessagesCount", is(1)))
                 .andExpect(jsonPath("conversations[1].name", is(name)))
                 .andExpect(jsonPath("conversations[1].lastMessage.text", is(text)))
-                .andExpect(jsonPath("conversations[1].lastMessage.author.id", is(authorId1.intValue())))
                 .andExpect(jsonPath("conversations[1].lastMessage.subject", isEmptyOrNullString()))
                 .andExpect(jsonPath("conversations[1].lastMessage.unread", is(true)))
                 .andExpect(jsonPath("conversations[1].lastMessage.system", is(false)))
@@ -293,7 +289,6 @@ public class ConversationControllerIntegrationTest {
         Conversation conversation = entityHelper.createConversation(author, receivers, text, name);
         Long conversationId = conversation.getId();
         List<Message> messages = conversation.getMessages();
-        Long messageId = messages.get(0).getId();
         Boolean isSystem = messages.get(0).getIsSystem();
         String userInfoValue = buildUserInfoValue(authorId);
 
@@ -304,9 +299,8 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("conversations", hasSize(1)))
                     .andExpect(jsonPath("conversations[0].id", is(conversationId.intValue())))
                     .andExpect(jsonPath("conversations[0].name", is(name)))
-                    .andExpect(jsonPath("conversations[0].lastMessage.id", is(messageId.intValue())))
                     .andExpect(jsonPath("conversations[0].lastMessage.text", is(text)))
-                    .andExpect(jsonPath("conversations[0].lastMessage.author.id", is(authorId.intValue())))
+                    .andExpect(jsonPath("conversations[0].lastMessage.author.name", is(name)))
                     .andExpect(jsonPath("conversations[0].lastMessage.subject", isEmptyOrNullString()))
                     .andExpect(jsonPath("conversations[0].lastMessage.unread", is(false)))
                     .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
