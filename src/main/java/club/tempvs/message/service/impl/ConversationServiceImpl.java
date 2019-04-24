@@ -126,17 +126,14 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     @Override
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
     public GetConversationsDto getConversationsAttended(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         User user = userHolder.getUser();
         Long participantId = user.getProfileId();
         String timeZone = user.getTimezone();
         Participant participant = participantService.getParticipant(participantId);
-        List<Object[]> conversationsPerParticipant = conversationRepository
-                .findConversationsPerParticipant(participant, pageable);
+        List<Object[]> conversationsPerParticipant = getConversationsPerParticipant(participant, pageable);
+
         List<ConversationDtoBean> conversationDtoBeans = conversationsPerParticipant.stream()
             .map(entry -> {
                 Conversation conversation = (Conversation) entry[0];
@@ -321,5 +318,12 @@ public class ConversationServiceImpl implements ConversationService {
         String timeZone = userHolder.getUser().getTimezone();
         List<Message> messages = messageService.getMessagesFromConversation(conversation, DEFAULT_PAGE_NUMBER, MAX_PAGE_SIZE);
         return new GetConversationDto(conversation, messages, initiator, timeZone);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private List<Object[]> getConversationsPerParticipant(Participant participant, Pageable pageable) {
+        return conversationRepository.findConversationsPerParticipant(participant, pageable);
     }
 }
