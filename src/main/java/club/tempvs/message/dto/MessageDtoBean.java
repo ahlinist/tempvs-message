@@ -1,6 +1,6 @@
 package club.tempvs.message.dto;
 
-import static java.util.Objects.nonNull;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import club.tempvs.message.domain.Conversation;
 import club.tempvs.message.domain.Message;
@@ -44,7 +44,7 @@ public class MessageDtoBean {
 
         this.text = conversation.getLastMessageText();
         this.author = new ParticipantDto(conversation.getLastMessageAuthorName());
-        this.subject = nonNull(subject) ? new ParticipantDto(subjectName) : null;
+        this.subject = isNotBlank(subjectName) ? new ParticipantDto(subjectName) : null;
         this.createdDate = parseDate(conversation.getLastMessageCreatedDate(), zoneId);
         this.unread = conversation.getLastMessageCreatedDate().isAfter(lastReadOn);
         this.system = conversation.getLastMessageSystem();
