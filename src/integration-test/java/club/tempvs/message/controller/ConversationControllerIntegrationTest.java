@@ -13,6 +13,7 @@ import club.tempvs.message.dto.*;
 import club.tempvs.message.util.EntityHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.ImmutableSet;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,12 +92,12 @@ public class ConversationControllerIntegrationTest {
         String name = null;
 
         Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+        Set<Participant> receivers = ImmutableSet.of(
                 entityHelper.createParticipant(receiverId, "name", "CLUB", "ANTIQUITY")
-        ));
+        );
 
         entityHelper.createConversation(author, receivers, oldMessage, name);
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(receiverId));
+        Set<Long> receiverIds = ImmutableSet.of(receiverId);
         String createConversationJson = getCreateConversationDtoJson(receiverIds, newMessage, name);
         String userInfoValue = buildUserInfoValue(authorId);
 
@@ -242,8 +243,8 @@ public class ConversationControllerIntegrationTest {
         Participant author1 = entityHelper.createParticipant(10L, "name", "CLUB", "ANTIQUITY");
         Participant author2 = entityHelper.createParticipant(15L, "name", "CLUB", "ANTIQUITY");
 
-        Set<Participant> receivers1 = new HashSet<>(Arrays.asList(author2, caller));
-        Set<Participant> receivers2 = new HashSet<>(Arrays.asList(caller));
+        Set<Participant> receivers1 = ImmutableSet.of(author2, caller);
+        Set<Participant> receivers2 = ImmutableSet.of(caller);
 
         entityHelper.createConversation(author1, receivers1, text, name);
         entityHelper.createConversation(author2, receivers2, text, name);
@@ -269,8 +270,7 @@ public class ConversationControllerIntegrationTest {
                 .andExpect(jsonPath("conversations[1].lastMessage.system", is(false)))
                 .andExpect(jsonPath("conversations[1].type", is(CONFERENCE)))
                 .andExpect(jsonPath("conversations[1].conversant", is("name, name")))
-                .andExpect(jsonPath("conversations[1].unreadMessagesCount", is(1)))
-                .andExpect(header().string(COUNT_HEADER, String.valueOf(2)));
+                .andExpect(jsonPath("conversations[1].unreadMessagesCount", is(1)));
     }
 
     @Test
@@ -305,8 +305,7 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("conversations[0].lastMessage.unread", is(false)))
                     .andExpect(jsonPath("conversations[0].lastMessage.system", is(isSystem)))
                     .andExpect(jsonPath("conversations[0].type", is(CONFERENCE)))
-                    .andExpect(jsonPath("conversations[0].conversant", is("name, name, name")))
-                    .andExpect(header().string(COUNT_HEADER, String.valueOf(1)));
+                    .andExpect(jsonPath("conversations[0].conversant", is("name, name, name")));
     }
 
     @Test
@@ -400,7 +399,7 @@ public class ConversationControllerIntegrationTest {
     public void testAddMessageForMissingConversationInDB() throws Exception {
         Long authorId = 1L;
         String newMessageText = "new message text";
-        Long missingConversationId = 2L;
+        int missingConversationId = 2;
 
         String addMessageJson = getAddMessageDtoJson(newMessageText);
         String userInfoValue = buildUserInfoValue(authorId);
@@ -423,9 +422,9 @@ public class ConversationControllerIntegrationTest {
         Long addedParticipantId = 3L;
 
         Participant author = entityHelper.createParticipant(authorId, "name", "USER", "");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+        Set<Participant> receivers = ImmutableSet.of(
                 entityHelper.createParticipant(receiverId, "name", "USER", "")
-        ));
+        );
 
         Conversation conversation = entityHelper.createConversation(author, receivers, text, "");
         Long initialConversationId = conversation.getId();
@@ -434,7 +433,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
+        addParticipantsDto.setParticipants(ImmutableSet.of(addedParticipantId));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
         String userInfoValue = buildUserInfoValue(authorId);
@@ -464,9 +463,9 @@ public class ConversationControllerIntegrationTest {
         String text = "text";
 
         Participant author = entityHelper.createParticipant(authorId, "name", "USER", "");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+        Set<Participant> receivers = ImmutableSet.of(
                 entityHelper.createParticipant(receiverId, "name", "USER", "")
-        ));
+        );
 
         Conversation conversation = entityHelper.createConversation(author, receivers, text, "");
         Long initialConversationId = conversation.getId();
@@ -474,7 +473,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
+        addParticipantsDto.setParticipants(ImmutableSet.of(addedParticipantId));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
         String userInfoValue = buildUserInfoValue(authorId);
@@ -506,7 +505,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(addedParticipantId, "name", "CLUB", "LATE_MIDDLE_AGES");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
+        addParticipantsDto.setParticipants(ImmutableSet.of(addedParticipantId));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
         String userInfoValue = buildUserInfoValue(authorId);
@@ -549,7 +548,7 @@ public class ConversationControllerIntegrationTest {
         entityHelper.createParticipant(5L, "name", "USER", "");
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
+        addParticipantsDto.setParticipants(ImmutableSet.of(addedParticipantId));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
         String userInfoValue = buildUserInfoValue(authorId);
@@ -585,13 +584,13 @@ public class ConversationControllerIntegrationTest {
 
         Participant author = entityHelper.createParticipant(authorId, "name", "USER", "");
         Participant receiver = entityHelper.createParticipant(2L, "name", "USER", "");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(receiver));
+        Set<Participant> receivers = ImmutableSet.of(receiver);
 
         Conversation conversation = entityHelper.createConversation(author, receivers, "text", "name");
         Long conversationId = conversation.getId();
 
         AddParticipantsDto addParticipantsDto = new AddParticipantsDto();
-        addParticipantsDto.setParticipants(new HashSet<>(Arrays.asList(addedParticipantId)));
+        addParticipantsDto.setParticipants(ImmutableSet.of(addedParticipantId));
 
         String addParticipantJson = mapper.writeValueAsString(addParticipantsDto);
         String userInfoValue = buildUserInfoValue(authorId);
@@ -611,7 +610,7 @@ public class ConversationControllerIntegrationTest {
         Long authorId = 1L;
         String text = "text";
         String name = "name";
-        Long removedParticipantId = 4L;
+        int removedParticipantId = 4;
 
         Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
         Set<Participant> receivers = new HashSet<>(Arrays.asList(
@@ -643,7 +642,7 @@ public class ConversationControllerIntegrationTest {
                     .andExpect(jsonPath("messages[0].system", is(false)))
                     .andExpect(jsonPath("messages[1].text", is(participantRemovedMessage)))
                     .andExpect(jsonPath("messages[1].author.id", is(authorId.intValue())))
-                    .andExpect(jsonPath("messages[1].subject.id", is(removedParticipantId.intValue())))
+                    .andExpect(jsonPath("messages[1].subject.id", is(removedParticipantId)))
                     .andExpect(jsonPath("messages[1].unread", is(false)))
                     .andExpect(jsonPath("messages[1].system", is(true)))
                     .andExpect(jsonPath("type", is(CONFERENCE)));
@@ -652,8 +651,8 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testRemoveParticipantFromNonExistentConversation() throws Exception {
         Long authorId = 1L;
-        Long removedParticipantId = 4L;
-        Long nonExistentConversationId = 444L;
+        int removedParticipantId = 4;
+        int nonExistentConversationId = 444;
         entityHelper.createParticipant(1L, "name", "CLUB", "ANTIQUITY");
         entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY");
         String url = "/api/conversations/" + nonExistentConversationId + "/participants/" + removedParticipantId;
@@ -670,12 +669,12 @@ public class ConversationControllerIntegrationTest {
     @Test
     public void testRemoveParticipantFromConversationOf2() throws Exception {
         Long authorId = 1L;
-        Long removedParticipantId = 4L;
+        int removedParticipantId = 4;
 
         Participant author = entityHelper.createParticipant(authorId, "name", "CLUB", "ANTIQUITY");
-        Set<Participant> receivers = new HashSet<>(Arrays.asList(
+        Set<Participant> receivers = ImmutableSet.of(
                 entityHelper.createParticipant(4L, "name", "CLUB", "ANTIQUITY")
-        ));
+        );
 
         Conversation conversation = entityHelper.createConversation(author, receivers, "text", "");
         String url = "/api/conversations/" + conversation.getId() + "/participants/" + removedParticipantId;

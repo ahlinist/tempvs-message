@@ -2,6 +2,7 @@ package club.tempvs.message.controller;
 
 import club.tempvs.message.dto.*;
 import club.tempvs.message.service.ConversationService;
+import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,7 +76,7 @@ public class ConversationControllerTest {
         verify(conversationService).getConversation(id, page, size);
         verifyNoMoreInteractions(conversationService);
 
-        assertTrue("Result is a conversation", result instanceof GetConversationDto);
+        assertEquals("Result is a conversation", getConversationDto, result);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -94,12 +95,12 @@ public class ConversationControllerTest {
 
         when(conversationService.getConversationsAttended(page, size)).thenReturn(getConversationsDto);
 
-        ResponseEntity result = conversationController.getConversationsByParticipant(page, size);
+        GetConversationsDto result = conversationController.getConversationsByParticipant(page, size);
 
         verify(conversationService).getConversationsAttended(page, size);
         verifyNoMoreInteractions(conversationService);
 
-        assertTrue("GetConversationsDto object is returned as a body", result.getBody() instanceof GetConversationsDto);
+        assertEquals("GetConversationsDto object is returned as a body", getConversationsDto, result);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -129,7 +130,7 @@ public class ConversationControllerTest {
     @Test
     public void testAddParticipant() {
         Long conversationId = 1L;
-        Set<Long> receiverIds = new HashSet<>(Arrays.asList(3L));
+        Set<Long> receiverIds = ImmutableSet.of(3L);
 
         when(addParticipantsDto.getParticipants()).thenReturn(receiverIds);
         when(conversationService.addParticipants(conversationId, receiverIds)).thenReturn(getConversationDto);
@@ -154,7 +155,7 @@ public class ConversationControllerTest {
         verify(conversationService).removeParticipant(conversationId, subjectId);
         verifyNoMoreInteractions(conversationService);
 
-        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
+        assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
 
     @Test
@@ -168,7 +169,7 @@ public class ConversationControllerTest {
         verify(conversationService).countUpdatedConversationsPerParticipant();
         verifyNoMoreInteractions(conversationService);
 
-        assertTrue("3L returned as a response as a new conversations count", result.getStatusCodeValue() == 200);
+        assertEquals("3L returned as a response as a new conversations count", 200, result.getStatusCodeValue());
     }
 
     @Test
@@ -184,7 +185,7 @@ public class ConversationControllerTest {
         verify(conversationService).rename(conversationId, conversationName);
         verifyNoMoreInteractions(conversationService);
 
-        assertTrue("GetConversationDto is returned as a result", result instanceof GetConversationDto);
+        assertEquals("GetConversationDto is returned as a result", getConversationDto, result);
     }
 
     @Test
