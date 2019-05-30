@@ -768,7 +768,7 @@ public class ConversationControllerIntegrationTest {
         String updateConversationNameJson = mapper.writeValueAsString(updateConversationNameDto);
         String userInfoValue = buildUserInfoValue(authorId);
 
-        mvc.perform(post("/api/conversations/" + conversationId + "/name")
+        mvc.perform(patch("/api/conversations/" + conversationId + "/name")
                 .accept(APPLICATION_JSON_VALUE)
                 .contentType(APPLICATION_JSON_VALUE)
                 .content(updateConversationNameJson)

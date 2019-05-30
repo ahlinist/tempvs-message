@@ -94,7 +94,7 @@ public class ConversationController {
         return conversationService.removeParticipant(conversationId, subjectId);
     }
 
-    @PostMapping("/conversations/{conversationId}/name")
+    @PatchMapping("/conversations/{conversationId}/name")
     public GetConversationDto renameConversation(
             @PathVariable("conversationId") Long conversationId,
             @RequestBody UpdateConversationNameDto updateConversationNameDto) {
