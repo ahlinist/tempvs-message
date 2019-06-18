@@ -54,6 +54,7 @@ dependencies {
     compile 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     //database
     compile "org.postgresql:postgresql:${postgresVersion}"
+    implementation "org.liquibase:liquibase-core:${liquibaseVersion}" //to fire liquibase on startcd 
     //lombok
     compileOnly 'org.projectlombok:lombok:1.18.4'
     apt 'org.projectlombok:lombok:1.18.4'
