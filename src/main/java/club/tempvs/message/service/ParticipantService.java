@@ -10,7 +10,5 @@ public interface ParticipantService {
 
     Set<Participant> getParticipants(Set<Long> ids);
 
-    Participant createParticipant(Long id, String name, String type, String period);
-
     Participant refreshParticipant(Long id, String name, String type, String period);
 }

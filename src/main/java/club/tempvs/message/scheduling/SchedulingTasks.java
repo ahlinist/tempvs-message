@@ -13,8 +13,8 @@ public class SchedulingTasks {
 
     private final ParticipantSynchronizer participantSynchronizer;
 
-    //runs every hour
-    @Scheduled(fixedRate = 60 * 60 * 1000)
+    //runs every 30 seconds
+    @Scheduled(fixedRate = 30 * 1000)
     public void refreshParticipants() {
         participantSynchronizer.execute();
     }

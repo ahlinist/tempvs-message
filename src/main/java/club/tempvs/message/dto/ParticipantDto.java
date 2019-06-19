@@ -2,8 +2,10 @@ package club.tempvs.message.dto;
 
 import club.tempvs.message.domain.Participant;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class ParticipantDto {
 
     Long id;

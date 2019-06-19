@@ -7,7 +7,6 @@ import static java.util.Collections.emptySet;
 import club.tempvs.message.domain.Participant;
 import club.tempvs.message.dao.ParticipantRepository;
 import club.tempvs.message.service.ParticipantService;
-import club.tempvs.message.util.ObjectFactory;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import lombok.RequiredArgsConstructor;
@@ -21,27 +20,20 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ParticipantServiceImpl implements ParticipantService {
 
-    private final ObjectFactory objectFactory;
     private final ParticipantRepository participantRepository;
 
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
-    public Participant createParticipant(Long id, String name, String type, String period) {
-        Participant participant = objectFactory.getInstance(Participant.class, id, name, type, period);
-        return participantRepository.save(participant);
-    }
-
-    @HystrixCommand(commandProperties = {
-            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
-    })
     public Participant getParticipant(Long id) {
         if (isNull(id)) {
             throw new IllegalStateException("Participant's id is not specified");
         }
 
-        return participantRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("No participant with id " + id + " found in the db"));
+        Participant participant = findParticipantById(id);
+
+        if (nonNull(participant)) {
+            return participant;
+        } else {
+            throw new IllegalStateException("No participant with id " + id + " found in the db");
+        }
     }
 
     @HystrixCommand(commandProperties = {
@@ -65,16 +57,27 @@ public class ParticipantServiceImpl implements ParticipantService {
             @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
     })
     public Participant refreshParticipant(Long id, String name, String type, String period) {
-        Participant participant = getParticipant(id);
+        Participant participant = findParticipantById(id);
 
         if (nonNull(participant)) {
             participant.setName(name);
             participant.setType(type);
             participant.setPeriod(period);
         } else {
-            participant = objectFactory.getInstance(Participant.class, id, name, type, period);
+            participant = new Participant(id, name, type, period);
         }
 
         return participantRepository.save(participant);
+    }
+
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.strategy", value = "SEMAPHORE")
+    })
+    private Participant findParticipantById(Long id) {
+        if (isNull(id)) {
+            throw new IllegalStateException("Participant's id is not specified");
+        }
+
+        return participantRepository.findById(id).orElse(null);
     }
 }

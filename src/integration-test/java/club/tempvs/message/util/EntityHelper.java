@@ -36,6 +36,6 @@ public class EntityHelper {
     }
 
     public Participant createParticipant(Long id, String name, String type, String period) {
-        return participantService.createParticipant(id, name, type, period);
+        return participantService.refreshParticipant(id, name, type, period);
     }
 }
