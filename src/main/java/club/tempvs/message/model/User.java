@@ -1,5 +1,7 @@
 package club.tempvs.message.model;
 
+import static java.util.Objects.nonNull;
+
 import club.tempvs.message.dto.UserInfoDto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +23,7 @@ public class User {
         this.userProfileId = userInfoDto.getUserProfileId();
         this.userName = userInfoDto.getUserName();
         this.timezone = userInfoDto.getTimezone();
+        this.timezone = nonNull(userInfoDto.getTimezone()) ? userInfoDto.getTimezone() : "UTC";
         this.locale = new Locale(userInfoDto.getLang());
     }
 }
