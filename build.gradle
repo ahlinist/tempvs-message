@@ -1,6 +1,6 @@
 buildscript {
     dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.1.4.RELEASE"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.1.7.RELEASE"
         classpath "io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE"
     }
 }
@@ -28,9 +28,7 @@ liquibase {
 
 group 'club.tempvs'
 version '1.0-SNAPSHOT'
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = '11'
 
 repositories {
     mavenCentral()
@@ -43,7 +41,7 @@ configurations {
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Greenwich.SR1'
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Greenwich.SR2'
     }
 }
 
@@ -53,18 +51,17 @@ dependencies {
     compile 'org.springframework.cloud:spring-cloud-starter-netflix-hystrix'
     compile 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     //database
-    compile "org.postgresql:postgresql:${postgresVersion}"
-    implementation "org.liquibase:liquibase-core:${liquibaseVersion}" //to fire liquibase on startcd 
+    compile "org.postgresql:postgresql"
     //lombok
-    compileOnly 'org.projectlombok:lombok:1.18.4'
-    apt 'org.projectlombok:lombok:1.18.4'
+    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
     //testing
     testCompile "org.springframework.boot:spring-boot-starter-test"
     testRuntime 'com.h2database:h2:1.4.194'
-    testCompile 'org.mockito:mockito-core:2.18.3'
     //liquibase
-    liquibaseRuntime "org.liquibase:liquibase-core:${liquibaseVersion}"
-    liquibaseRuntime "org.postgresql:postgresql:${postgresVersion}"
+    implementation "org.liquibase:liquibase-core" //to fire liquibase on start
+    liquibaseRuntime "org.liquibase:liquibase-core"
+    liquibaseRuntime "org.postgresql:postgresql"
     liquibaseRuntime 'org.liquibase.ext:liquibase-hibernate5:3.6'
     liquibaseRuntime 'org.springframework.boot:spring-boot-starter-data-jpa'
     liquibaseRuntime sourceSets.main.output
@@ -73,8 +70,8 @@ dependencies {
 }
 
 bootJar {
-    baseName = 'tempvs-message'
-    version =  project.version
+    archiveBaseName = 'tempvs-message'
+    archiveVersion = ''
 }
 
 sourceSets {
@@ -92,8 +89,4 @@ sourceSets {
 task integrationTest(type: Test) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
-}
-
-task stage() {
-    dependsOn build
 }
