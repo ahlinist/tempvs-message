@@ -1,5 +1,0 @@
-spring:
-  liquibase:
-    enabled: false
-authorization:
-  token: security_token
