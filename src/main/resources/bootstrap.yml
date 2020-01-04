@@ -3,7 +3,7 @@ spring:
     name: message
   cloud:
     config:
-      uri: ${CONFIG_SERVER_URI}
+      uri: ${CONFIG_SERVER_URI:http://localhost:8888}
       fail-fast: true
-      username: ${CONFIG_AUTH_NAME}
-      password: ${CONFIG_AUTH_PASSWORD}
+      username: ${CONFIG_AUTH_NAME:root}
+      password: ${CONFIG_AUTH_PASSWORD:s3cr3t_pass}
